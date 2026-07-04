@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sumas dobles - Profesor Gorila</title>
+  <style>
+    :root {
+      --bg: #fff7df;
+      --card: #ffffff;
+      --text: #17213a;
+      --muted: #666;
+      --ok: #42b86b;
+      --bad: #d7d7d7;
+      --blue: #4f7cff;
+      --green: #3aa655;
+      --purple: #7b55d9;
+      --orange: #ff8a2a;
+      --border: #ece4cf;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at 10% 15%, rgba(255, 185, 62, .25), transparent 22%),
+        radial-gradient(circle at 90% 20%, rgba(79, 124, 255, .18), transparent 20%),
+        linear-gradient(180deg, #fff7df, #f6f7ff);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 18px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 920px;
+      background: var(--card);
+      border-radius: 28px;
+      padding: 26px;
+      box-shadow: 0 14px 36px rgba(0,0,0,.10);
+      border: 2px solid rgba(255,255,255,.8);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app::before {
+      content: "＋  1+1  ＝  10+10  ✎  🦍  ＋";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 10px;
+      text-align: center;
+      font-size: 23px;
+      letter-spacing: 11px;
+      color: rgba(79,124,255,.17);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    h1, h2, h3 { margin-top: 0; }
+
+    h1 {
+      font-size: 42px;
+      text-align: center;
+      margin: 28px 0 8px;
+      color: #1d3c96;
+    }
+
+    .orange { color: var(--orange); }
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 24px;
+      font-size: 18px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    button {
+      border: 0;
+      border-radius: 20px;
+      padding: 18px 20px;
+      font-size: 20px;
+      cursor: pointer;
+      background: var(--blue);
+      color: white;
+      font-weight: bold;
+      transition: transform .05s ease, opacity .2s ease, background .2s ease;
+    }
+
+    button:active { transform: scale(.98); }
+
+    button.light {
+      background: #f1f1f5;
+      color: #333;
+    }
+
+    button.light:hover { background: #e4e4ea; }
+
+    .levels {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .level-card {
+      min-height: 320px;
+      border: 3px solid #e9edf9;
+      background: #ffffff;
+      color: #1b2a63;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 8px 18px rgba(0,0,0,.07);
+      border-radius: 24px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .level-card .monkey {
+      font-size: 78px;
+      margin: 8px 0;
+    }
+
+    .level-card h2 {
+      margin: 0;
+      font-size: 30px;
+    }
+
+    .level-card p {
+      color: #555;
+      font-size: 17px;
+      line-height: 1.35;
+      margin: 10px 0;
+    }
+
+    .easy {
+      background: #f3fff2;
+      border-color: #cdeec9;
+    }
+
+    .medium {
+      background: #f1f7ff;
+      border-color: #c8ddff;
+    }
+
+    .hard {
+      background: #f7f0ff;
+      border-color: #dcc8ff;
+    }
+
+    .easy h2 { color: #248436; }
+    .medium h2 { color: #1d62c7; }
+    .hard h2 { color: #6b35b6; }
+
+    .home-buttons {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      max-width: 440px;
+      margin: 24px auto 0;
+    }
+
+    .teacher-btn {
+      background: #fff0bd;
+      color: #8a5200;
+      border: 2px solid #ffd56f;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      background: #f4f4f6;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    .question-card {
+      background: #fff;
+      border: 3px solid #ececec;
+      border-radius: 26px;
+      padding: 26px 18px;
+      margin: 18px 0 20px;
+    }
+
+    .question {
+      text-align: center;
+      font-size: 78px;
+      font-weight: bold;
+      margin: 10px 0;
+      letter-spacing: 2px;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .option {
+      font-size: 42px;
+      min-height: 96px;
+      background: #f7f8ff;
+      color: #1f2d7a;
+      border: 3px solid #e1e6ff;
+      box-shadow: 0 5px 10px rgba(0,0,0,.06);
+    }
+
+    .option.correct {
+      background: var(--ok);
+      color: white;
+      border-color: var(--ok);
+    }
+
+    .option.wrong {
+      background: var(--bad);
+      color: #555;
+      border-color: var(--bad);
+    }
+
+    .message {
+      text-align: center;
+      min-height: 30px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .stat {
+      background: #f7f7fb;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 34px;
+      margin-bottom: 4px;
+    }
+
+    .note {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .center { text-align: center; }
+
+    .gorila-card {
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 10px 4px 0;
+    }
+
+    .gorila-icon {
+      font-size: 72px;
+      margin-bottom: 4px;
+    }
+
+    .strategy-box {
+      background: #ffffff;
+      border: 2px solid #eeeeee;
+      border-radius: 24px;
+      padding: 20px;
+      margin: 18px 0;
+      text-align: center;
+    }
+
+    .strategy-box h3 {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+
+    .strategy-main {
+      font-size: 24px;
+      line-height: 1.3;
+      font-weight: bold;
+      color: #1d3c96;
+      margin-bottom: 6px;
+    }
+
+    .example-sum {
+      font-size: 48px;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+
+    .count-line {
+      font-size: 30px;
+      font-weight: bold;
+      color: #1d3c96;
+      margin: 10px 0;
+    }
+
+    .final-result {
+      font-size: 26px;
+      font-weight: bold;
+      color: #1f7a40;
+      margin-top: 10px;
+    }
+
+    .footer-note {
+      text-align: center;
+      background: #f8f8fb;
+      border: 1px solid #e4e4ea;
+      color: #666;
+      padding: 9px 12px;
+      border-radius: 14px;
+      margin-top: 20px;
+      font-size: 13px;
+      font-weight: normal;
+      line-height: 1.35;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+
+    .capture-box {
+      background: #ffffff;
+      border: 2px solid #eeeeee;
+      border-radius: 22px;
+      padding: 18px;
+      margin: 18px 0;
+    }
+
+    .capture-title {
+      font-size: 23px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .chip {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: bold;
+      font-size: 17px;
+    }
+
+    .chip-ok {
+      background: #e5f8ec;
+      color: #1f7a40;
+      border: 1px solid #bfe8ce;
+    }
+
+    .chip-missing {
+      background: #eaf2ff;
+      color: #1d62c7;
+      border: 1px solid #bfd6ff;
+    }
+
+    @media (max-width: 760px) {
+      .levels, .options, .result-grid { grid-template-columns: 1fr; }
+      .question { font-size: 56px; }
+      h1 { font-size: 32px; }
+      .app::before { letter-spacing: 5px; font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="home" class="screen active">
+      <h1>Sumas <span class="orange">dobles</span></h1>
+      <p class="subtitle">Profesor Gorila te ayuda a practicar sumas dobles</p>
+
+      <div class="levels">
+        <button class="level-card easy" onclick="startLevel('easy')">
+          <h2>Nivel fácil</h2>
+          <div class="monkey">🐵</div>
+          <p><strong>Monito bebé</strong></p>
+          <p>Dobles de 1 + 1 a 10 + 10</p>
+          <p>30 preguntas para practicar bien la base</p>
+          <span>Jugar</span>
+        </button>
+
+        <button class="level-card medium" onclick="startLevel('medium')">
+          <h2>Nivel medio</h2>
+          <div class="monkey">🙊</div>
+          <p><strong>Mono niño</strong></p>
+          <p>Dobles sin llevar en las unidades</p>
+          <p>20 preguntas para seguir avanzando</p>
+          <span>Jugar</span>
+        </button>
+
+        <button class="level-card hard" onclick="startLevel('hard')">
+          <h2>Nivel difícil</h2>
+          <div class="monkey">🦍</div>
+          <p><strong>Mono grande</strong></p>
+          <p>Dobles que sí se llevan</p>
+          <p>10 preguntas para pensar con calma</p>
+          <span>Jugar</span>
+        </button>
+      </div>
+
+      <div class="home-buttons">
+        <button class="teacher-btn" onclick="showTeacher()">🦍 Modo docente: estrategias</button>
+      </div>
+
+      <div class="footer-note">
+        © 2026 Dante Martín · Recurso educativo creado con asistencia de IA · Licencia CC BY-NC 4.0
+      </div>
+    </section>
+
+    <section id="game" class="screen">
+      <div class="topbar">
+        <span class="pill" id="levelPill">Nivel</span>
+        <span class="pill" id="progressPill">1/10</span>
+        <span class="pill">Tomate tu tiempo</span>
+      </div>
+
+      <div class="question-card">
+        <div class="question" id="questionText">2 + 2</div>
+      </div>
+
+      <div class="options" id="options"></div>
+      <div class="message" id="message"></div>
+    </section>
+
+    <section id="results" class="screen">
+      <h2>¡Ronda terminada!</h2>
+      <p id="resultText" class="note center"></p>
+
+      <div class="result-grid">
+        <div class="stat"><strong id="statCorrect">0</strong>Correctas</div>
+        <div class="stat"><strong id="statTotal">0</strong>Preguntas</div>
+      </div>
+
+      <div class="capture-box">
+        <div class="capture-title">🟢 Dobles que conseguiste</div>
+        <div id="capturedList" class="chips"></div>
+      </div>
+
+      <div class="capture-box">
+        <div class="capture-title">🔵 Dobles para seguir practicando</div>
+        <div id="missingList" class="chips"></div>
+      </div>
+
+      <div class="home-buttons">
+        <button onclick="restartSameLevel()">Jugar otra vez</button>
+        <button class="light" onclick="goHome()">Volver al inicio</button>
+      </div>
+    </section>
+
+    <section id="teacher" class="screen">
+      <div class="gorila-card">
+        <div class="gorila-icon">🦍</div>
+        <h2>Profesor Gorila</h2>
+        <p class="note center">Tres estrategias para enseñar y practicar dobles.</p>
+
+        <div class="strategy-box">
+          <h3>Nivel fácil</h3>
+          <p class="strategy-main">Si 1 + 1 es 2, entonces 10 + 10 es 20.</p>
+          <div class="example-sum">1 + 1 = 2</div>
+          <div class="count-line">10 + 10 = 20</div>
+          <p class="note">La idea es reconocer dobles conocidos y usarlos con decenas.</p>
+        </div>
+
+        <div class="strategy-box">
+          <h3>Nivel medio</h3>
+          <p class="strategy-main">Sumo unidades con unidades y decenas con decenas.</p>
+          <div class="example-sum">74 + 74</div>
+          <p>Primero: <strong>4 + 4 = 8</strong></p>
+          <p>Después: <strong>70 + 70 = 140</strong></p>
+          <div class="final-result">140 + 8 = 148</div>
+        </div>
+
+        <div class="strategy-box">
+          <h3>Nivel difícil</h3>
+          <p class="strategy-main">Cuando las unidades pasan de 10, las transformo en una decena.</p>
+          <div class="example-sum">76 + 76</div>
+          <p>Primero: <strong>6 + 6 = 12</strong></p>
+          <p>El 12 tiene <strong>1 decena</strong> y <strong>2 unidades</strong>.</p>
+          <p>Después: <strong>70 + 70 = 140</strong></p>
+          <div class="final-result">140 + 12 = 152</div>
+        </div>
+
+        <button class="light" onclick="goHome()">Volver al inicio</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const screens = ["home", "game", "results", "teacher"];
+    const QUESTIONS_BY_LEVEL = {
+      easy: 30,
+      medium: 20,
+      hard: 10
+    };
+
+    let currentLevel = "easy";
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let correctCount = 0;
+    let correctDoubles = new Set();
+    let attemptedDoubles = new Set();
+
+    const levelNames = {
+      easy: "Nivel fácil",
+      medium: "Nivel medio",
+      hard: "Nivel difícil"
+    };
+
+    function show(id) {
+      screens.forEach(s => document.getElementById(s).classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function goHome() {
+      show("home");
+    }
+
+    function shuffle(arr) {
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
+
+    function makeQuestions(level) {
+      let nums = [];
+
+      if (level === "easy") {
+        for (let n = 1; n <= 10; n++) nums.push(n);
+      }
+
+      if (level === "medium") {
+        for (let n = 11; n <= 100; n++) {
+          const units = n % 10;
+          if (units <= 4) nums.push(n);
+        }
+      }
+
+      if (level === "hard") {
+        for (let n = 11; n <= 100; n++) {
+          const units = n % 10;
+          if (units >= 5) nums.push(n);
+        }
+      }
+
+      const total = QUESTIONS_BY_LEVEL[level];
+      const selected = [];
+
+      while (selected.length < total) {
+        selected.push(...shuffle(nums));
+      }
+
+      return selected.slice(0, total).map(n => ({
+        a: n,
+        b: n,
+        answer: n + n
+      }));
+    }
+
+    function startLevel(level) {
+      currentLevel = level;
+      currentQuestions = makeQuestions(level);
+      currentIndex = 0;
+      correctCount = 0;
+      correctDoubles = new Set();
+      attemptedDoubles = new Set();
+      show("game");
+      renderQuestion();
+    }
+
+    function restartSameLevel() {
+      startLevel(currentLevel);
+    }
+
+    function generateOptions(q) {
+      const correct = q.answer;
+      const options = new Set([correct]);
+
+      const commonErrors = [];
+
+      if (currentLevel === "medium") {
+        const tens = Math.floor(q.a / 10);
+        const units = q.a % 10;
+        commonErrors.push(Number(`${tens + tens}${units + units}`));
+        commonErrors.push(correct - 10);
+        commonErrors.push(correct + 10);
+      }
+
+      if (currentLevel === "hard") {
+        const tens = Math.floor(q.a / 10);
+        const units = q.a % 10;
+        commonErrors.push(Number(`${tens + tens}${(units + units) % 10}`));
+        commonErrors.push(correct - 10);
+        commonErrors.push(correct + 10);
+      }
+
+      commonErrors.push(correct - 1, correct + 1, correct - 2, correct + 2);
+
+      shuffle(commonErrors)
+        .filter(n => Number.isFinite(n) && n >= 0 && n !== correct)
+        .forEach(n => {
+          if (options.size < 3) options.add(n);
+        });
+
+      while (options.size < 3) {
+        const variation = Math.floor(Math.random() * 21) - 10;
+        const candidate = correct + variation;
+        if (candidate >= 0 && candidate !== correct) options.add(candidate);
+      }
+
+      return shuffle([...options]);
+    }
+
+    function renderQuestion() {
+      if (currentIndex >= currentQuestions.length) {
+        finishRound();
+        return;
+      }
+
+      const q = currentQuestions[currentIndex];
+
+      document.getElementById("levelPill").textContent = levelNames[currentLevel];
+      document.getElementById("progressPill").textContent = `${currentIndex + 1}/${currentQuestions.length}`;
+      document.getElementById("questionText").textContent = `${q.a} + ${q.b}`;
+      document.getElementById("message").textContent = "";
+      document.getElementById("options").innerHTML = "";
+
+      generateOptions(q).forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.textContent = opt;
+        btn.onclick = () => answerQuestion(btn, opt);
+        document.getElementById("options").appendChild(btn);
+      });
+    }
+
+    function answerQuestion(button, chosen) {
+      const buttons = document.querySelectorAll(".option");
+      buttons.forEach(b => b.disabled = true);
+
+      const q = currentQuestions[currentIndex];
+      const correct = chosen === q.answer;
+      const doubleKey = `${q.a}+${q.b}`;
+      attemptedDoubles.add(doubleKey);
+
+      if (correct) {
+        correctCount++;
+        correctDoubles.add(doubleKey);
+        button.classList.add("correct");
+        document.getElementById("message").textContent = "¡Muy bien!";
+      } else {
+        button.classList.add("wrong");
+        document.getElementById("message").textContent = "Probamos con otra.";
+      }
+
+      setTimeout(() => {
+        currentIndex++;
+        renderQuestion();
+      }, 700);
+    }
+
+
+    function getAllLevelDoubleKeys(level) {
+      let nums = [];
+
+      if (level === "easy") {
+        for (let n = 1; n <= 10; n++) nums.push(n);
+      }
+
+      if (level === "medium") {
+        for (let n = 11; n <= 100; n++) {
+          const units = n % 10;
+          if (units <= 4) nums.push(n);
+        }
+      }
+
+      if (level === "hard") {
+        for (let n = 11; n <= 100; n++) {
+          const units = n % 10;
+          if (units >= 5) nums.push(n);
+        }
+      }
+
+      return nums.map(n => `${n}+${n}`);
+    }
+
+    function renderChips(containerId, items, className, emptyText) {
+      const container = document.getElementById(containerId);
+      if (!items.length) {
+        container.innerHTML = `<span class="note">${emptyText}</span>`;
+        return;
+      }
+
+      container.innerHTML = items
+        .map(item => `<span class="chip ${className}">${item}</span>`)
+        .join("");
+    }
+
+    function finishRound() {
+      const allDoubles = getAllLevelDoubleKeys(currentLevel);
+      const captured = [...correctDoubles].sort((a, b) => Number(a.split("+")[0]) - Number(b.split("+")[0]));
+      const missing = allDoubles.filter(d => !correctDoubles.has(d));
+
+      const message = missing.length === 0
+        ? "¡Bien! Conseguiste todos los dobles de este nivel."
+        : "¡Bien! Estos dobles ya salieron muy bien. Todavía podés seguir practicando algunos.";
+
+      document.getElementById("resultText").textContent = `${levelNames[currentLevel]} completado. ${message}`;
+      document.getElementById("statCorrect").textContent = correctCount;
+      document.getElementById("statTotal").textContent = currentQuestions.length;
+
+      renderChips("capturedList", captured.slice(0, 24), "chip-ok", "Todavía no conseguiste dobles en esta ronda.");
+      renderChips("missingList", missing.slice(0, 12), "chip-missing", "¡No queda ninguno por practicar!");
+
+      show("results");
+    }
+
+    function showTeacher() {
+      show("teacher");
+    }
+  </script>
+</body>
+</html>

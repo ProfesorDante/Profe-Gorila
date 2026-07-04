@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Componer y descomponer números - Profesor Gorila</title>
+  <style>
+    :root {
+      --bg: #fff7df;
+      --card: #ffffff;
+      --text: #17213a;
+      --muted: #666;
+      --ok: #42b86b;
+      --bad: #d7d7d7;
+      --blue: #4f7cff;
+      --blue-dark: #315de0;
+      --green: #3aa655;
+      --green-dark: #23843a;
+      --purple: #7b55d9;
+      --orange: #ff8a2a;
+      --border: #ece4cf;
+      --hundreds: #dfeaff;
+      --tens: #fff0bf;
+      --ones: #ddf7e5;
+      --hundreds-text: #1d62c7;
+      --tens-text: #9a6200;
+      --ones-text: #1f7a40;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at 10% 15%, rgba(255, 185, 62, .25), transparent 22%),
+        radial-gradient(circle at 90% 20%, rgba(79, 124, 255, .18), transparent 20%),
+        linear-gradient(180deg, #fff7df, #f6f7ff);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 18px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 900px;
+      background: var(--card);
+      border-radius: 28px;
+      padding: 26px;
+      box-shadow: 0 14px 36px rgba(0,0,0,.10);
+      border: 2px solid rgba(255,255,255,.8);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app::before {
+      content: "100 + 20 + 3  =  123  🦍  356 = 300 + 50 + 6";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 10px;
+      text-align: center;
+      font-size: 20px;
+      letter-spacing: 7px;
+      color: rgba(79,124,255,.15);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    h1, h2, h3 { margin-top: 0; }
+
+    h1 {
+      font-size: 40px;
+      text-align: center;
+      margin: 28px 0 8px;
+      color: #1d3c96;
+    }
+
+    .orange { color: var(--orange); }
+
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 24px;
+      font-size: 18px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    button {
+      border: 0;
+      border-radius: 20px;
+      padding: 18px 20px;
+      font-size: 20px;
+      cursor: pointer;
+      background: var(--blue);
+      color: white;
+      font-weight: bold;
+      transition: transform .05s ease, background .2s ease;
+    }
+
+    button:active { transform: scale(.98); }
+
+    button.light {
+      background: #f1f1f5;
+      color: #333;
+    }
+
+    button.light:hover { background: #e4e4ea; }
+
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .big-card {
+      min-height: 230px;
+      border: 3px solid #e9edf9;
+      background: #ffffff;
+      color: #1b2a63;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 8px 18px rgba(0,0,0,.07);
+      border-radius: 24px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .big-card span {
+      font-size: 58px;
+      margin-bottom: 10px;
+    }
+
+    .big-card small {
+      display: block;
+      margin-top: 10px;
+      color: #565656;
+      font-size: 16px;
+      font-weight: normal;
+      line-height: 1.25;
+    }
+
+    .compose-btn {
+      background: #eef8ff;
+      color: #1d62c7;
+      border-color: #c8ddff;
+    }
+
+    .decompose-btn {
+      background: #f1fff3;
+      color: #1f7a40;
+      border-color: #c9eed5;
+    }
+
+    .teacher-btn {
+      background: #fff0bd;
+      color: #8a5200;
+      border-color: #ffd56f;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      background: #f4f4f6;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    .question-card {
+      background: #fff;
+      border: 3px solid #ececec;
+      border-radius: 26px;
+      padding: 26px 18px;
+      margin: 18px 0 20px;
+      text-align: center;
+    }
+
+    .prompt {
+      color: #555;
+      font-size: 22px;
+      margin-bottom: 18px;
+      font-weight: bold;
+    }
+
+    .question {
+      text-align: center;
+      font-size: 58px;
+      font-weight: bold;
+      margin: 10px 0;
+      letter-spacing: 1px;
+      line-height: 1.15;
+    }
+
+    .parts-line {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 8px auto;
+    }
+
+    .part {
+      display: inline-block;
+      min-width: 105px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      font-weight: bold;
+      font-size: 34px;
+      border: 2px solid rgba(0,0,0,.06);
+    }
+
+    .hundreds {
+      background: var(--hundreds);
+      color: var(--hundreds-text);
+    }
+
+    .tens {
+      background: var(--tens);
+      color: var(--tens-text);
+    }
+
+    .ones {
+      background: var(--ones);
+      color: var(--ones-text);
+    }
+
+    .plus {
+      font-size: 34px;
+      font-weight: bold;
+      color: #999;
+    }
+
+    .big-number {
+      font-size: 78px;
+      font-weight: bold;
+      color: #1d3c96;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .option {
+      font-size: 30px;
+      min-height: 96px;
+      background: #f7f8ff;
+      color: #1f2d7a;
+      border: 3px solid #e1e6ff;
+      box-shadow: 0 5px 10px rgba(0,0,0,.06);
+      line-height: 1.2;
+    }
+
+    .option.correct {
+      background: var(--ok);
+      color: white;
+      border-color: var(--ok);
+    }
+
+    .option.wrong {
+      background: var(--bad);
+      color: #555;
+      border-color: var(--bad);
+    }
+
+    .message {
+      text-align: center;
+      min-height: 30px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .stat {
+      background: #f7f7fb;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 34px;
+      margin-bottom: 4px;
+    }
+
+    .home-buttons {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      max-width: 440px;
+      margin: 24px auto 0;
+    }
+
+    .note {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .center { text-align: center; }
+
+    .gorila-card {
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 10px 4px 0;
+    }
+
+    .gorila-icon {
+      font-size: 72px;
+      margin-bottom: 4px;
+    }
+
+    .strategy-box {
+      background: #ffffff;
+      border: 2px solid #eeeeee;
+      border-radius: 24px;
+      padding: 20px;
+      margin: 18px 0;
+      text-align: center;
+    }
+
+    .strategy-main {
+      font-size: 24px;
+      line-height: 1.3;
+      font-weight: bold;
+      color: #1d3c96;
+      margin-bottom: 12px;
+    }
+
+    .arrow {
+      font-size: 34px;
+      color: #999;
+      margin: 8px 0;
+    }
+
+    .footer-note {
+      text-align: center;
+      background: #f8f8fb;
+      border: 1px solid #e4e4ea;
+      color: #666;
+      padding: 9px 12px;
+      border-radius: 14px;
+      margin-top: 20px;
+      font-size: 13px;
+      font-weight: normal;
+      line-height: 1.35;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    @media (max-width: 760px) {
+      .menu, .options, .result-grid { grid-template-columns: 1fr; }
+      .question { font-size: 40px; }
+      .big-number { font-size: 60px; }
+      .part { font-size: 28px; min-width: 90px; }
+      h1 { font-size: 30px; }
+      .app::before { letter-spacing: 3px; font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="home" class="screen active">
+      <h1>Componer y <span class="orange">descomponer</span> números</h1>
+      <p class="subtitle">Aprendé a construir y desarmar números</p>
+
+      <div class="menu">
+        <button class="big-card compose-btn" onclick="startMode('compose')">
+          <span>🧱</span>
+          Componer números
+          <small>Construí el número a partir de sus partes.</small>
+        </button>
+
+        <button class="big-card decompose-btn" onclick="startMode('decompose')">
+          <span>🔨</span>
+          Descomponer números
+          <small>Desarmá el número en centenas, decenas y unidades.</small>
+        </button>
+      </div>
+
+      <div class="home-buttons">
+        <button class="teacher-btn" onclick="showTeacher()">🦍 Modo docente: Profesor Gorila explica</button>
+      </div>
+
+      <div class="footer-note">
+        © 2026 Dante Martín · Recurso educativo creado con asistencia de IA · Licencia CC BY-NC 4.0
+      </div>
+    </section>
+
+    <section id="game" class="screen">
+      <div class="topbar">
+        <span class="pill" id="modePill">Modo</span>
+        <span class="pill" id="progressPill">1/25</span>
+        <span class="pill">Tomate tu tiempo</span>
+      </div>
+
+      <div class="question-card">
+        <div class="prompt" id="promptText">¿Qué número construyen estas partes?</div>
+        <div class="question" id="questionText"></div>
+      </div>
+
+      <div class="options" id="options"></div>
+      <div class="message" id="message"></div>
+    </section>
+
+    <section id="results" class="screen">
+      <h2>¡Terminaste!</h2>
+      <p id="resultText" class="note center"></p>
+
+      <div class="result-grid">
+        <div class="stat"><strong id="statCorrect">0</strong>Correctas</div>
+        <div class="stat"><strong id="statTotal">0</strong>Preguntas</div>
+      </div>
+
+      <div class="home-buttons">
+        <button onclick="restartSameMode()">Jugar otra vez</button>
+        <button class="light" onclick="goHome()">Volver al inicio</button>
+      </div>
+    </section>
+
+    <section id="teacher" class="screen">
+      <div class="gorila-card">
+        <div class="gorila-icon">🦍</div>
+        <h2>Profesor Gorila</h2>
+        <p class="note center">Las palabras de Matemática también se aprenden.</p>
+
+        <div class="strategy-box">
+          <h3>¿Qué significa componer?</h3>
+          <p class="strategy-main">Componer un número significa armarlo o construirlo.</p>
+          <div class="parts-line">
+            <span class="part hundreds">100</span>
+            <span class="plus">+</span>
+            <span class="part tens">20</span>
+            <span class="plus">+</span>
+            <span class="part ones">3</span>
+          </div>
+          <div class="arrow">↓</div>
+          <div class="big-number">123</div>
+        </div>
+
+        <div class="strategy-box">
+          <h3>¿Qué significa descomponer?</h3>
+          <p class="strategy-main">Descomponer un número significa desarmarlo en partes.</p>
+          <div class="big-number">356</div>
+          <div class="arrow">↓</div>
+          <div class="parts-line">
+            <span class="part hundreds">300</span>
+            <span class="plus">+</span>
+            <span class="part tens">50</span>
+            <span class="plus">+</span>
+            <span class="part ones">6</span>
+          </div>
+        </div>
+
+        <div class="strategy-box">
+          <h3>¿Para qué sirve?</h3>
+          <p class="strategy-main">
+            Sirve para entender que cada cifra tiene un valor según el lugar que ocupa.
+          </p>
+          <p class="note">
+            Usamos colores para ayudar: azul para centenas, amarillo para decenas y verde para unidades.
+          </p>
+        </div>
+
+        <button class="light" onclick="goHome()">Volver al inicio</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const screens = ["home", "game", "results", "teacher"];
+    const QUESTIONS_PER_ROUND = 25;
+
+    let currentMode = "compose";
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let correctCount = 0;
+
+    const modeNames = {
+      compose: "Componer números",
+      decompose: "Descomponer números"
+    };
+
+    function show(id) {
+      screens.forEach(s => document.getElementById(s).classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function goHome() {
+      show("home");
+    }
+
+    function shuffle(arr) {
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function numberParts(n) {
+      const hundreds = Math.floor(n / 100) * 100;
+      const tens = Math.floor((n % 100) / 10) * 10;
+      const ones = n % 10;
+      return { hundreds, tens, ones };
+    }
+
+    function partsText(n) {
+      const p = numberParts(n);
+      const parts = [];
+      if (p.hundreds > 0) parts.push(p.hundreds);
+      if (p.tens > 0) parts.push(p.tens);
+      if (p.ones > 0) parts.push(p.ones);
+      if (parts.length === 0) parts.push(0);
+      return parts.join(" + ");
+    }
+
+    function partsHTML(n) {
+      const p = numberParts(n);
+      const elements = [];
+
+      if (p.hundreds > 0) elements.push(`<span class="part hundreds">${p.hundreds}</span>`);
+      if (p.tens > 0) elements.push(`<span class="part tens">${p.tens}</span>`);
+      if (p.ones > 0) elements.push(`<span class="part ones">${p.ones}</span>`);
+      if (!elements.length) elements.push(`<span class="part ones">0</span>`);
+
+      return `<div class="parts-line">${elements.join('<span class="plus">+</span>')}</div>`;
+    }
+
+    function makeNumber() {
+      const hundreds = randomInt(1, 9) * 100;
+      const tens = randomInt(0, 9) * 10;
+      const ones = randomInt(0, 9);
+      return hundreds + tens + ones;
+    }
+
+    function makeQuestions(mode) {
+      const questions = [];
+      const used = new Set();
+
+      while (questions.length < QUESTIONS_PER_ROUND) {
+        const n = makeNumber();
+        if (used.has(n)) continue;
+        used.add(n);
+        questions.push({
+          number: n,
+          answer: mode === "compose" ? String(n) : partsText(n)
+        });
+      }
+
+      return questions;
+    }
+
+    function startMode(mode) {
+      currentMode = mode;
+      currentQuestions = makeQuestions(mode);
+      currentIndex = 0;
+      correctCount = 0;
+      show("game");
+      renderQuestion();
+    }
+
+    function restartSameMode() {
+      startMode(currentMode);
+    }
+
+    function makeComposeOptions(n) {
+      const p = numberParts(n);
+      const options = new Set([String(n)]);
+
+      const wrongs = [
+        String(p.hundreds + p.ones * 10 + Math.floor(p.tens / 10)),
+        String((Math.floor(p.hundreds / 100) * 100) + (p.ones * 10) + Math.floor(p.tens / 10)),
+        String(p.hundreds + p.tens + ((p.ones + 1) % 10)),
+        String(p.hundreds + (((Math.floor(p.tens / 10) + 1) % 10) * 10) + p.ones),
+        String(Math.max(100, n - 10)),
+        String(Math.min(999, n + 10))
+      ];
+
+      shuffle(wrongs)
+        .filter(x => x !== String(n) && Number(x) >= 0 && Number(x) <= 999)
+        .forEach(x => {
+          if (options.size < 3) options.add(x);
+        });
+
+      while (options.size < 3) options.add(String(makeNumber()));
+      return shuffle([...options]);
+    }
+
+    function makeDecomposeOptions(n) {
+      const p = numberParts(n);
+      const correct = partsText(n);
+      const options = new Set([correct]);
+
+      const wrongNums = [
+        p.hundreds + (p.ones * 10) + Math.floor(p.tens / 10),
+        Math.min(900, p.hundreds + 100) + p.tens + p.ones,
+        p.hundreds + Math.max(0, p.tens - 10) + p.ones,
+        p.hundreds + Math.min(90, p.tens + 10) + p.ones,
+        p.hundreds + p.tens + ((p.ones + 1) % 10)
+      ];
+
+      shuffle(wrongNums)
+        .map(partsText)
+        .filter(x => x !== correct)
+        .forEach(x => {
+          if (options.size < 3) options.add(x);
+        });
+
+      while (options.size < 3) options.add(partsText(makeNumber()));
+      return shuffle([...options]);
+    }
+
+    function optionHTML(value) {
+      if (value.includes("+")) {
+        return value.split("+").map(part => part.trim()).join(" + ");
+      }
+      return value;
+    }
+
+    function renderQuestion() {
+      if (currentIndex >= currentQuestions.length) {
+        finishRound();
+        return;
+      }
+
+      const q = currentQuestions[currentIndex];
+
+      document.getElementById("modePill").textContent = modeNames[currentMode];
+      document.getElementById("progressPill").textContent = `${currentIndex + 1}/${currentQuestions.length}`;
+      document.getElementById("message").textContent = "";
+      document.getElementById("options").innerHTML = "";
+
+      if (currentMode === "compose") {
+        document.getElementById("promptText").textContent = "¿Qué número construyen estas partes?";
+        document.getElementById("questionText").innerHTML = partsHTML(q.number);
+      } else {
+        document.getElementById("promptText").textContent = "¿Cómo se puede desarmar este número?";
+        document.getElementById("questionText").innerHTML = `<div class="big-number">${q.number}</div>`;
+      }
+
+      const opts = currentMode === "compose"
+        ? makeComposeOptions(q.number)
+        : makeDecomposeOptions(q.number);
+
+      opts.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.textContent = optionHTML(opt);
+        btn.onclick = () => answerQuestion(btn, opt);
+        document.getElementById("options").appendChild(btn);
+      });
+    }
+
+    function answerQuestion(button, chosen) {
+      const buttons = document.querySelectorAll(".option");
+      buttons.forEach(b => b.disabled = true);
+
+      const q = currentQuestions[currentIndex];
+      const correct = chosen === q.answer;
+
+      if (correct) {
+        correctCount++;
+        button.classList.add("correct");
+        document.getElementById("message").textContent = currentMode === "compose"
+          ? "¡Muy bien! Construiste el número."
+          : "¡Muy bien! Desarmaste el número.";
+      } else {
+        button.classList.add("wrong");
+        document.getElementById("message").textContent = "Seguimos practicando.";
+      }
+
+      setTimeout(() => {
+        currentIndex++;
+        renderQuestion();
+      }, 750);
+    }
+
+    function finishRound() {
+      const actionText = currentMode === "compose"
+        ? "Construiste correctamente"
+        : "Desarmaste correctamente";
+
+      document.getElementById("resultText").textContent =
+        `${modeNames[currentMode]} completado. ${actionText} ${correctCount} números.`;
+
+      document.getElementById("statCorrect").textContent = correctCount;
+      document.getElementById("statTotal").textContent = currentQuestions.length;
+      show("results");
+    }
+
+    function showTeacher() {
+      show("teacher");
+    }
+  </script>
+</body>
+</html>

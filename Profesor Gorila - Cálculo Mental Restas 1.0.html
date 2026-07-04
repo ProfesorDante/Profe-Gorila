@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Restas rápidas - 2.º grado</title>
+  <style>
+    :root {
+      --bg: #fff7df;
+      --card: #ffffff;
+      --text: #242424;
+      --muted: #666;
+      --ok: #42b86b;
+      --bad: #d7d7d7;
+      --accent: #4f7cff;
+      --accent-dark: #315de0;
+      --race: #ff8a2a;
+      --race-dark: #df6810;
+      --teacher: #7b55d9;
+      --border: #ece4cf;
+      --soft: #fff1c9;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at 10% 15%, rgba(255, 185, 62, .25), transparent 22%),
+        radial-gradient(circle at 90% 20%, rgba(79, 124, 255, .18), transparent 20%),
+        linear-gradient(180deg, #fff7df, #f6f7ff);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 18px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 820px;
+      background: var(--card);
+      border-radius: 28px;
+      padding: 26px;
+      box-shadow: 0 14px 36px rgba(0,0,0,.10);
+      border: 2px solid rgba(255,255,255,.8);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app::before {
+      content: "＋  8-3  ＝  10  ✎  📘  ＋";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 10px;
+      text-align: center;
+      font-size: 23px;
+      letter-spacing: 13px;
+      color: rgba(79,124,255,.18);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    h1, h2, h3 { margin-top: 0; }
+
+    h1 {
+      font-size: 40px;
+      text-align: center;
+      margin: 28px 0 8px;
+      color: #1d3c96;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      margin-bottom: 24px;
+      font-size: 18px;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .menu {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 20px;
+      padding: 18px 20px;
+      font-size: 20px;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      font-weight: bold;
+      transition: transform .05s ease, opacity .2s ease, background .2s ease;
+    }
+
+    button:hover { background: var(--accent-dark); }
+    button:active { transform: scale(.98); }
+
+    button.secondary {
+      background: #eef1ff;
+      color: #3046b0;
+    }
+
+    button.secondary:hover { background: #dfe5ff; }
+
+    button.light {
+      background: #f1f1f5;
+      color: #333;
+    }
+
+    button.light:hover { background: #e4e4ea; }
+
+    .big-card {
+      min-height: 175px;
+      border: 3px solid #e9edf9;
+      background: #ffffff;
+      color: #1b2a63;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 8px 18px rgba(0,0,0,.07);
+    }
+
+    .big-card span {
+      font-size: 46px;
+      margin-bottom: 8px;
+    }
+
+    .big-card small {
+      display: block;
+      margin-top: 8px;
+      color: #565656;
+      font-size: 16px;
+      font-weight: normal;
+      line-height: 1.25;
+    }
+
+    .race-btn {
+      background: #fff3e4;
+      color: #9a3d00;
+      border-color: #ffd2a5;
+    }
+
+    .race-btn:hover { background: #ffe6cd; }
+
+    .progress-btn {
+      background: #f1ebff;
+      color: #4b2ca8;
+      border-color: #d7c7ff;
+    }
+
+    .teacher-btn {
+      background: #edf8f1;
+      color: #1f7a40;
+      border-color: #c9eed5;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      font-size: 20px;
+      margin: 8px 0 16px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .setup-box {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #fffaf0;
+      border: 2px solid var(--border);
+      border-radius: 22px;
+      padding: 20px;
+    }
+
+    .question-card {
+      background: #fff;
+      border: 3px solid #ececec;
+      border-radius: 26px;
+      padding: 26px 18px;
+      margin: 18px 0 20px;
+    }
+
+    .question {
+      text-align: center;
+      font-size: 78px;
+      font-weight: bold;
+      margin: 10px 0;
+      letter-spacing: 2px;
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .option {
+      font-size: 42px;
+      min-height: 96px;
+      background: #f7f8ff;
+      color: #1f2d7a;
+      border: 3px solid #e1e6ff;
+      box-shadow: 0 5px 10px rgba(0,0,0,.06);
+    }
+
+    .option.correct {
+      background: var(--ok);
+      color: white;
+      border-color: var(--ok);
+    }
+
+    .option.wrong {
+      background: var(--bad);
+      color: #555;
+      border-color: var(--bad);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      background: #f4f4f6;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    .race-pill {
+      background: #fff0df;
+      color: #9a3d00;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .stat {
+      background: #f7f7fb;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 30px;
+      margin-bottom: 4px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 16px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px;
+      text-align: left;
+    }
+
+    th { background: #f7f7fb; }
+
+    .note {
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .message {
+      text-align: center;
+      min-height: 28px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .footer-note {
+      text-align: center;
+      background: #f8f8fb;
+      border: 1px solid #e4e4ea;
+      color: #666;
+      padding: 9px 12px;
+      border-radius: 14px;
+      margin-top: 18px;
+      font-size: 13px;
+      font-weight: normal;
+      line-height: 1.35;
+    }
+
+    .copyright {
+      max-width: 680px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+
+    .gorila-card {
+      max-width: 620px;
+      margin: 0 auto;
+      text-align: center;
+      padding: 10px 4px 0;
+    }
+
+    .gorila-icon {
+      font-size: 72px;
+      margin-bottom: 4px;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .strategy-box,
+    .example-box {
+      background: #ffffff;
+      border: 2px solid #eeeeee;
+      border-radius: 24px;
+      padding: 20px;
+      margin: 18px 0;
+      text-align: center;
+    }
+
+    .strategy-main {
+      font-size: 26px;
+      line-height: 1.25;
+      font-weight: bold;
+      color: #1d3c96;
+      margin-bottom: 4px;
+    }
+
+    .example-sum {
+      font-size: 58px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .example-box p {
+      font-size: 22px;
+      margin: 10px 0;
+    }
+
+    .count-line {
+      font-size: 34px;
+      font-weight: bold;
+      color: #1d3c96;
+      margin: 16px 0;
+    }
+
+    .final-result {
+      font-size: 28px;
+      font-weight: bold;
+      color: #1f7a40;
+      margin-top: 16px;
+    }
+
+    .teacher-note {
+      color: #666;
+      font-size: 16px;
+      line-height: 1.4;
+      max-width: 520px;
+      margin: 18px auto;
+    }
+
+    @media (max-width: 680px) {
+      .menu, .options, .result-grid { grid-template-columns: 1fr; }
+      .question { font-size: 56px; }
+      h1 { font-size: 32px; }
+      .app::before { letter-spacing: 5px; font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section id="home" class="screen active">
+      <h1>Restas rápidas</h1>
+      <p class="subtitle">Practicá restas sencillas y mejorá poco a poco</p>
+      <div class="menu">
+        <button class="big-card" onclick="showNameScreen('practice')">
+          <span>▶</span>
+          Empezar
+          <small>25 restas para practicar</small>
+        </button>
+        <button class="big-card race-btn" onclick="showNameScreen('race')">
+          <span>🏁</span>
+          Carrera de restas
+          <small>25 restas, 20 segundos por cuenta</small>
+        </button>
+        <button class="big-card progress-btn" onclick="showProgress()">
+          <span>📈</span>
+          Mi progreso
+          <small>Mirar mis mejores rondas</small>
+        </button>
+        <button class="big-card teacher-btn" onclick="showTeacher()">
+          <span>🦍</span>
+          Modo docente
+          <small>Profesor Gorila explica cómo restar</small>
+        </button>
+      </div>
+      <div class="footer-note copyright">
+        © 2026 Dante Martín · Recurso educativo creado con asistencia de IA · Licencia CC BY-NC 4.0
+      </div>
+    </section>
+
+    <section id="nameScreen" class="screen">
+      <div class="setup-box">
+        <h2 id="nameTitle">Antes de empezar</h2>
+        <p id="nameInfo" class="note">Esta ronda tiene 25 restas elegidas entre combinaciones de 0 a 10, sin resultados negativos.</p>
+        <label>Nombre del alumno/a</label>
+        <input id="studentName" placeholder="Escribí tu nombre" autocomplete="off" />
+        <button onclick="startGame()">Comenzar</button>
+        <button class="light" onclick="goHome()">Volver</button>
+      </div>
+    </section>
+
+    <section id="game" class="screen">
+      <div class="topbar">
+        <span class="pill" id="playerPill">Alumno/a</span>
+        <span class="pill" id="modePill">Modo</span>
+        <span class="pill" id="progressPill">1/25</span>
+        <span class="pill" id="timerPill">Tiempo</span>
+      </div>
+
+      <div class="question-card">
+        <div class="question" id="questionText">8 - 3</div>
+      </div>
+
+      <div class="options" id="options"></div>
+
+      <div class="message" id="message"></div>
+    </section>
+
+    <section id="results" class="screen">
+      <h2>Resultado de la ronda</h2>
+      <p id="resultName" class="note"></p>
+
+      <div class="result-grid">
+        <div class="stat"><strong id="statCorrect">0</strong>Correctas</div>
+        <div class="stat"><strong id="statWrong">0</strong>Incorrectas</div>
+        <div class="stat"><strong id="statTime">0s</strong>Tiempo</div>
+      </div>
+
+      <h3>Análisis docente rápido</h3>
+      <p id="analysisText" class="note"></p>
+
+      <div id="wrongList"></div>
+
+      <div class="menu">
+        <button id="reviewBtn" onclick="startReview()">Repasar errores</button>
+        <button class="secondary" onclick="goHome()">Volver al inicio</button>
+      </div>
+    </section>
+
+    <section id="progress" class="screen">
+      <h2>Mi progreso</h2>
+      <label>Nombre del alumno/a</label>
+      <input id="progressName" placeholder="Escribí tu nombre" />
+      <button onclick="loadProgress()">Ver progreso</button>
+      <div id="progressContent"></div>
+      <button class="light" onclick="goHome()">Volver</button>
+    </section>
+
+    <section id="teacher" class="screen">
+      <div class="gorila-card">
+        <div class="gorila-icon">🦍</div>
+        <h2>Profesor Gorila</h2>
+        <p class="note center">Una estrategia sencilla para empezar a restar mejor.</p>
+
+        <div class="strategy-box">
+          <h3>¿Cómo enseño a restar?</h3>
+          <p class="strategy-main">
+            Guardá el número de arriba en tu mente y sacá el otro con los dedos.
+          </p>
+        </div>
+
+        <div class="example-box">
+          <div class="example-sum">9 - 4</div>
+          <p>🧠 Guardo el <strong>9</strong> en mi mente.</p>
+          <p>✋ Levanto <strong>4 dedos</strong> para ir sacando.</p>
+          <p>Mientras bajo un dedo, cuento hacia atrás:</p>
+          <div class="count-line">8 → 7 → 6 → 5</div>
+          <div class="final-result">✅ Resultado: 5</div>
+        </div>
+
+        <p class="teacher-note">
+          Esta estrategia ayuda a que los chicos comprendan que restar es sacar y puedan hacerlo paso a paso.
+        </p>
+
+        <button class="light" onclick="goHome()">Volver al inicio</button>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const QUESTION_COUNT = 25;
+    const SECONDS_PER_RACE_QUESTION = 20;
+
+    const screens = ["home", "nameScreen", "game", "results", "progress", "teacher"];
+    const allQuestions = [];
+    for (let a = 0; a <= 10; a++) {
+      for (let b = 0; b <= a; b++) {
+        allQuestions.push({ a, b, answer: a - b });
+      }
+    }
+
+    let currentMode = "practice";
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let currentStudent = "";
+    let currentResults = [];
+    let startTime = 0;
+    let questionStartTime = 0;
+    let timer = null;
+    let remainingSeconds = 0;
+    let lastWrongQuestions = [];
+    let isReviewRound = false;
+
+    function show(id) {
+      screens.forEach(s => document.getElementById(s).classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+    }
+
+    function goHome() {
+      clearInterval(timer);
+      show("home");
+    }
+
+    function showNameScreen(mode) {
+      currentMode = mode;
+      document.getElementById("nameTitle").textContent = mode === "race" ? "Carrera de restas" : "Práctica";
+      document.getElementById("nameInfo").textContent = mode === "race"
+        ? "Vas a resolver 25 restas. Tenés 20 segundos para cada cuenta."
+        : "Vas a resolver 25 restas elegidas entre combinaciones de 0 a 10, sin resultados negativos.";
+      show("nameScreen");
+      setTimeout(() => document.getElementById("studentName").focus(), 100);
+    }
+
+    function shuffle(arr) {
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
+
+    function sampleQuestions(count) {
+      const shuffled = shuffle(allQuestions);
+      return shuffled.slice(0, Math.min(count, shuffled.length));
+    }
+
+    function startGame() {
+      const name = document.getElementById("studentName").value.trim();
+      if (!name) {
+        alert("Primero escribí el nombre del alumno/a.");
+        return;
+      }
+
+      currentStudent = name;
+      currentIndex = 0;
+      currentResults = [];
+      lastWrongQuestions = [];
+      isReviewRound = false;
+      startTime = Date.now();
+      currentQuestions = sampleQuestions(QUESTION_COUNT);
+
+      clearInterval(timer);
+      if (currentMode === "race") {
+        remainingSeconds = SECONDS_PER_RACE_QUESTION;
+      }
+
+      show("game");
+      renderQuestion();
+    }
+
+    function generateOptions(correct) {
+      const options = new Set([correct]);
+      const near = [correct - 1, correct + 1, correct - 2, correct + 2, correct + 3, correct - 3]
+        .filter(n => n >= 0 && n <= 10);
+      shuffle(near).forEach(n => {
+        if (options.size < 3) options.add(n);
+      });
+      while (options.size < 3) {
+        options.add(Math.floor(Math.random() * 11));
+      }
+      return shuffle([...options]);
+    }
+
+    function renderQuestion() {
+      clearInterval(timer);
+
+      if (currentIndex >= currentQuestions.length) {
+        finishGame();
+        return;
+      }
+
+      const q = currentQuestions[currentIndex];
+      questionStartTime = Date.now();
+      document.getElementById("questionText").textContent = `${q.a} - ${q.b}`;
+      document.getElementById("message").textContent = "";
+      document.getElementById("options").innerHTML = "";
+
+      generateOptions(q.answer).forEach(opt => {
+        const btn = document.createElement("button");
+        btn.className = "option";
+        btn.textContent = opt;
+        btn.onclick = () => answerQuestion(btn, opt, false);
+        document.getElementById("options").appendChild(btn);
+      });
+
+      if (currentMode === "race") {
+        remainingSeconds = SECONDS_PER_RACE_QUESTION;
+        timer = setInterval(() => {
+          remainingSeconds--;
+          updateTopbar();
+          if (remainingSeconds <= 0) {
+            timeOutQuestion();
+          }
+        }, 1000);
+      }
+
+      updateTopbar();
+    }
+
+    function updateTopbar() {
+      document.getElementById("playerPill").textContent = currentStudent;
+      document.getElementById("modePill").textContent = currentMode === "race" ? "Carrera de restas" : "Práctica";
+      document.getElementById("modePill").className = currentMode === "race" ? "pill race-pill" : "pill";
+      document.getElementById("progressPill").textContent = `${currentIndex + 1}/${currentQuestions.length}`;
+      document.getElementById("timerPill").textContent = currentMode === "race" ? `${remainingSeconds}s` : "Sin presión";
+      document.getElementById("timerPill").className = currentMode === "race" ? "pill race-pill" : "pill";
+    }
+
+    function answerQuestion(button, chosen, timedOut) {
+      clearInterval(timer);
+      const buttons = document.querySelectorAll(".option");
+      buttons.forEach(b => b.disabled = true);
+
+      const q = currentQuestions[currentIndex];
+      const correct = chosen === q.answer;
+      const responseTime = (Date.now() - questionStartTime) / 1000;
+
+      if (timedOut) {
+        document.getElementById("message").textContent = "Se terminó el tiempo. Seguimos.";
+        lastWrongQuestions.push(q);
+      } else if (correct) {
+        button.classList.add("correct");
+        document.getElementById("message").textContent = "¡Bien!";
+      } else {
+        button.classList.add("wrong");
+        document.getElementById("message").textContent = "Seguimos practicando.";
+        lastWrongQuestions.push(q);
+      }
+
+      currentResults.push({
+        student: currentStudent,
+        mode: currentMode,
+        a: q.a,
+        b: q.b,
+        correctAnswer: q.answer,
+        chosen: timedOut ? "Sin responder" : chosen,
+        correct: timedOut ? false : correct,
+        timedOut,
+        difference: timedOut ? "" : chosen - q.answer,
+        responseTime: responseTime.toFixed(2),
+        date: new Date().toLocaleString()
+      });
+
+      setTimeout(() => {
+        currentIndex++;
+        renderQuestion();
+      }, 650);
+    }
+
+    function timeOutQuestion() {
+      clearInterval(timer);
+      const buttons = document.querySelectorAll(".option");
+      buttons.forEach(b => b.disabled = true);
+      answerQuestion(null, null, true);
+    }
+
+    function finishGame() {
+      clearInterval(timer);
+      saveRound();
+      renderResults();
+      show("results");
+    }
+
+    function saveRound() {
+      if (isReviewRound) return;
+      const data = JSON.parse(localStorage.getItem("sumasRapidasData") || "[]");
+      data.push({
+        student: currentStudent,
+        mode: currentMode,
+        date: new Date().toLocaleString(),
+        total: currentResults.length,
+        correct: currentResults.filter(r => r.correct).length,
+        wrong: currentResults.filter(r => !r.correct).length,
+        duration: ((Date.now() - startTime) / 1000).toFixed(1),
+        details: currentResults
+      });
+      localStorage.setItem("sumasRapidasData", JSON.stringify(data));
+    }
+
+    function renderResults() {
+      const correct = currentResults.filter(r => r.correct).length;
+      const wrong = currentResults.filter(r => !r.correct).length;
+      const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+
+      document.getElementById("resultName").textContent = isReviewRound
+        ? `${currentStudent} - Repaso de errores`
+        : `${currentStudent} - ${currentMode === "race" ? "Carrera de restas" : "Práctica"}`;
+      document.getElementById("statCorrect").textContent = correct;
+      document.getElementById("statWrong").textContent = wrong;
+      document.getElementById("statTime").textContent = `${duration}s`;
+
+      const wrongs = currentResults.filter(r => !r.correct);
+      document.getElementById("reviewBtn").style.display = (wrongs.length && !isReviewRound) ? "block" : "none";
+
+      const minusOne = wrongs.filter(r => r.difference === -1).length;
+      const plusOne = wrongs.filter(r => r.difference === 1).length;
+      const overTen = wrongs.filter(r => r.correctAnswer > 10).length;
+      const timeOuts = wrongs.filter(r => r.timedOut).length;
+
+      let analysis = "No se observan errores en esta ronda.";
+      if (wrongs.length) {
+        analysis = `Hubo ${wrongs.length} error/es. `;
+        if (timeOuts >= 1) analysis += `Quedaron ${timeOuts} cuenta/s sin responder por tiempo. `;
+        if (minusOne >= 2) analysis += "Aparece varias veces el patrón de responder uno menos. ";
+        if (plusOne >= 2) analysis += "Aparece varias veces el patrón de responder uno más. ";
+        if (overTen >= 2) analysis += "Conviene reforzar restas con números más grandes. ";
+        if (minusOne < 2 && plusOne < 2 && overTen < 2 && timeOuts === 0) analysis += "Por ahora parecen errores variados o de atención.";
+      }
+      document.getElementById("analysisText").textContent = analysis;
+
+      if (!wrongs.length) {
+        document.getElementById("wrongList").innerHTML = "";
+        return;
+      }
+
+      let html = "<h3>Cuentas con error</h3><table><tr><th>Cuenta</th><th>Eligió</th><th>Diferencia</th><th>Tiempo</th></tr>";
+      wrongs.forEach(r => {
+        html += `<tr><td>${r.a} + ${r.b}</td><td>${r.chosen}</td><td>${r.difference}</td><td>${r.responseTime}s</td></tr>`;
+      });
+      html += "</table>";
+      document.getElementById("wrongList").innerHTML = html;
+    }
+
+    function startReview() {
+      if (!lastWrongQuestions.length) return;
+      currentMode = "practice";
+      currentQuestions = shuffle(lastWrongQuestions);
+      currentIndex = 0;
+      currentResults = [];
+      isReviewRound = true;
+      startTime = Date.now();
+      clearInterval(timer);
+      show("game");
+      renderQuestion();
+    }
+
+    function showProgress() {
+      document.getElementById("progressContent").innerHTML = "";
+      show("progress");
+    }
+
+    function loadProgress() {
+      const name = document.getElementById("progressName").value.trim().toLowerCase();
+      const data = JSON.parse(localStorage.getItem("sumasRapidasData") || "[]");
+      const rounds = data.filter(r => r.student.toLowerCase() === name);
+
+      if (!name) {
+        alert("Escribí un nombre.");
+        return;
+      }
+
+      if (!rounds.length) {
+        document.getElementById("progressContent").innerHTML = "<p class='note'>Todavía no hay registros para ese nombre.</p>";
+        return;
+      }
+
+      const bestAccuracy = [...rounds].sort((a,b) => (b.correct/b.total) - (a.correct/a.total))[0];
+      const latest = rounds[rounds.length - 1];
+
+      let html = `<div class="result-grid">
+        <div class="stat"><strong>${rounds.length}</strong>Rondas</div>
+        <div class="stat"><strong>${latest.correct}/${latest.total}</strong>Última</div>
+        <div class="stat"><strong>${Math.round((bestAccuracy.correct/bestAccuracy.total)*100)}%</strong>Mejor precisión</div>
+      </div>`;
+
+      html += "<h3>Últimas rondas</h3><table><tr><th>Fecha</th><th>Modo</th><th>Correctas</th><th>Tiempo</th></tr>";
+      rounds.slice(-8).reverse().forEach(r => {
+        const modeName = r.mode === "race" ? "Carrera de restas" : "Práctica";
+        html += `<tr><td>${r.date}</td><td>${modeName}</td><td>${r.correct}/${r.total}</td><td>${r.duration}s</td></tr>`;
+      });
+      html += "</table>";
+
+      document.getElementById("progressContent").innerHTML = html;
+    }
+
+    function showTeacher() {
+      show("teacher");
+    }
+
+    function downloadCSV() {
+      const data = JSON.parse(localStorage.getItem("sumasRapidasData") || "[]");
+      const rows = [["Alumno","Fecha","Modo","Cuenta","Respuesta correcta","Eligio","Correcta","Diferencia","Tiempo respuesta","Sin responder por tiempo"]];
+      data.forEach(round => {
+        round.details.forEach(d => {
+          const modeName = d.mode === "race" ? "Carrera de restas" : "Práctica";
+          rows.push([d.student,d.date,modeName,`${d.a}-${d.b}`,d.correctAnswer,d.chosen,d.correct ? "SI" : "NO",d.difference,d.responseTime,d.timedOut ? "SI" : "NO"]);
+        });
+      });
+
+      const csv = rows.map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+      const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "registro_sumas_rapidas.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function clearData() {
+      if (confirm("¿Seguro que querés borrar todos los registros guardados en este navegador?")) {
+        localStorage.removeItem("sumasRapidasData");
+        showTeacher();
+      }
+    }
+  </script>
+</body>
+</html>
