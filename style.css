@@ -160,3 +160,78 @@ footer{
     font-size:.9rem;
 
 }
+/* =======================================================
+   PÁGINAS DE ÁREAS
+======================================================= */
+
+.encabezado-area{
+
+    text-align:center;
+
+    padding:40px 20px 20px;
+
+}
+
+.encabezado-area h1{
+
+    font-size:2rem;
+
+}
+
+.encabezado-area h2{
+
+    margin-top:10px;
+
+    color:#2F3A45;
+
+    font-size:2.3rem;
+
+}
+
+
+
+/* Iconos grandes */
+
+.icono{
+
+    font-size:3rem;
+
+    margin-bottom:15px;
+
+}
+
+
+
+/* Botón volver */
+
+.volver{
+
+    text-align:center;
+
+    margin:40px 0 60px;
+
+}
+
+.boton-volver{
+
+    display:inline-block;
+
+    background:#4A90E2;
+
+    color:white;
+
+    text-decoration:none;
+
+    padding:14px 28px;
+
+    border-radius:12px;
+
+    transition:.25s;
+
+}
+
+.boton-volver:hover{
+
+    background:#5BA3F0;
+
+}
