@@ -265,14 +265,20 @@ footer{
 
 /* MOBILE */
 @media (max-width: 768px) {
+
   body {
-    padding-bottom: 160px;
+    padding-bottom: 120px;
   }
 
   .nav-botones {
-    width: 95%;
     left: 50%;
     transform: translateX(-50%);
-    justify-content: space-around;
+    width: calc(100% - 24px);
+    max-width: 420px;
+
+    display: flex;
+    justify-content: space-between;
+
+    bottom: 10px;
   }
 }
