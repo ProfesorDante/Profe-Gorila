@@ -32,32 +32,46 @@
 
     * { box-sizing: border-box; }
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background:
-        radial-gradient(circle at 10% 15%, rgba(255, 185, 62, .25), transparent 22%),
-        radial-gradient(circle at 90% 20%, rgba(79, 124, 255, .18), transparent 20%),
-        linear-gradient(180deg, #fff7df, #f6f7ff);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 18px;
-    }
+    body{
+    margin:0;
+    font-family:Arial,sans-serif;
 
-    .app {
-      width: 100%;
-      max-width: 900px;
-      background: var(--card);
-      border-radius: 28px;
-      padding: 26px;
-      box-shadow: 0 14px 36px rgba(0,0,0,.10);
-      border: 2px solid rgba(255,255,255,.8);
-      position: relative;
-      overflow: hidden;
-    }
+    background:
+      radial-gradient(circle at 10% 15%, rgba(255,185,62,.25), transparent 22%),
+      radial-gradient(circle at 90% 20%, rgba(79,124,255,.18), transparent 20%),
+      linear-gradient(180deg,#fff7df,#f6f7ff);
+
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:18px;
+
+    padding-bottom:140px;
+}
+
+ .app{
+
+    width:100%;
+    max-width:900px;
+
+    background:white;
+
+    border-radius:28px;
+
+    padding:26px;
+
+    box-shadow:0 14px 36px rgba(0,0,0,.10);
+
+    position:relative;
+
+    overflow:hidden;
+
+    margin-bottom:40px;
+
+}
 
     .app::before {
       content: "100 + 20 + 3  =  123  🦍  356 = 300 + 50 + 6";
