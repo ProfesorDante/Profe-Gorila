@@ -241,8 +241,10 @@ footer{
   bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
+
   display: flex;
   gap: 12px;
+
   z-index: 9999;
 
   background: white;
@@ -252,5 +254,6 @@ footer{
 
   width: calc(100% - 24px);
   max-width: 420px;
-  justify-content: space-between;
+
+  justify-content: space-around;
 }
