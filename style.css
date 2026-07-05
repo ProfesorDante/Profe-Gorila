@@ -237,32 +237,8 @@ footer{
 }
 
 .nav-botones {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
-}
-@media (max-width: 768px) {
-    .nav-botones {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        padding: 10px;
-        justify-content: space-around;
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
-    }
-
-    body {
-        padding-bottom: 70px;
-    }
-}
-
-
-.nav-botones {
     position: fixed;
-    bottom: 15px;
+    bottom: 10px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -280,7 +256,10 @@ footer{
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
-/* MOBILE */
+.nav-botones a:hover {
+    background: #357ad6;
+}
+
 @media (max-width: 768px) {
     .nav-botones {
         bottom: 10px;
@@ -289,7 +268,6 @@ footer{
         transform: none;
         left: 0;
     }
-}
 
     body {
         padding-bottom: 80px;
