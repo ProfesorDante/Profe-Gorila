@@ -273,3 +273,45 @@ footer{
     border-radius: 10px;
     font-weight: bold;
 }
+
+.nav-botones {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 25px auto 10px;
+    padding: 10px;
+    flex-wrap: wrap;
+}
+
+.nav-botones a {
+    text-decoration: none;
+    padding: 12px 18px;
+    background: #4A90E2;
+    color: white;
+    border-radius: 12px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.nav-botones a:hover {
+    background: #357ad6;
+}
+
+/* 👇 ESTO ES CLAVE PARA CELULAR */
+@media (max-width: 768px) {
+    .nav-botones {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: white;
+        border-top: 1px solid #ddd;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.15);
+        justify-content: space-around;
+        margin: 0;
+    }
+
+    body {
+        padding-bottom: 80px;
+    }
+}
