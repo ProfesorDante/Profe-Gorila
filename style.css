@@ -258,21 +258,7 @@ footer{
         padding-bottom: 70px;
     }
 }
-.nav-botones {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 20px;
-}
 
-.nav-botones a {
-    text-decoration: none;
-    padding: 10px 16px;
-    background: #4A90E2;
-    color: white;
-    border-radius: 10px;
-    font-weight: bold;
-}
 
 .nav-botones {
     display: flex;
@@ -297,7 +283,6 @@ footer{
     background: #357ad6;
 }
 
-/* 👇 ESTO ES CLAVE PARA CELULAR */
 @media (max-width: 768px) {
     .nav-botones {
         position: fixed;
