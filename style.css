@@ -265,6 +265,10 @@ footer{
 
 /* MOBILE */
 @media (max-width: 768px) {
+  body {
+    padding-bottom: 160px;
+  }
+
   .nav-botones {
     width: 95%;
     left: 50%;
