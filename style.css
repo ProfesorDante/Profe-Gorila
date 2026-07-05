@@ -289,15 +289,21 @@ footer{
 @media (max-width:768px){
 
     body{
-
         padding-bottom:160px;
-
     }
 
     .nav-botones{
-
         width:95%;
-
     }
 
+}
+
+.nav-botones{
+    display:flex !important;
+    flex-direction:row !important;
+    align-items:center;
+}
+
+.nav-botones a{
+    display:block !important;
 }
