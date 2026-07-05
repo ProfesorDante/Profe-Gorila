@@ -248,7 +248,7 @@ footer{
   z-index: 9999;
 
   background: white;
-  padding: 14px 18px;
+  padding: 10px 14px;
   border-radius: 16px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.15);
 
@@ -256,4 +256,17 @@ footer{
   max-width: 420px;
 
   justify-content: space-around;
+}
+
+.nav-botones a {
+  text-decoration: none;
+  padding: 14px 18px;
+  background: #4A90E2;
+  color: white;
+  border-radius: 14px;
+  font-weight: bold;
+  font-size: 16px;
+
+  flex: 1;
+  text-align: center;
 }
