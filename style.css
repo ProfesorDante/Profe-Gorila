@@ -248,7 +248,7 @@ footer{
   z-index: 9999;
 
   background: white;
-  padding: 10px 14px;
+  padding: 14px 16px;
   border-radius: 16px;
   box-shadow: 0 6px 18px rgba(0,0,0,0.15);
 
@@ -265,7 +265,7 @@ footer{
   color: white;
   border-radius: 14px;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 18px;
 
   flex: 1;
   text-align: center;
