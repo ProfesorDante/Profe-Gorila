@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>Camino a la Escuela - Beta</title>
+<title>Camino a la Escuela - Beta 0.9 Mobile Polish</title>
 <style>
 *{box-sizing:border-box}
 body{
@@ -43,12 +43,83 @@ button:active{transform:translateY(3px);box-shadow:0 2px #222}
   .pill{font-size:12px;padding:6px 8px}.bar{width:76px}.card h1{font-size:25px}.card p{font-size:16px}
   .buttons{grid-template-columns:1fr}.controlBtn{min-height:62px;font-size:15px}
 }
+
+html, body, .wrap, .gameArea, canvas, button, .controls, .controlBtn, .hud, .pill, .tip {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+body {
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+.controls {
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+}
+.controlBtn {
+  border-radius: 999px;
+  min-height: 66px;
+  font-size: 30px;
+  line-height: 1;
+  padding: 12px;
+  background: radial-gradient(circle at 35% 28%, #5b8eea, #315c99 65%, #1d3763);
+  border: 3px solid #93b7ff;
+  box-shadow: 0 6px 0 #172744, 0 10px 18px rgba(0,0,0,.28);
+  text-shadow: 0 2px rgba(0,0,0,.35);
+}
+.controlBtn.jump {
+  background: radial-gradient(circle at 35% 28%, #67d15e, #3b7f34 65%, #24551f);
+  border-color: #a9f09f;
+}
+.controlBtn.down {
+  background: radial-gradient(circle at 35% 28%, #8e98aa, #596273 65%, #343b48);
+  border-color: #c6ccd6;
+}
+.controlBtn.pressed, .controlBtn:active {
+  transform: translateY(4px) scale(.98);
+  box-shadow: 0 2px 0 #172744, 0 5px 10px rgba(0,0,0,.28);
+}
+@media (max-width: 760px) {
+  body { padding: 3px; align-items: flex-start; overflow: hidden; }
+  .wrap { border-radius: 12px; max-width: 100%; }
+  .top { padding: 7px; gap: 5px; }
+  .title { font-size: 14px; width: 100%; text-align: center; }
+  .hud { width: 100%; justify-content: center; gap: 5px; }
+  .pill { font-size: 11px; padding: 4px 6px; border-radius: 10px; }
+  .bar { width: 58px; height: 13px; }
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    padding: 12px 18px 16px;
+    background: linear-gradient(180deg,#151e34,#0f1728);
+  }
+  .controlBtn { min-height: 70px; font-size: 32px; padding: 8px; }
+  #leftBtn { order: 1; }
+  #jumpBtn { order: 2; }
+  #rightBtn { order: 3; }
+  #downBtn { display: none; }
+  .tip { font-size: 11px; padding: 7px; }
+  .credit { font-size: 10px; padding: 5px; }
+  .card { padding: 16px; border-radius: 16px; }
+  .card h1 { font-size: 24px; }
+  .card p { font-size: 15px; }
+}
+@media (max-width: 430px) {
+  .controls { gap: 10px; padding: 10px 12px 13px; }
+  .controlBtn { min-height: 62px; font-size: 29px; }
+  .pill { font-size: 10px; }
+  .tip { display:none; }
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="title">🦍 CAMINO A LA ESCUELA · BETA</div>
+    <div class="title">🦍 CAMINO A LA ESCUELA · BETA 0.9</div>
     <div class="hud">
       <div class="pill">Mundo: <span id="worldName">Sendero</span></div>
       <div class="pill">❤️ <span class="bar"><span id="heartFill" class="fill"></span></span></div>
@@ -65,7 +136,7 @@ button:active{transform:translateY(3px);box-shadow:0 2px #222}
       <div class="card">
         <h1>🌴 El Camino a la Escuela</h1>
         <p>Cada mañana, el profe recorre el camino hacia la escuela. En el trayecto va encontrándose con sus alumnitos, que se suman a la aventura hasta llegar todos juntos al aula.</p>
-        <p>Cada mañana, el profe camina hacia la escuela. En el camino se encuentra con sus alumnitos y juntos continúan la aventura hasta llegar al aula.</p><p style='font-size:14px;color:#5b361d'><strong>Estado:</strong> versión lista para recibir sprites definitivos.</p>
+        <p>Cada mañana, el profe camina hacia la escuela. En el camino se encuentra con sus alumnitos y juntos continúan la aventura hasta llegar al aula.</p><p style='font-size:14px;color:#5b361d'><strong>Estado:</strong> versión beta optimizada para PC, tablet y celular.</p>
         <div class="buttons">
           <button onclick="startGame()">▶ Jugar</button>
           <button class="secondary" onclick="toggleMusic()">🎵 Música: <span id="musicLabel">suave</span></button>
@@ -86,21 +157,74 @@ button:active{transform:translateY(3px);box-shadow:0 2px #222}
   </div>
 
   <div class="controls">
-    <button class="controlBtn secondary" id="leftBtn">⬅</button>
-    <button class="controlBtn" id="jumpBtn">⬆ SALTAR / SUBIR</button>
-    <button class="controlBtn secondary" id="downBtn">⬇ BAJAR</button>
-    <button class="controlBtn secondary" id="rightBtn">➡</button>
+    <button class="controlBtn secondary" id="leftBtn" aria-label="Mover a la izquierda">◀</button>
+    <button class="controlBtn jump" id="jumpBtn" aria-label="Saltar">▲</button>
+    <button class="controlBtn secondary down" id="downBtn" aria-label="Bajar">▼</button>
+    <button class="controlBtn secondary" id="rightBtn" aria-label="Mover a la derecha">▶</button>
   </div>
-  <div class="tip">VERSIÓN v2 LIMPIA · PC: flechas o barra espaciadora · En las lianas usá ↑ y ↓ · Hay secretos que no se anuncian 😉</div>
+  <div class="tip">VERSIÓN v2 LIMPIA · PC: flechas o barra espaciadora · Tablet/celu: botones grandes · Hay secretos 😉</div>
   <div class="credit">© 2026 Dante Martín. Todos los derechos reservados. Proyecto desarrollado con asistencia de IA.</div>
 </div>
 
 <script>
+
+
+const PROFE_SHEET_SRC = "data:image/png;base64,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";
+const PROFE_FRAME = 64;
+const PROFE_COLS = 6;
+const PROFE_FRAME_MAP = {'idle1': 0, 'idle2': 1, 'idle3': 2, 'idle4': 3, 'walk1': 4, 'walk2': 5, 'walk3': 6, 'walk4': 7, 'walk5': 8, 'walk6': 9, 'jump': 10, 'fall': 11, 'climb1': 12, 'climb2': 13, 'hug': 14, 'dance1': 15, 'dance2': 16};
+const profeSheet = new Image();
+let profeSheetReady = false;
+profeSheet.onload = () => profeSheetReady = true;
+profeSheet.src = PROFE_SHEET_SRC;
+function spriteFrameName(){
+  if(player.state==="nap" || player.state==="uke") return null;
+  if(player.onVine) return Math.floor(elapsed*8)%2===0 ? "climb1" : "climb2";
+  if(!player.onGround) return player.vy<0 ? "jump" : "fall";
+  if(player.state==="hug") return "hug";
+  if(player.state==="dance") return Math.floor(elapsed*8)%2===0 ? "dance1" : "dance2";
+  if(Math.abs(player.vx)>25){
+    const arr=["walk1","walk2","walk3","walk4","walk5","walk6"];
+    return arr[Math.floor(player.walkFrame)%arr.length];
+  }
+  const idle=["idle1","idle2","idle3","idle4"];
+  return idle[Math.floor(elapsed*2)%idle.length];
+}
+function drawProfeSprite(frameName, x, y, flip){
+  const idx=PROFE_FRAME_MAP[frameName];
+  if(idx===undefined || !profeSheetReady) return false;
+  const sx=(idx%PROFE_COLS)*PROFE_FRAME;
+  const sy=Math.floor(idx/PROFE_COLS)*PROFE_FRAME;
+  ctx.save();
+  ctx.imageSmoothingEnabled=false;
+  if(flip){
+    ctx.translate(x+76,y-14);
+    ctx.scale(-1,1);
+    ctx.drawImage(profeSheet,sx,sy,PROFE_FRAME,PROFE_FRAME,0,0,76,96);
+  }else{
+    ctx.drawImage(profeSheet,sx,sy,PROFE_FRAME,PROFE_FRAME,x-9,y-14,76,96);
+  }
+  ctx.restore();
+  return true;
+}
+
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 const W=canvas.width,H=canvas.height;
 
 const keys={left:false,right:false,jump:false,down:false};
+
+document.addEventListener("contextmenu", e => e.preventDefault(), {passive:false});
+document.addEventListener("selectstart", e => e.preventDefault(), {passive:false});
+document.addEventListener("dragstart", e => e.preventDefault(), {passive:false});
+document.addEventListener("gesturestart", e => e.preventDefault(), {passive:false});
+let lastTouchEnd = 0;
+document.addEventListener("touchend", e => {
+  const now = Date.now();
+  if(now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, {passive:false});
+
 const worldNames={1:"Sendero",2:"Gran árbol",3:"Copas"};
 
 let running=false,last=0,elapsed=0,totalTime=600;
@@ -110,14 +234,14 @@ let musicOn=true,layers=4,wind=0,windClock=0;
 let platforms=[],items=[],vines=[],particles=[],followers=[];
 let secrets={uke:false,gold:false,nap:false,hum:false,rain:false,butterfly:false};
 
-const player={x:80,y:360,w:58,h:78,vx:0,vy:0,onGround:false,onVine:false,facing:1,idle:0,state:"run",stateTimer:0,spawnX:80,spawnY:360,walkFrame:0,blink:0,coyote:0,jumpBuffer:0,landTimer:0,jumpHeldTime:0,jumpCut:false};
+const player={x:80,y:360,w:58,h:78,vx:0,vy:0,onGround:false,onVine:false,facing:1,idle:0,state:"run",stateTimer:0,spawnX:80,spawnY:360,walkFrame:0,blink:0,coyote:0,jumpBuffer:0,landTimer:0,jumpHeldTime:0,jumpCut:false,napLock:0};
 
 function showStart(){running=false;stopAudio();document.getElementById("endOverlay").style.display="none";document.getElementById("startOverlay").style.display="flex";}
 function startGame(){
   document.getElementById("startOverlay").style.display="none";
   document.getElementById("endOverlay").style.display="none";
   buildLevel();
-  Object.assign(player,{x:80,y:360,vx:0,vy:0,onGround:false,onVine:false,facing:1,idle:0,state:"run",stateTimer:0,spawnX:80,spawnY:360,walkFrame:0,blink:0,coyote:0,jumpBuffer:0,landTimer:0,jumpHeldTime:0,jumpCut:false});
+  Object.assign(player,{x:80,y:360,vx:0,vy:0,onGround:false,onVine:false,facing:1,idle:0,state:"run",stateTimer:0,spawnX:80,spawnY:360,walkFrame:0,blink:0,coyote:0,jumpBuffer:0,landTimer:0,jumpHeldTime:0,jumpCut:false,napLock:0});
   running=true;last=performance.now();elapsed=0;camX=0;camY=0;world=1;screenShake=0;
   bananas=0;rareFruits=0;students=0;heart=86;noBumps=true;message="";particles=[];followers=[];
   secrets={uke:false,gold:false,nap:false,hum:false,rain:false,butterfly:false};
@@ -194,9 +318,12 @@ function update(dt){
   player.coyote=Math.max(0,player.coyote-dt);
   player.jumpBuffer=Math.max(0,player.jumpBuffer-dt);
   player.landTimer=Math.max(0,player.landTimer-dt);
+  player.napLock=Math.max(0,player.napLock-dt);
 
   if(keys.jump) player.jumpBuffer=.12;
   if(player.stateTimer<=0&&!player.onVine&&player.state!=="nap")player.state="run";
+
+  if(player.state==="nap" && player.stateTimer>0){ keys.left=false; keys.right=false; }
 
   const vine=findVine();
   if(vine&&(keys.jump||keys.down||player.onVine)){
@@ -262,7 +389,7 @@ function update(dt){
   let targetX=Math.max(0,Math.min(player.x-W*.40+lookAhead,5780));
 
   let targetY;
-  const verticalLook=player.vy<-120?-32:player.vy>180?38:0;
+  const verticalLook=(player.state==="nap"||player.napLock>0)?0:(player.vy<-120?-32:player.vy>180?38:0);
   if(world===1) targetY=Math.max(-15,Math.min(player.y-H*.67+verticalLook,35));
   else if(world===2) targetY=Math.max(-1500,Math.min(player.y-H*.66+verticalLook,35));
   else targetY=Math.max(-1660,Math.min(player.y-H*.66+verticalLook,-940));
@@ -310,7 +437,7 @@ function collectAndCollide(){
       if(o.type==="golden"){bananas+=3;heart=100;secrets.gold=true;setState("dance",1.7);burst(o.x,o.y,"#fff36a",18);msg("✨ banana dorada",1300);playFanfare();}
       if(o.type==="student"){students++;heart=Math.min(100,heart+12);setState("hug",1.1);followers.push({x:o.x,y:o.y,girl:o.girl,delay:followers.length*0.18});burst(o.x,o.y,"#f08a8a",14);msg("🤗 abrazo de alumno",1100);playStudent();}
       if(o.type==="humming"){secrets.hum=true;heart=Math.min(100,heart+8);burst(o.x,o.y,"#4cc6e2",16);msg("🐦 el colibrí dejó una semillita",1500);playFanfare();}
-      if(o.type==="sunspot"){secrets.nap=true;heart=Math.min(100,heart+18);player.vx=0;player.vy=0;setState("nap",2.3);msg("☀️ siestita al sol",1500);playUkulele();}
+      if(o.type==="sunspot"){secrets.nap=true;heart=Math.min(100,heart+18);player.vx=0;player.vy=0;player.napLock=.45;setState("nap",2.3);msg("☀️ siestita al sol",1500);playUkulele();}
     }
     if(o.type==="rock"&&!o.hit&&rect(player,o)){o.hit=true;heart=Math.max(10,heart-8);noBumps=false;screenShake=5;player.vx=-player.facing*120;player.vy=-170;playBump();}
   }
@@ -752,30 +879,22 @@ function drawPlayer(){
     return;
   }
 
+  const fr=spriteFrameName();
+  if(fr && drawProfeSprite(fr,a,b+bounce,player.facing<0)){
+    if(player.state==="hug"){
+      ctx.fillStyle="#f08a8a";
+      ctx.font="28px Arial";
+      ctx.fillText("❤",a+62,b+16);
+    }
+    if(player.state==="dance"&&Math.floor(elapsed*8)%2===0){
+      ctx.fillStyle="#ffd84d";
+      ctx.font="26px Arial";
+      ctx.fillText("♪",a+64,b+5);
+    }
+    return;
+  }
+
   drawProfe(a,b+bounce);
-
-  if(player.onVine){
-    px(a+28,b+3,7,85,"#2e8a3d");
-    circ(a+23,b+24,7,"#252525");
-    circ(a+42,b+24,7,"#252525");
-  }
-
-  if(player.state==="uke"){
-    drawUkulele(a+43,b+58);
-    notes(a+82,b+26);
-  }
-
-  if(player.state==="hug"){
-    ctx.fillStyle="#f08a8a";
-    ctx.font="28px Arial";
-    ctx.fillText("❤",a+62,b+16);
-  }
-
-  if(player.state==="dance"&&Math.floor(elapsed*8)%2===0){
-    ctx.fillStyle="#ffd84d";
-    ctx.font="26px Arial";
-    ctx.fillText("♪",a+64,b+5);
-  }
 }
 
 function drawProfe(a,b){
@@ -930,7 +1049,7 @@ function drawVersionTag(){
   px(12,500,158,24,"rgba(20,28,50,.65)");
   ctx.fillStyle="#fff1cf";
   ctx.font="bold 13px Arial";
-  ctx.fillText("Art Pass 1C · mejoritas",22,517);
+  ctx.fillText("Beta 0.9 · mejoritas",22,517);
 }
 
 function drawMessage(){if(message){px(250,18,460,42,"#141c32dd");ctx.fillStyle="#fff1cf";ctx.font="bold 23px Arial";ctx.textAlign="center";ctx.fillText(message,480,47);ctx.textAlign="left";}}
@@ -964,7 +1083,29 @@ function playRain(){ensureAudio();for(let i=0;i<8;i++)tone(900+Math.random()*400
 
 window.addEventListener("keydown",e=>{if(e.code==="ArrowLeft")keys.left=true;if(e.code==="ArrowRight")keys.right=true;if(e.code==="Space"||e.code==="ArrowUp")keys.jump=true;if(e.code==="ArrowDown")keys.down=true;if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Space"].includes(e.code))e.preventDefault();});
 window.addEventListener("keyup",e=>{if(e.code==="ArrowLeft")keys.left=false;if(e.code==="ArrowRight")keys.right=false;if(e.code==="Space"||e.code==="ArrowUp")keys.jump=false;if(e.code==="ArrowDown")keys.down=false;});
-function bind(id,k){let e=document.getElementById(id),down=ev=>{ev.preventDefault();keys[k]=true},up=ev=>{ev.preventDefault();keys[k]=false};e.addEventListener("pointerdown",down);e.addEventListener("pointerup",up);e.addEventListener("pointerleave",up);e.addEventListener("pointercancel",up);}
+function bind(id,k){
+  const e=document.getElementById(id);
+  const down=ev=>{
+    ev.preventDefault();
+    ev.stopPropagation();
+    keys[k]=true;
+    e.classList.add("pressed");
+    try{ e.setPointerCapture(ev.pointerId); }catch(_){}
+  };
+  const up=ev=>{
+    ev.preventDefault();
+    ev.stopPropagation();
+    keys[k]=false;
+    e.classList.remove("pressed");
+    try{ e.releasePointerCapture(ev.pointerId); }catch(_){}
+  };
+  e.addEventListener("pointerdown",down,{passive:false});
+  e.addEventListener("pointerup",up,{passive:false});
+  e.addEventListener("pointerleave",up,{passive:false});
+  e.addEventListener("pointercancel",up,{passive:false});
+  e.addEventListener("touchstart",ev=>ev.preventDefault(),{passive:false});
+  e.addEventListener("touchmove",ev=>ev.preventDefault(),{passive:false});
+}
 bind("leftBtn","left");bind("rightBtn","right");bind("jumpBtn","jump");bind("downBtn","down");
 buildLevel();draw();
 </script>
