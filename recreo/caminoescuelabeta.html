@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>Camino a la Escuela - Beta 0.93 Landscape + Sprites</title>
+<title>Camino a la Escuela - Beta 0.94 Asset Pack HTML</title>
 <style>
 *{box-sizing:border-box}
 body{
@@ -294,7 +294,7 @@ body {
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="title">🦍 CAMINO A LA ESCUELA · BETA 0.931</div>
+    <div class="title">🦍 CAMINO A LA ESCUELA · BETA 0.941</div>
     <div class="hud">
       <div class="pill">Mundo: <span id="worldName">Sendero</span></div>
       <div class="pill">❤️ <span class="bar"><span id="heartFill" class="fill"></span></span></div>
@@ -311,7 +311,7 @@ body {
       <div class="card">
         <h1>🌴 El Camino a la Escuela</h1>
         <p>Cada mañana, el profe recorre el camino hacia la escuela. En el trayecto va encontrándose con sus alumnitos, que se suman a la aventura hasta llegar todos juntos al aula.</p>
-        <p>Cada mañana, el profe camina hacia la escuela. En el camino se encuentra con sus alumnitos y juntos continúan la aventura hasta llegar al aula.</p><p style='font-size:14px;color:#5b361d'><strong>Estado:</strong> versión beta optimizada para PC, tablet, celular vertical y celular horizontal.</p>
+        <p>Cada mañana, el profe camina hacia la escuela. En el camino se encuentra con sus alumnitos y juntos continúan la aventura hasta llegar al aula.</p><p style='font-size:14px;color:#5b361d'><strong>Estado:</strong> versión HTML único con recursos visuales embebidos, lista para copiar y pegar en GitHub.</p>
         <div class="buttons">
           <button onclick="startGame()">▶ Jugar</button>
           <button class="secondary" id="fullscreenBtn" onclick="goFullscreen()">⛶ Pantalla completa</button>
@@ -383,6 +383,27 @@ function drawProfeSprite(frameName, x, y, flip){
   }
   ctx.restore();
   return true;
+}
+
+const EMBEDDED_ASSETS_SRC={
+"banana":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABKUlEQVR4nO2Zuw3CMBRFLyzAEKlASkMdGiZgg1DRMgstVdiACWigpkGCiiGYwFSODDhO/GwwiHsqKx/73MSffABCCElJL7WAZjYeKNv27fHmdOy/R+dzMEBqGCA1DJCanw9ACCGEEEII+Q7KAqosYP2+E3KsiygvNOqcK3XOa5k2sbKAqva7q+1cX4K+zNkani9OdXlzeK3flMdlmT3IjE7ePqIAjVdsuLrq4nwyzZ531+LAi/yDlEcQ7wBlAVWt8+YDjBCNOOQ1XUN4BTD7tjMEYA/SQRxo74Ymojugy60hBPjIA4JZqEulMejajlgm9p3wvfIa8TpgNmI2LkEqDwQuZDFChMgDkX4x2VZeV7eyhZWOragDUvJsEzopvG1GcYX51ExGyD9wB/JJa4nfWd1gAAAAAElFTkSuQmCC",
+"golden":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAAB8UlEQVR4nO2ZPUvDUBSGn0gtOLnoJE7+AwfpEB3cFQV3de0/cHHwR3Su4O7HolMXO4iDv6BOIgi6OFqE66Cp6fW2TU5uYi+cBwpJP3Lfp/fk4ySgKIqiyIn+O0BWdlbnjev9i4f3sQ4z5cSZHmrpFdNvGeAS+ARmge2o3gxmll3YM3gPXEf15h5wBdxVH8kvtuAT8GH6rQbw/PMKGtc+eAYcRfXmTdVhysAleAi0Tb+1VXWYMrAFl4G5qN48/1leqj6SX2rW+hrwYvqtDb6Poo3qIymKoihKZQTRKRTpckLpB8VdTiiC4i4nFEEQdjkhCYq6nFAExV2O3U1MK9rlKIqiKEGwH+N8CvRf2/F2JWNeY2NeYwPFwyW/T29TSmHBUSGkksZ0eu3bzqM9hjRfoYZ31MAHu93B8mk3+xjGdHqDlbfjFdd3osVurswiwf0Y0z6P3R8unAz+/YP1zaGQLtlkpodmbYRcQh7J3IKDQKMEYUgS/oqmsctxkhz8VkiW6hALwgRJ+CM6lgxikL/8xSWaLE+UhPGiGcVAtm+LDzK5JQsiPXCJTxPpQdKDl4FUDgqeB6uQLCIHnm782id1HyVr/2ESOfB4Z9t15SIRdVWCVA5KuHUvFfUtllDas4kiF9w+xBIqefiSRdanlKIo08MXMDnDKxgiD2QAAAAASUVORK5CYII=",
+"apple":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAB2klEQVR4nO2YsU7DMBCGrwjeICqCLVJVdWPkAahY2JBYUHcUieehYu+GxMZEeQBGtqqqlA0EyhswmAFZcpzYvjvbCUT+Nlxz/v/47uIYIJFI/GtGsQJfnR4Jfezh9aO23mQxa8wBANitNmhd+3Rp/kjh03lumiIAcEY6NzBZzIRFOADUjAmXib1AulBgxKtM57kxzSSdGohBMkBht9qMtusSPX+7Lp2FHKWIi3EmKsP48leQtQtJk5guFOw9UIyzWrFV+UFjTlZ+1/5+Ps9aY1HeA94GdOESjAHJ8qti62DXQDHOhEn8zfFh6/+Yxm2xXLCc64vd3V4/6XPeHl8uXHHu3z8bY9TdIBvAiJdgTAA0jVBMkFKIIh4A4OTyzPq7RE8tSjqxa8AlXsI1gQVtQH0q3MVcqHGxu4AywO0QvmDWJadQrKfPjT/8w5wp97EtEjtPhVILXjvgEscRT8U7hUwiuxAPEOg43ZXYNoZfxH+dZKBvnAbUo23b+T0G6jquo/Xwd0An9i5Q46MM+Hx0+4BZF70DXdQCJfcl7BoIbYIbj2RAfyqhTPh81Ae5VgHgfej0cq0isZ3TbWZsu8ZpFtGuFin4dLlol7sYQrTnKP3dZqavd0oiMVR+AKr5ynW5lfx2AAAAAElFTkSuQmCC",
+"orange":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABlklEQVR4nO2ZsXHDMAxFkVw6tWly58KV60zgdGmygwfIQBnAO7hxZ0+Q2pULr6A6KXLUMTyAJD4hxYrxSlEE/xdAWoKJHMdxHGfG3I0R9OOVvqSx973tmmbBcqIlLMw0B0CEp7QYaTIgid+sl+Kc7fHMXkdNwAZS8TnREqkZxMS9elWyEc/NQ8pR7TheJAjoVoufC0+PuzDWHz7fNHHjbGgyocpAVnxC9/K8YwcE4mxoMlFtgAv6S3z09IdxpYnSehzQHtisl0XxAY0JZC9VGeBKZyAjHkFbSlAGuE37V0AGromigbR8pFPHEk0ZwRnoT5e6+5S/B1qaSqgkbmzxRAZ7QBI5hXgiogeLIFOJ5fj/p9C1AxuY4jitoWggfrXdHs/Vx6eWbrUYHorm1fo2SyhkwaqMQhwku1UG0jLiFkdJ52u/zKAMpHsBNRHP608XsWORo9oA9zRaTKTia9bjsP2ozwgKSPeiH/VQX0hqq2iywAkn0veGRmls5YzE2bFobN1uazEw6+ZuzGzb6xxT/sHhOM7M+QZRUqz55cVJaQAAAABJRU5ErkJggg==",
+"rock":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAABcklEQVR4nO2aPXKDMBCFXzI+UoZQUlFy2JSpUjqe3Ak3wSM0gLR/SGj2q2wPIO3bt5ZWNuA4juM4juM4ZgzjNA/jNJeexxY36wGGcZq7vlvevkT4+f56sx47B7NJLBkPgl/xuD9er0uKYTJwlPUV/ecH7r9/q88WMUoIoT5gKviYUIwSrlAdhBp8yJ4rAFsx1B68F3wq8C3OLBHxA4++7DjBx8Qloi2CaBmUWD6H2AkWvHNvLBF813fQ3lCx7KRZ71ukMq9ZCmo7watYPoas4pH1Q6iCUIPXcoFZL7AV0J4onMz/J2GWimDeDIXEgW5ti8+GpF6u/c9EWgrsZbAWpEvj5QWQki1AjfZfkLjAHVB6AlpwXdCMAABPhCwBaq5/KU05AKC7oDkBAJoISQFatj/QqAOAfBc0K0Buj3AowFXtT2mQmnMAtTtMXpj6ja8mOK1x9sW1lwP3XIB8IALU5wbJoQj7WJxznxW1/NfAcZzr8QTPY74wES/bSQAAAABJRU5ErkJggg==",
+"leaf":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhElEQVR4nGNgGAWjYBSMglEwCkY6YCRVw7Q78f87O07jVfNwzjWizSVKoXyK1n8Yu7zCFC5OyCHEOIagA5AtZ2BgYFB3k2JgYGBgCDCShottOPcURc/NXc+IdgTJIYAOCIUIxSFArGOQHZKlspBkc6kGpt2Jxxlao2AUjIJRMApGATYAAIJsJdb144NZAAAAAElFTkSuQmCC"
+};
+
+const embeddedAssets={};
+Object.keys(EMBEDDED_ASSETS_SRC).forEach(k=>{const im=new Image();im.src=EMBEDDED_ASSETS_SRC[k];embeddedAssets[k]=im;});
+function assetReady(name){const im=embeddedAssets[name];return im&&im.complete&&im.naturalWidth>0;}
+function drawAsset(name,x,y,w,h){
+  if(assetReady(name)){
+    ctx.save();ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(embeddedAssets[name],Math.round(x),Math.round(y),Math.round(w),Math.round(h));
+    ctx.restore();return true;
+  }
+  return false;
 }
 
 const canvas=document.getElementById("game");
@@ -914,40 +935,16 @@ function drawItems(){
 }
 
 function banana(a,b,g){
-  ctx.save();
-  ctx.translate(a+16,b+17);
-  ctx.rotate(Math.sin(elapsed*2+a*.01)*0.12);
-  ctx.lineCap="round";
-  ctx.strokeStyle=g?"#fff36a":"#ffd84d";
-  ctx.lineWidth=13;
-  ctx.beginPath();
-  ctx.arc(0,0,22,.35*Math.PI,1.12*Math.PI);
-  ctx.stroke();
-  ctx.strokeStyle=g?"#d89700":"#9a6200";
-  ctx.lineWidth=3;
-  ctx.beginPath();
-  ctx.arc(0,0,22,.35*Math.PI,1.12*Math.PI);
-  ctx.stroke();
-  ctx.strokeStyle="rgba(255,255,255,.55)";
-  ctx.lineWidth=2;
-  ctx.beginPath();
-  ctx.arc(-2,-2,17,.42*Math.PI,.92*Math.PI);
-  ctx.stroke();
-  ctx.restore();
+  if(drawAsset(g?"golden":"banana",a-8,b-8,g?48:42,g?48:42)) return;
+  ctx.save();ctx.translate(a+16,b+17);ctx.rotate(Math.sin(elapsed*2+a*.01)*0.12);ctx.lineCap="round";ctx.strokeStyle=g?"#fff36a":"#ffd84d";ctx.lineWidth=13;ctx.beginPath();ctx.arc(0,0,22,.35*Math.PI,1.12*Math.PI);ctx.stroke();ctx.restore();
 }
 function apple(a,b){
-  circ(a+15,b+17,14,"#d84435");
-  oval(a+10,b+12,6,5,"#f06b5d");
-  px(a+14,b+1,4,10,"#5b361d");
-  oval(a+23,b+5,9,5,"#5eb85a");
-  circ(a+9,b+10,3,"rgba(255,255,255,.45)");
+  if(drawAsset("apple",a-4,b-5,40,40)) return;
+  circ(a+15,b+17,14,"#d84435");px(a+14,b+1,4,10,"#5b361d");oval(a+23,b+5,9,5,"#5eb85a");
 }
 function orange(a,b){
-  circ(a+15,b+17,14,"#ff8a2a");
-  circ(a+10,b+12,4,"rgba(255,255,255,.35)");
-  px(a+10,b+8,8,4,"#ffd25b");
-  ctx.strokeStyle="#d46a00";ctx.lineWidth=2;
-  ctx.beginPath();ctx.arc(a+15,b+17,14,0,Math.PI*2);ctx.stroke();
+  if(drawAsset("orange",a-4,b-5,40,40)) return;
+  circ(a+15,b+17,14,"#ff8a2a");px(a+10,b+8,8,4,"#ffd25b");
 }
 function student(a,b,girl){
   const wave=Math.sin(elapsed*5+a*.01)>0.35 ? -3 : 0;
@@ -972,9 +969,8 @@ function student(a,b,girl){
   px(a+25,b+47,8,7,"#4a2a14");
 }
 function rock(a,b,h){
-  px(a,b+16,45,18,h?"#555":"#777f8b");
-  px(a+8,b+4,25,22,h?"#444":"#a1a9b2");
-  px(a+14,b+8,8,4,"rgba(255,255,255,.25)");
+  if(drawAsset("rock",a-8,b-8,58,44)) return;
+  px(a,b+12,45,22,h?"#555":"#8a93a0");px(a+8,b+2,25,18,h?"#444":"#a9b1bb");
 }
 function vine(a,b,h,seed){
   const sway=Math.sin(elapsed*1.4+seed)*5;
@@ -1041,7 +1037,7 @@ function drawParticles(){
   for(const p of particles){
     let a=sx(p.x),b=sy(p.y);
     if(p.type==="butterfly"){ctx.fillStyle=p.color;ctx.font="24px Arial";ctx.fillText("🦋",a,b);}
-    else if(p.type==="leaf"){oval(a,b,6,3,p.color);}
+    else if(p.type==="leaf"){if(!drawAsset("leaf",a-8,b-8,18,18)) oval(a,b,6,3,p.color);}
     else if(p.type==="spark"){ctx.fillStyle=p.color;ctx.font="14px Arial";ctx.fillText("✦",a,b);}
     else circ(a,b,3,p.color);
   }
