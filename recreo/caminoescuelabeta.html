@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>Camino a la Escuela - Beta 0.9 Mobile Polish</title>
+<title>Camino a la Escuela - Beta 0.91 Responsive</title>
 <style>
 *{box-sizing:border-box}
 body{
@@ -114,12 +114,87 @@ body {
   .tip { display:none; }
 }
 
+
+/* Beta 0.91: responsive landscape para celular/tablet */
+@media (orientation: landscape) and (max-height: 620px) {
+  body {
+    padding: 2px;
+    align-items: center;
+    overflow: hidden;
+  }
+  .wrap {
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 10px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+  .top {
+    padding: 4px 8px;
+    min-height: 38px;
+  }
+  .title {
+    font-size: 13px;
+    width: auto;
+    flex: 1 1 auto;
+    text-align: left;
+  }
+  .hud {
+    gap: 4px;
+    justify-content: flex-end;
+  }
+  .pill {
+    font-size: 10px;
+    padding: 3px 5px;
+    border-width: 1px;
+  }
+  .bar {
+    width: 48px;
+    height: 11px;
+  }
+  .gameArea {
+    min-height: 0;
+  }
+  canvas {
+    max-height: calc(100vh - 112px);
+    object-fit: contain;
+    background:#7ecbec;
+  }
+  .controls {
+    position: relative;
+    display: grid;
+    grid-template-columns: 96px 96px 1fr 104px;
+    gap: 10px;
+    padding: 7px 16px 10px;
+    align-items: center;
+  }
+  #leftBtn { order:1; }
+  #rightBtn { order:2; }
+  #jumpBtn { order:4; }
+  #downBtn { display:none; }
+  .controlBtn {
+    min-height: 54px;
+    max-height: 58px;
+    font-size: 27px;
+    padding: 6px;
+  }
+  .tip, .credit {
+    display: none;
+  }
+}
+@media (orientation: portrait) and (max-width: 760px) {
+  canvas {
+    max-height: calc(100vh - 230px);
+    object-fit: contain;
+  }
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="title">🦍 CAMINO A LA ESCUELA · BETA 0.9</div>
+    <div class="title">🦍 CAMINO A LA ESCUELA · BETA 0.911</div>
     <div class="hud">
       <div class="pill">Mundo: <span id="worldName">Sendero</span></div>
       <div class="pill">❤️ <span class="bar"><span id="heartFill" class="fill"></span></span></div>
@@ -136,7 +211,7 @@ body {
       <div class="card">
         <h1>🌴 El Camino a la Escuela</h1>
         <p>Cada mañana, el profe recorre el camino hacia la escuela. En el trayecto va encontrándose con sus alumnitos, que se suman a la aventura hasta llegar todos juntos al aula.</p>
-        <p>Cada mañana, el profe camina hacia la escuela. En el camino se encuentra con sus alumnitos y juntos continúan la aventura hasta llegar al aula.</p><p style='font-size:14px;color:#5b361d'><strong>Estado:</strong> versión beta optimizada para PC, tablet y celular.</p>
+        <p>Cada mañana, el profe camina hacia la escuela. En el camino se encuentra con sus alumnitos y juntos continúan la aventura hasta llegar al aula.</p><p style='font-size:14px;color:#5b361d'><strong>Estado:</strong> versión beta optimizada para PC, tablet, celular vertical y celular horizontal.</p>
         <div class="buttons">
           <button onclick="startGame()">▶ Jugar</button>
           <button class="secondary" onclick="toggleMusic()">🎵 Música: <span id="musicLabel">suave</span></button>
@@ -162,7 +237,7 @@ body {
     <button class="controlBtn secondary down" id="downBtn" aria-label="Bajar">▼</button>
     <button class="controlBtn secondary" id="rightBtn" aria-label="Mover a la derecha">▶</button>
   </div>
-  <div class="tip">VERSIÓN v2 LIMPIA · PC: flechas o barra espaciadora · Tablet/celu: botones grandes · Hay secretos 😉</div>
+  <div class="tip">VERSIÓN v2 LIMPIA · PC: flechas o barra espaciadora · Tablet/celu: botones grandes · También horizontal · Hay secretos 😉</div>
   <div class="credit">© 2026 Dante Martín. Todos los derechos reservados. Proyecto desarrollado con asistencia de IA.</div>
 </div>
 
@@ -323,7 +398,7 @@ function update(dt){
   if(keys.jump) player.jumpBuffer=.12;
   if(player.stateTimer<=0&&!player.onVine&&player.state!=="nap")player.state="run";
 
-  if(player.state==="nap" && player.stateTimer>0){ keys.left=false; keys.right=false; }
+  const napActive = player.state==="nap" && player.stateTimer>0;
 
   const vine=findVine();
   if(vine&&(keys.jump||keys.down||player.onVine)){
@@ -337,9 +412,9 @@ function update(dt){
 
   if(!player.onVine){
     const accel=player.onGround?groundAccel:airAccel;
-    if(keys.left){player.vx-=accel*dt;player.facing=-1}
-    if(keys.right){player.vx+=accel*dt;player.facing=1}
-    if(!keys.left&&!keys.right)player.vx*=player.onGround?groundFriction:airFriction;
+    if(!napActive && keys.left){player.vx-=accel*dt;player.facing=-1}
+    if(!napActive && keys.right){player.vx+=accel*dt;player.facing=1}
+    if(napActive || (!keys.left&&!keys.right))player.vx*=player.onGround?groundFriction:airFriction;
     player.vx=Math.max(-maxSpeed,Math.min(maxSpeed,player.vx));
 
     if(player.jumpBuffer>0 && (player.onGround || player.coyote>0)){
@@ -437,7 +512,7 @@ function collectAndCollide(){
       if(o.type==="golden"){bananas+=3;heart=100;secrets.gold=true;setState("dance",1.7);burst(o.x,o.y,"#fff36a",18);msg("✨ banana dorada",1300);playFanfare();}
       if(o.type==="student"){students++;heart=Math.min(100,heart+12);setState("hug",1.1);followers.push({x:o.x,y:o.y,girl:o.girl,delay:followers.length*0.18});burst(o.x,o.y,"#f08a8a",14);msg("🤗 abrazo de alumno",1100);playStudent();}
       if(o.type==="humming"){secrets.hum=true;heart=Math.min(100,heart+8);burst(o.x,o.y,"#4cc6e2",16);msg("🐦 el colibrí dejó una semillita",1500);playFanfare();}
-      if(o.type==="sunspot"){secrets.nap=true;heart=Math.min(100,heart+18);player.vx=0;player.vy=0;player.napLock=.45;setState("nap",2.3);msg("☀️ siestita al sol",1500);playUkulele();}
+      if(o.type==="sunspot"){secrets.nap=true;heart=Math.min(100,heart+18);player.vx=0;player.vy=0;player.napLock=.8;player.jumpBuffer=0;player.jumpCut=false;setState("nap",2.3);msg("☀️ siestita al sol",1500);playUkulele();}
     }
     if(o.type==="rock"&&!o.hit&&rect(player,o)){o.hit=true;heart=Math.max(10,heart-8);noBumps=false;screenShake=5;player.vx=-player.facing*120;player.vy=-170;playBump();}
   }
@@ -1056,7 +1131,7 @@ function drawMessage(){if(message){px(250,18,460,42,"#141c32dd");ctx.fillStyle="
 
 // Música procedural basada en Jazz Jungla
 let audioCtx=null,master=null,musicTimer=null,step=0;
-function ensureAudio(){if(audioCtx)return;audioCtx=new (window.AudioContext||window.webkitAudioContext)();master=audioCtx.createGain();master.gain.value=.16;master.connect(audioCtx.destination);}
+function ensureAudio(){if(audioCtx)return;audioCtx=new (window.AudioContext||window.webkitAudioContext)();master=audioCtx.createGain();master.gain.value=.20;master.connect(audioCtx.destination);}
 function tone(f,d,type="sine",vol=.04,delay=0){if(!audioCtx)return;let t=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(master);o.start(t);o.stop(t+d+.05);}
 function startAudio(){ensureAudio();if(audioCtx.state==="suspended")audioCtx.resume();stopAudio();step=0;musicTimer=setInterval(musicTick,340);}
 function stopAudio(){if(musicTimer){clearInterval(musicTimer);musicTimer=null;}}
@@ -1107,6 +1182,16 @@ function bind(id,k){
   e.addEventListener("touchmove",ev=>ev.preventDefault(),{passive:false});
 }
 bind("leftBtn","left");bind("rightBtn","right");bind("jumpBtn","jump");bind("downBtn","down");
+
+// Beta 0.91: bloqueo extra de gestos molestos en móvil.
+document.body.addEventListener("touchmove", e => {
+  if(e.target.closest(".controls") || e.target.tagName === "CANVAS") e.preventDefault();
+}, {passive:false});
+window.addEventListener("blur", ()=>{
+  keys.left=false; keys.right=false; keys.jump=false; keys.down=false;
+  document.querySelectorAll(".controlBtn").forEach(b=>b.classList.remove("pressed"));
+});
+
 buildLevel();draw();
 </script>
 </body>
