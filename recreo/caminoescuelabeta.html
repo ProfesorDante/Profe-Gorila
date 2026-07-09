@@ -344,7 +344,7 @@ canvas{image-rendering:auto;}
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="title">🦍 CAMINO A LA ESCUELA · RC3 GRAN SALTO</div>
+    <div class="title">🦍 CAMINO A LA ESCUELA</div>
     <div class="hud">
       <div class="pill">Mundo: <span id="worldName">Sendero</span></div>
       <div class="pill">❤️ <span class="bar"><span id="heartFill" class="fill"></span></span></div>
@@ -389,7 +389,7 @@ canvas{image-rendering:auto;}
     <button type="button" class="controlBtn secondary down" id="downBtn" aria-label="Bajar">▼</button>
     <button type="button" class="controlBtn secondary" id="rightBtn" aria-label="Mover a la derecha">▶</button>
   </div>
-  <div class="tip">BETA 1.5 · SELVA DEL GRAN ÁRBOL · PC: flechas o barra espaciadora · Tablet/celu: pantalla completa recomendada · Hay secretos 😉</div>
+  <div class="tip">PC: flechas o barra espaciadora · Tablet/celu: pantalla completa recomendada · Hay secretos 😉</div>
   <div class="credit">© 2026 Dante Martín. Todos los derechos reservados. Proyecto desarrollado con asistencia de IA.</div>
 </div>
 
@@ -533,6 +533,7 @@ let running=false,last=0,elapsed=0,totalTime=600;
 let camX=0,camY=0,world=1,screenShake=0,radioDanceTimer=0,radioBoostTimer=0;
 let bananas=0,rareFruits=0,students=0,mochilas=0,heart=0,noBumps=true,message="",rescuedStudents=[];
 let musicOn=true,layers=4,wind=0,windClock=0,radioEvent={active:false,x:0,y:0,t:0,kind:"radio"};
+let highTrumpetLevel=0, highTrumpetTriumph=false, trumpetFinale=false;
 let platforms=[],items=[],vines=[],storyProps=[],particles=[],followers=[],lifeClock=0,ambientBirds=[],curiousButterflies=[],idleTarareoTimer=0;
 let secrets={uke:false,gold:false,radio:false,hum:false,rain:false,butterfly:false};
 
@@ -545,6 +546,7 @@ function startGame(){
   buildLevel();
   Object.assign(player,{x:80,y:360,vx:0,vy:0,onGround:false,onVine:false,facing:1,idle:0,state:"run",stateTimer:0,spawnX:80,spawnY:360,walkFrame:0,blink:0,coyote:0,jumpBuffer:0,landTimer:0,jumpHeldTime:0,jumpCut:false,radioLock:0});
   running=true;last=performance.now();elapsed=0;camX=0;camY=0;world=1;screenShake=0;radioDanceTimer=0;radioBoostTimer=0;radioEvent={active:false,x:0,y:0,t:0,kind:"radio"};
+  highTrumpetLevel=0; highTrumpetTriumph=false; trumpetFinale=false;
   bananas=0;rareFruits=0;students=0;mochilas=0;heart=0;noBumps=true;message="";rescuedStudents=[];particles=[];followers=[];
   secrets={uke:false,gold:false,radio:false,hum:false,rain:false,butterfly:false};
   hud(); if(musicOn)startAudio(); requestAnimationFrame(loop);
@@ -583,10 +585,10 @@ function buildLevel(){
   addPlatform(12100,-1390,1220,260,"ground");        // Escuela del Gran Árbol entre las ramas. Mundo 1 congelado: empieza más a la derecha para conservar la recompensa del Gran Salto.
 
   // Carteles de mundo: ahora cada zona tiene nombre propio.
-  addStoryProp("welcomeSign",180,366,150,92);
+  addStoryProp("welcomeSign",165,350,185,108);
   addStoryProp("brokenBus",400,340,380,130); // Colectivo escolar averiado: origen de la aventura.
   addStoryProp("treeSign",8420,280,170,105);
-  addStoryProp("schoolSign",11840,-1570,170,100);
+  addStoryProp("schoolSign",12135,-1498,205,112);
 
   // Decoración especial de Beta 1.7: cueva, ramas no jugables y escuela abrazada por el árbol.
   addStoryProp("caveMouth",4480,430,330,150);
@@ -607,12 +609,12 @@ function buildLevel(){
   addStoryProp("branchBack",10950,-1305,780,100);
 
   // Mochilas: el esfuerzo aparece a lo largo del viaje, no amontonado.
-  addStoryProp("backpack",980,405,38,38);
-  addStoryProp("backpack",2920,405,38,38);
-  addStoryProp("backpack",6020,510,38,38);
-  addStoryProp("backpack",8430,405,38,38);
-  addStoryProp("backpack",11180,-1510,38,38);
-  addStoryProp("backpack",11940,-1475,38,38);
+  addStoryProp("backpack",980,401,44,44);
+  addStoryProp("backpack",2920,401,44,44);
+  addStoryProp("backpack",6020,506,44,44);
+  addStoryProp("backpack",8430,401,44,44);
+  addStoryProp("backpack",11180,-1514,44,44);
+  addStoryProp("backpack",11940,-1479,44,44);
 
   // 1) Sendero inicial más largo: entrar en la Selva antes de decidir.
   [[360,405],[760,405],[1180,405],[1600,405],[2020,405],[2460,405],[2950,405]].forEach(p=>addItem("banana",p[0],p[1]));
@@ -681,18 +683,18 @@ function buildLevel(){
   [[9560,-1370],[9740,-1378]].forEach(p=>addItem("banana",p[0],p[1]));
 
   // Plataforma exitosa: adrenalina, bananas extra y trompeta del Profe.
-  // Mundo 1 congelado: solo se alcanza haciendo bien EL Gran Salto.
-  [[10320,-1390,310,28],[10880,-1410,300,28],[11520,-1395,290,28]].forEach(p=>addPlatform(p[0],p[1],p[2],p[3],"branch"));
-  [[10355,-1445],[10520,-1455],[10690,-1458],[10935,-1470],[11110,-1462],[11585,-1455],[11725,-1445]].forEach(p=>addItem("banana",p[0],p[1]));
-  addItem("apple",10980,-1488);
-  addItem("golden",11690,-1482);
-  addItem("trumpet",10435,-1438);
+  // World 1 Final Review: solo se alcanza haciendo bien EL Gran Salto, ahora apenas más amable.
+  [[10283,-1390,310,28],[10848,-1410,300,28],[11488,-1395,290,28]].forEach(p=>addPlatform(p[0],p[1],p[2],p[3],"branch"));
+  [[10318,-1445],[10483,-1455],[10653,-1458],[10903,-1470],[11078,-1462],[11553,-1455],[11693,-1445]].forEach(p=>addItem("banana",p[0],p[1]));
+  addItem("apple",10948,-1488);
+  addItem("golden",11658,-1482);
+  addItem("trumpet",10398,-1438);
 
   // Rama inferior: plan B amable. Está bastante más abajo, así el salto se siente grande.
   // Permite continuar hacia la escuela, pero no permite volver a la trompeta.
   [[10120,-1070,610,28],[10820,-1125,540,28],[11490,-1205,470,28],[11940,-1290,310,28]].forEach(p=>addPlatform(p[0],p[1],p[2],p[3],"branch"));
   [[10210,-1120],[10520,-1130],[10920,-1178],[11220,-1188],[11620,-1260],[12040,-1340]].forEach(p=>addItem("banana",p[0],p[1]));
-  addStudent(10510,-1458,"Feli");
+  addStudent(10473,-1458,"Feli");
 
   // Puente final hacia la Escuela del Gran Árbol: conecta ambas rutas sin romper la recompensa.
   addPlatform(12090,-1340,360,28,"branch");
@@ -821,6 +823,7 @@ function update(dt){
   // Cámara 3.0: zona del Gran Árbol estable.
   // Antes el cambio de mundo estaba justo cerca de la radio y hacía saltar el encuadre.
   world=(player.x>7800 || player.y<40) ? (player.x<11650?2:3) : 1;
+  updateHighTrumpetState(dt);
   if(player.x>12280&&player.y<-1440)endGame(true);
 
   const mode=cameraMode();
@@ -843,6 +846,36 @@ function update(dt){
   screenShake=Math.max(0,screenShake-dt*12);
 }
 
+function updateHighTrumpetState(dt){
+  // Art/Emotion Pass: la trompeta representa conquistar la altura.
+  // Si el jugador alcanza la trompeta del Gran Salto, el efecto queda hasta la escuela.
+  if(trumpetFinale){
+    highTrumpetLevel = 1;
+    if(Math.random()<0.022){
+      particles.push({x:player.x+player.w/2,y:player.y+4,vx:(Math.random()-.5)*24,vy:-30-Math.random()*24,life:.9,color:'#fff1a8',type:'musicNote'});
+    }
+    return;
+  }
+  // Entra al subir a la Ruta Alta sobre el túnel; si el jugador cae, se apaga con fade.
+  const onTunnelHighRoute = player.x>3300 && player.x<7800 && player.y<360;
+  const reachedUpperTree = player.x>=7800 && player.y<120;
+  const onUpperCanopy = player.x>=9000 && player.y<-1260;
+
+  if(onTunnelHighRoute || (highTrumpetTriumph && (reachedUpperTree || onUpperCanopy))){
+    highTrumpetLevel = Math.min(1, highTrumpetLevel + dt*2.2);
+    if(player.x>7800 && player.y<160) highTrumpetTriumph = true;
+    if(highTrumpetLevel>.55 && Math.random()<0.018){
+      particles.push({x:player.x+player.w/2,y:player.y+4,vx:(Math.random()-.5)*22,vy:-26-Math.random()*22,life:.9,color:'#fff1a8',type:'musicNote'});
+    }
+  }else{
+    highTrumpetLevel = Math.max(0, highTrumpetLevel - dt*2.8);
+  }
+
+  // Si cae a la ruta baja antes del Gran Árbol o a la rama inferior del final, la trompeta se despide.
+  if((player.x<7800 && player.y>400) || (player.x>9900 && player.x<12150 && player.y>-1260)){
+    highTrumpetTriumph = false;
+  }
+}
 
 function cameraMode(){
   if(player.onVine) return "climb";
@@ -974,6 +1007,9 @@ function triggerUkuleleDance(o){
 }
 function triggerTrumpetDance(o){
   o.played=true;
+  trumpetFinale=true;
+  highTrumpetTriumph=true;
+  highTrumpetLevel=1;
   radioDanceTimer=3.9;
   radioBoostTimer=5.2;
   radioEvent={active:true,x:o.x,y:o.y,t:5.2,kind:"trumpet"};
@@ -1132,7 +1168,7 @@ function draw(){
   const shakeY=(Math.random()-.5)*screenShake;
   ctx.save();
   ctx.translate(shakeX,shakeY);
-  drawSky();drawBackdrop();drawNaturalForest();drawContinuousGround();drawCaveAmbience();drawStoryProps();drawPlatforms();drawItems();drawFollowers();drawParticles();drawPlayer();drawForegroundBranches();drawVersionTag();drawMessage();
+  drawSky();drawBackdrop();drawNaturalForest();drawContinuousGround();drawCaveAmbience();drawStoryProps();drawPlatforms();drawItems();drawFollowers();drawParticles();drawPlayer();drawForegroundBranches();drawMessage();
   ctx.restore();
 }
 function sx(x){return Math.round(x-camX)}
@@ -1221,7 +1257,7 @@ function drawNaturalForest(){
     {x:3920,y:505,kind:"small_tree",s:1.05},
     {x:5250,y:565,kind:"small_tree",s:1.0},
     {x:7900,y:450,kind:"small_tree",s:.95},
-    {x:9700,y:-1315,kind:"small_tree",s:.88},
+    {x:9700,y:-1308,kind:"small_tree",s:.88},
   ];
   for(const t of layerBack){
     const a=sx(t.x), b=sy(t.y);
@@ -1580,16 +1616,22 @@ function drawSignLabel(type,a,b,w,h){
   ctx.textBaseline="middle";
   ctx.font="900 13px Arial";
   let lines=[];
-  if(type==="welcomeSign"){ lines=["Selva del","Gran Árbol"]; ctx.font="900 12px Arial"; }
+  if(type==="welcomeSign"){ lines=["Selva del","Gran Árbol"]; ctx.font="900 15px Arial"; }
   if(type==="routeSign"){ lines=["Ruta Alta ↑","Túnel ↓"]; ctx.font="900 12px Arial"; }
   if(type==="tunnelSign"){ lines=["Túnel de","las Raíces"]; ctx.font="900 11px Arial"; }
   if(type==="treeSign"){ lines=["GRAN","ÁRBOL"]; ctx.font="900 16px Arial"; }
-  if(type==="schoolSign"){ lines=["Escuela del","Gran Árbol →"]; ctx.font="900 12px Arial"; }
+  if(type==="schoolSign"){ lines=["Escuela del","Gran Árbol →"]; ctx.font="900 15px Arial"; }
   if(type==="branchRouteSign"){ lines=["Ruta de","Ramas →"]; ctx.font="900 12px Arial"; }
   if(type==="adrenalineSign"){ lines=["Gran","Salto ↑"]; ctx.font="900 14px Arial"; }
-  const step=15;
+  const step= type==="schoolSign" ? 17 : (type==="welcomeSign" ? 16 : 15);
   const cy=b+h*.42-(lines.length-1)*step/2;
-  for(let i=0;i<lines.length;i++) ctx.fillText(lines[i],a+w/2,cy+i*step);
+  ctx.lineJoin="round";
+  ctx.strokeStyle="rgba(255,241,207,.92)";
+  ctx.lineWidth=3.2;
+  for(let i=0;i<lines.length;i++){
+    ctx.strokeText(lines[i],a+w/2,cy+i*step);
+    ctx.fillText(lines[i],a+w/2,cy+i*step);
+  }
   ctx.restore();
 }
 
@@ -1652,17 +1694,21 @@ function student(a,b,girl,glasses){
   circ(a+14,b+15,3,"#111");
   circ(a+28,b+15,3,"#111");
   if(glasses){
-    // Anteojos bien legibles para Martu y Lauti.
-    ctx.fillStyle="rgba(235,248,255,.78)";
-    ctx.fillRect(a+7,b+8,13,11);
-    ctx.fillRect(a+23,b+8,13,11);
-    ctx.strokeStyle="#050914";
-    ctx.lineWidth=3;
-    ctx.strokeRect(a+7,b+8,13,11);
-    ctx.strokeRect(a+23,b+8,13,11);
-    ctx.beginPath();ctx.moveTo(a+20,b+13);ctx.lineTo(a+23,b+13);ctx.stroke();
-    ctx.strokeStyle="#ffffff";ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(a+10,b+10);ctx.lineTo(a+15,b+10);ctx.moveTo(a+26,b+10);ctx.lineTo(a+31,b+10);ctx.stroke();
+    // Anteojos visibles pero amables: detalle de identidad, no caricatura.
+    ctx.fillStyle="rgba(235,248,255,.48)";
+    ctx.fillRect(a+9,b+9,9,8);
+    ctx.fillRect(a+24,b+9,9,8);
+    ctx.strokeStyle="#eaf6ff";
+    ctx.lineWidth=2.5;
+    ctx.strokeRect(a+8,b+8,11,10);
+    ctx.strokeRect(a+23,b+8,11,10);
+    ctx.strokeStyle="#1a243d";
+    ctx.lineWidth=1.5;
+    ctx.strokeRect(a+8,b+8,11,10);
+    ctx.strokeRect(a+23,b+8,11,10);
+    ctx.beginPath();ctx.moveTo(a+19,b+13);ctx.lineTo(a+23,b+13);ctx.stroke();
+    ctx.strokeStyle="rgba(255,255,255,.85)";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(a+10,b+10);ctx.lineTo(a+13,b+10);ctx.moveTo(a+25,b+10);ctx.lineTo(a+29,b+10);ctx.stroke();
   }
   oval(a+21,b+25,9,4,"#f3cf99");
   px(a-5,b+25,10,20,girl?"#b455b6":"#315c99");
@@ -1968,80 +2014,150 @@ function drawUkulele(a,b){
 
 function notes(a,b){ctx.fillStyle="#4f7cff";ctx.font="24px Arial";ctx.fillText("♪",a,b);ctx.fillStyle="#ff8a2a";ctx.fillText("♫",a+25,b+18)}
 
-function drawVersionTag(){
-  px(12,500,190,24,"rgba(20,28,50,.65)");
-  ctx.fillStyle="#fff1cf";
-  ctx.font="bold 13px Arial";
-  ctx.fillText("RC3.1 · gran salto extendido",22,517);
-}
+function drawVersionTag(){}
 
 function drawMessage(){if(message){px(250,18,460,42,"#141c32dd");ctx.fillStyle="#fff1cf";ctx.font="bold 23px Arial";ctx.textAlign="center";ctx.fillText(message,480,47);ctx.textAlign="left";}}
 
-// Música procedural basada en Jazz Jungla
-let audioCtx=null,master=null,musicTimer=null,step=0;
-function ensureAudio(){if(audioCtx)return;audioCtx=new (window.AudioContext||window.webkitAudioContext)();master=audioCtx.createGain();master.gain.value=.34;master.connect(audioCtx.destination);}
-function tone(f,d,type="sine",vol=.04,delay=0){if(!audioCtx)return;let t=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(master);o.start(t);o.stop(t+d+.05);}
+// Música procedural basada en la partitura jazzjungla.
+// Music Pass: la misma melodía se interpreta distinto según la zona.
+let audioCtx=null,master=null,compressor=null,musicTimer=null,step=0;
+const NOTE_FREQ={
+  C2:65.41,Cs2:69.30,D2:73.42,Ds2:77.78,E2:82.41,F2:87.31,Fs2:92.50,G2:98.00,Gs2:103.83,A2:110.00,As2:116.54,B2:123.47,
+  C3:130.81,Cs3:138.59,D3:146.83,Ds3:155.56,E3:164.81,F3:174.61,Fs3:185.00,G3:196.00,Gs3:207.65,A3:220.00,As3:233.08,B3:246.94,
+  C4:261.63,Cs4:277.18,D4:293.66,Ds4:311.13,E4:329.63,F4:349.23,Fs4:369.99,G4:392.00,Gs4:415.30,A4:440.00,As4:466.16,B4:493.88,
+  C5:523.25,Cs5:554.37,D5:587.33,Ds5:622.25,E5:659.25,F5:698.46,Fs5:739.99,G5:783.99,Gs5:830.61,A5:880.00,As5:932.33,B5:987.77,
+  C6:1046.50,D6:1174.66,E6:1318.51,F6:1396.91,G6:1567.98,A6:1760.00
+};
+function f(n){return typeof n==='number'?n:NOTE_FREQ[n]||0;}
+const JAZZJUNGLA={
+  // A: camino horizontal. Ostinato caminante de guitarra + motivo de trompeta.
+  guitarA:['G3','D4','G3','A4','G3','B4','A4','G4','G3','D4','G3','A4','G3','C5','B4','A4',
+           'G3','D4','G3','A4','G3','B4','A4','G4','F3','C4','F3','A4','F3','Bb4','A4','F4'],
+  bassA:['G2',0,'D3',0,'G2',0,'D3',0,'G2',0,'D3',0,'C3',0,'D3',0],
+  trumpetA:[0,0,0,'D5','E5',0,'D5',0,0,'C5','D5',0,'E5','F5','E5',0,
+            0,0,'G4','A4',0,'C5','D5',0,0,'D5','E5',0,'G5','A5','G5',0],
+  // B: Gran Árbol. La misma idea se abre hacia arriba para que la selva “florezca”.
+  guitarB:['G3','B4','D5','B4','G4','D5','B4','G4','F3','C5','Eb5','C5','A4','Eb5','C5','A4'],
+  bassB:['G2',0,'G2',0,'C3',0,'D3',0,'G2',0,'F2',0,'C3',0,'D3',0],
+  trumpetB:['G4','A4','B4','D5','E5','D5','B4','A4','C5','D5','Eb5','D5','C5','A4','G4',0]
+};
+function ensureAudio(){
+  if(audioCtx)return;
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  master=audioCtx.createGain();
+  compressor=audioCtx.createDynamicsCompressor();
+  compressor.threshold.value=-18; compressor.knee.value=24; compressor.ratio.value=6; compressor.attack.value=.004; compressor.release.value=.18;
+  master.gain.value=.72;
+  master.connect(compressor); compressor.connect(audioCtx.destination);
+}
+function tone(fq,d,type="sine",vol=.04,delay=0,cutoff=0){
+  if(!audioCtx||!fq)return;
+  const t=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=type;o.frequency.setValueAtTime(fq,t);
+  let node=o;
+  if(cutoff){const lp=audioCtx.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(cutoff,t);node.connect(lp);node=lp;}
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(Math.max(vol,.0002),t+.018);
+  g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  node.connect(g);g.connect(master);o.start(t);o.stop(t+d+.06);
+}
+function currentMusicZone(){
+  if(radioBoostTimer>0) return radioEvent.kind||"radio";
+  if(player.x>11800 || world===3) return "school";
+  if(trumpetFinale) return "trumpet";
+  if(player.x>8250 || player.y<-420) return "tree";
+  if(player.x>4200 && player.x<7600 && player.y>390) return "tunnel";
+  return "path";
+}
 function musicStepMs(){
-  // Base de la partitura: 80 bpm. Radio: empuja la misma música a 100 bpm.
-  const bpm=(radioBoostTimer>0 && (radioEvent.kind==="radio"||radioEvent.kind==="trumpet")) ? 100 : 80;
-  return 60000/bpm/2; // corcheas, para que camine sin apurarse.
+  const z=currentMusicZone();
+  const bpm=(z==="radio"||z==="trumpet") ? 100 : 80;
+  return 60000/bpm/2;
 }
 function scheduleMusic(){ if(!musicOn||!running) return; musicTimer=setTimeout(()=>{musicTick();scheduleMusic();}, musicStepMs()); }
 function startAudio(){ensureAudio();if(audioCtx.state==="suspended")audioCtx.resume();stopAudio();step=0;scheduleMusic();}
 function stopAudio(){if(musicTimer){clearTimeout(musicTimer);musicTimer=null;}}
+function scoreAt(arr,i){return f(arr[i%arr.length]);}
+function pluck(note,vol=.06,delay=0){ tone(note,.23,'triangle',vol,delay,2600); tone(note*2,.08,'triangle',vol*.22,delay+.015,3200); }
+function uke(note,vol=.06,delay=0){ tone(note,.26,'triangle',vol,delay,1800); tone(note*1.5,.08,'triangle',vol*.18,delay+.055,2200); }
+function trumpet(note,vol=.05,delay=0){ tone(note,.30,'sawtooth',vol,delay,3200); tone(note*2,.12,'square',vol*.20,delay+.015,4200); }
+function softDrum(kind,delay=0){
+  if(kind==='kick') tone(82,.10,'sine',.060,delay,900);
+  if(kind==='snare'){ tone(180,.07,'triangle',.042,delay,1600); tone(1120,.035,'square',.016,delay+.006,1800); }
+  if(kind==='hat') tone(2400,.035,'square',.013,delay,4200);
+}
 function musicTick(){
-  const radioBoost=radioBoostTimer>0;
-  const ukeBoost=radioBoost && radioEvent.kind==="ukulele";
-  const radioFast=radioBoost && radioEvent.kind==="radio";
-  const trumpetBoost=radioBoost && radioEvent.kind==="trumpet";
-  const guitar=[392,392,440,392,523,440,392,330,392,392,440,392,587,523,440,392];
-  const trumpet=[0,0,0,523,587,0,523,0,0,440,523,0,659,698,659,0];
-  const bass=[196,196,220,196,262,220,196,165];
-  let g=guitar[step%guitar.length],tr=trumpet[step%trumpet.length],bs=bass[step%bass.length];
-  // Base más audible: la selva ahora tiene presencia sonora.
-  tone(g,.24,"triangle",.060);
-  if(layers>=2&&step%2===0)tone(bs,.30,"sine",.052,.02);
-  if(layers>=3&&step%2===0)tone(90,.13,"sine",.070,.01);
-  if(layers>=4&&step%4===1)tone(g*1.5,.18,"triangle",.032,.04);
-  if(layers>=5&&tr && !ukeBoost){tone(tr,.32,"sawtooth",.038,.02);tone(tr*2,.18,"square",.010,.03);}
-  if(radioFast){
-    // Radio: fiesta rápida. Misma melodía, más energía.
-    tone(g*2,.18,"triangle",.056,.01);
-    if(step%2===0) tone(784,.16,"square",.026,.08);
-    if(step%4===2) tone(1046,.18,"sine",.046,.12);
+  const zone=currentMusicZone();
+  const i=step;
+  const bSection=(zone==="tree"||zone==="school"||zone==="trumpet") && !((i/16|0)%2===0);
+  const guitar=bSection?JAZZJUNGLA.guitarB:JAZZJUNGLA.guitarA;
+  const bass=bSection?JAZZJUNGLA.bassB:JAZZJUNGLA.bassA;
+  const lead=bSection?JAZZJUNGLA.trumpetB:JAZZJUNGLA.trumpetA;
+  const g=scoreAt(guitar,i), bs=scoreAt(bass,i), ld=scoreAt(lead,i);
+  const tunnel=(zone==="tunnel"||zone==="ukulele"), radio=(zone==="radio"), tree=(zone==="tree"||zone==="school"), trPrize=(zone==="trumpet");
+  const highLayer = Math.max(0, Math.min(1, highTrumpetLevel));
+
+  // Sendero y ruta alta: guitarra/bajo con marcha amable, basada en el ostinato de la partitura.
+  if(!tunnel){
+    pluck(g, radio?.078:.066);
+    if(bs && i%2===0) tone(bs,.30,'sine',radio?.073:.058,.01,1100);
+    if(i%4===0) softDrum('kick',.005);
+    if(i%4===2) softDrum('snare',.012);
+    if(radio && i%2===1) softDrum('hat',.02);
   }
-  if(trumpetBoost){
-    // Trompeta: premio del Gran Salto. La melodía aparece fuerte y brillante.
-    const melody = tr || trumpet[(step+1)%trumpet.length] || g*1.5;
-    tone(melody,.34,"sawtooth",.070,.01);
-    tone(melody*2,.18,"square",.018,.035);
-    if(step%2===0) tone(784,.18,"square",.032,.08);
-    if(step%4===0) tone(1046,.20,"sine",.052,.12);
+
+  // Túnel: la melodía pasa al ukelele. Menos marcha, más intimidad.
+  if(tunnel){
+    const m=ld || scoreAt(lead,i+1) || g*1.5;
+    uke(m,.083,.01);
+    if(i%2===0) uke(g*1.5,.040,.09);
+    if(bs && i%4===0) tone(bs,.24,'sine',.035,.02,800);
   }
-  if(ukeBoost){
-    // Ukelele: toma la melodía de la trompeta, pero en timbre cálido e íntimo.
-    const melody = tr || trumpet[(step+1)%trumpet.length] || g*1.5;
-    tone(melody,.30,"triangle",.070,.015);
-    tone(melody*1.5,.16,"triangle",.030,.11);
-    if(step%2===0) tone(g*2,.12,"triangle",.038,.06);
+
+  // Gran Árbol: no cambia la canción; florece con trompeta y brillo.
+  if(tree && ld && !tunnel){
+    trumpet(ld,.050 + highLayer*.020,.02);
+    if(i%8===0) tone(ld*2,.18,'sine',.020 + highLayer*.010,.12,5000);
+  }
+
+  // Ruta Alta: la trompeta entra como recompensa emocional por mantener la altura.
+  // Si el jugador cae, highTrumpetLevel baja y la capa desaparece suavemente.
+  if(highLayer>0.02 && ld && !tunnel && !radio){
+    const hm = ld || scoreAt(lead,i+1) || g*1.5;
+    trumpet(hm, .018 + highLayer*.045, .035);
+    if(i%8===0) tone(hm*2,.14,'sine',.008 + highLayer*.030,.13,5200);
+  }
+
+  // Radio: la misma partitura a 100 BPM, más movimiento y alegría.
+  if(radio){
+    const m=ld || scoreAt(lead,i+1) || g*1.5;
+    trumpet(m,.050,.025);
+    if(i%2===0) tone(m*2,.11,'triangle',.034,.08,4500);
+  }
+
+  // Trompeta del Gran Salto: premio musical claro, sin cambiar de tema.
+  if(trPrize){
+    const m=ld || scoreAt(lead,i+1) || g*1.5;
+    trumpet(m,.078,.01);
+    if(i%4===0) tone(m*2,.18,'sine',.040,.10,5200);
+    if(i%2===0) softDrum('hat',.04);
   }
   step++;
 }
 function toggleMusic(){musicOn=!musicOn;document.getElementById("musicLabel").textContent=musicOn?"suave":"apagada";if(!musicOn)stopAudio();else if(running)startAudio();}
-function playCollect(){ensureAudio();tone(880,.10,"triangle",.10);tone(1175,.11,"triangle",.07,.06);tone(1568,.08,"sine",.035,.13)}
-function playStudent(){ensureAudio();tone(660,.12);tone(880,.12,"sine",.08,.09);tone(1320,.16,"sine",.06,.18)}
-function playJump(){ensureAudio();tone(330,.09,"square",.035);tone(440,.09,"square",.028,.06)}
-function playBump(){ensureAudio();tone(120,.18,"sawtooth",.045)}
-function playFanfare(){ensureAudio();tone(523,.12);tone(659,.12,"sine",.065,.12);tone(784,.18,"sine",.065,.24)}
-function playUkulele(){ensureAudio();[523,587,523,440,523,659,698,659].forEach((n,i)=>tone(n,.20,"triangle",.055,i*.11))}
-function playRain(){ensureAudio();for(let i=0;i<8;i++)tone(900+Math.random()*400,.08,"sine",.012,i*.08)}
-function playRadioJingle(){ensureAudio();[392,523,659,784,659,523].forEach((n,i)=>tone(n,.16,i%2?"triangle":"sine",.065,i*.08));}
-function playTrumpetFanfare(){ensureAudio();[523,587,659,784,880,784,1046].forEach((n,i)=>tone(n,.18,"sawtooth",.060,i*.09));}
+function playCollect(){ensureAudio();tone(880,.10,"triangle",.115);tone(1175,.11,"triangle",.082,.06);tone(1568,.08,"sine",.040,.13)}
+function playStudent(){ensureAudio();tone(660,.12,"sine",.070);tone(880,.12,"sine",.090,.09);tone(1320,.16,"sine",.070,.18)}
+function playJump(){ensureAudio();tone(330,.09,"square",.040);tone(440,.09,"square",.032,.06)}
+function playBump(){ensureAudio();tone(120,.18,"sawtooth",.050)}
+function playFanfare(){ensureAudio();tone(523,.12,"sine",.075);tone(659,.12,"sine",.075,.12);tone(784,.18,"sine",.075,.24)}
+function playUkulele(){ensureAudio();['D5','E5','D5','C5','D5','E5','F5','E5'].forEach((n,i)=>uke(f(n),.074,i*.11))}
+function playRain(){ensureAudio();for(let i=0;i<8;i++)tone(900+Math.random()*400,.08,"sine",.014,i*.08)}
+function playRadioJingle(){ensureAudio();['G4','C5','E5','G5','E5','C5'].forEach((n,i)=>tone(f(n),.16,i%2?"triangle":"sine",.078,i*.08));}
+function playTrumpetFanfare(){ensureAudio();['C5','D5','E5','G5','A5','G5','C6'].forEach((n,i)=>trumpet(f(n),.080,i*.09));}
 function playSchoolBell(){
   ensureAudio();
-  // Timbre escolar sencillo: dos llamados claros y alegres al llegar.
-  [0,.18,.55,.73,1.10,1.28].forEach((d,i)=>tone(i%2?1568:1318,.16,"sine",.075,d));
-  [0,.55,1.10].forEach(d=>tone(659,.22,"triangle",.030,d));
+  [0,.18,.55,.73,1.10,1.28].forEach((d,i)=>tone(i%2?1568:1318,.16,"sine",.092,d));
+  [0,.55,1.10].forEach(d=>tone(659,.22,"triangle",.040,d));
 }
 
 window.addEventListener("keydown",e=>{if(e.code==="ArrowLeft")keys.left=true;if(e.code==="ArrowRight")keys.right=true;if(e.code==="Space"||e.code==="ArrowUp")keys.jump=true;if(e.code==="ArrowDown")keys.down=true;if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Space"].includes(e.code))e.preventDefault();});
