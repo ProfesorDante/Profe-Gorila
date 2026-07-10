@@ -680,6 +680,7 @@
     ];
 
     function showScreen(id) {
+      detenerAudio();
       screens.forEach(screenId => document.getElementById(screenId).classList.remove("active"));
       document.getElementById(id).classList.add("active");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -717,14 +718,63 @@
       return palabra.toUpperCase();
     }
 
-    function escucharPalabra(palabra) {
-      if (!palabra || !("speechSynthesis" in window)) return;
-      window.speechSynthesis.cancel();
-      const voz = new SpeechSynthesisUtterance(palabra.toLowerCase());
+    let audioToken = 0;
+    let audioTimers = [];
+
+    function detenerAudio() {
+      audioToken++;
+      audioTimers.forEach(clearTimeout);
+      audioTimers = [];
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    function programarAudio(fn, demora, token) {
+      const timer = setTimeout(() => {
+        if (token === audioToken) fn();
+      }, demora);
+      audioTimers.push(timer);
+    }
+
+    function hablarTexto(texto, alTerminar) {
+      if (!texto || !("speechSynthesis" in window)) {
+        if (alTerminar) alTerminar();
+        return;
+      }
+
+      const token = audioToken;
+      const voz = new SpeechSynthesisUtterance(texto.toLowerCase());
       voz.lang = "es-AR";
       voz.rate = 0.82;
       voz.pitch = 1;
+
+      let finalizado = false;
+      function terminarUnaVez() {
+        if (finalizado || token !== audioToken) return;
+        finalizado = true;
+        if (alTerminar) alTerminar();
+      }
+
+      voz.onend = terminarUnaVez;
+      voz.onerror = terminarUnaVez;
       window.speechSynthesis.speak(voz);
+    }
+
+    function escucharPalabra(palabra) {
+      if (!palabra || !("speechSynthesis" in window)) return;
+      detenerAudio();
+      hablarTexto(palabra);
+    }
+
+    function escucharRespuestaCorrecta(palabra, alTerminar) {
+      detenerAudio();
+      const token = audioToken;
+      programarAudio(() => {
+        hablarTexto(palabra, () => {
+          if (token === audioToken && alTerminar) alTerminar();
+        });
+      }, 450, token);
     }
 
     function elegirPalabraCon(tipo) {
@@ -796,6 +846,7 @@
     }
 
     function nuevaVocal() {
+      detenerAudio();
       actualizarProgresoVocales();
       const item = elegirPalabraCon("vocal");
       const data = ocultarLetras(item.palabra, "vocal");
@@ -834,6 +885,7 @@
     }
 
     function terminarVocales() {
+      detenerAudio();
       document.getElementById("progVocales").textContent = "Actividad completa";
       document.getElementById("vocalEmoji").textContent = "🌟";
       document.getElementById("vocalPalabra").textContent = "¡LISTO!";
@@ -864,7 +916,7 @@
           disableButtons("#vocalOpciones button", true);
           document.getElementById("vocalCompleta").classList.add("visible");
           setMessage("msgVocales", `¡Muy bien! La palabra es ${mostrarPalabra(palabraVocalActual)}.`, "ok-message");
-          setTimeout(avanzarVocales, 950);
+          escucharRespuestaCorrecta(palabraVocalActual, avanzarVocales);
         } else {
           setMessage("msgVocales", "¡Bien! Seguí completando la palabra.", "ok-message");
           setTimeout(() => setMessage("msgVocales", "", ""), 500);
@@ -890,6 +942,7 @@
     }
 
     function nuevaConsonante() {
+      detenerAudio();
       actualizarProgresoConsonantes();
       const item = elegirPalabraCon("consonante");
       const data = ocultarLetras(item.palabra, "consonante");
@@ -928,6 +981,7 @@
     }
 
     function terminarConsonantes() {
+      detenerAudio();
       document.getElementById("progConsonantes").textContent = "Actividad completa";
       document.getElementById("consEmoji").textContent = "🌟";
       document.getElementById("consPalabra").textContent = "¡LISTO!";
@@ -958,7 +1012,7 @@
           disableButtons("#consOpciones button", true);
           document.getElementById("consCompleta").classList.add("visible");
           setMessage("msgConsonantes", `¡Muy bien! La palabra es ${mostrarPalabra(palabraConsonanteActual)}.`, "ok-message");
-          setTimeout(avanzarConsonantes, 950);
+          escucharRespuestaCorrecta(palabraConsonanteActual, avanzarConsonantes);
         } else {
           setMessage("msgConsonantes", "¡Bien! Seguí completando la palabra.", "ok-message");
           setTimeout(() => setMessage("msgConsonantes", "", ""), 500);
@@ -983,6 +1037,7 @@
     }
 
     function nuevaArmar() {
+      detenerAudio();
       actualizarProgresoArmar();
       const candidatas = palabras.filter(item => limpiarPalabra(item.palabra).length <= 9);
       const item = candidatas[randomInt(0, candidatas.length - 1)];
@@ -1048,6 +1103,7 @@
     }
 
     function terminarArmar() {
+      detenerAudio();
       document.getElementById("progArmar").textContent = "Actividad completa";
       document.getElementById("armarEmoji").textContent = "🌟";
       document.getElementById("armarCompleta").classList.remove("visible");
@@ -1078,7 +1134,7 @@
         disableButtons("#letrasDisponibles button", true);
         document.getElementById("armarCompleta").classList.add("visible");
         setMessage("msgArmar", `¡Muy bien! Formaste ${mostrarPalabra(palabraArmarVisible)}.`, "ok-message");
-        setTimeout(avanzarArmar, 850);
+        escucharRespuestaCorrecta(palabraArmarVisible, avanzarArmar);
       } else {
         setMessage("msgArmar", "Revisá el orden. Decí la palabra despacito y volvé a intentarlo.", "bad-message");
       }
