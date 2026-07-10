@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Damas del Gran Árbol</title>
+<!-- Sprite Pass: contraste de fichas marrón cacao y dorado cálido -->
+<style>
+:root{
+  --bg:#dff2d7; --deep:#244d36; --leaf:#4b8f53; --leaf2:#6caf6f;
+  --wood:#8b5a2b; --wood2:#c39053; --cream:#fff8df; --gold:#f3ca52;
+  --blue:#477aa8; --red:#b65b4f; --ink:#183326;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(#c7ecf0,#dff2d7);color:var(--ink)}
+body{display:flex;justify-content:center;align-items:flex-start;padding:8px;overflow-x:hidden}
+.app{
+  width:min(1100px,100%);background:#f7f0d0;border:4px solid #446b43;border-radius:22px;
+  overflow:hidden;box-shadow:0 18px 48px rgba(24,67,41,.28)
+}
+header{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  background:linear-gradient(#315f3c,#21462e);color:#fff8df;padding:10px 14px
+}
+.title{font-weight:900;font-size:22px;text-shadow:0 2px #183326}
+.hud{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:#fff8df;color:#25442f;border:2px solid #d2b75a;border-radius:999px;padding:7px 10px;font-weight:900}
+main{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:12px;padding:12px;background:#b9db95}
+.boardWrap{position:relative;min-width:0}
+canvas{
+  display:block;width:100%;height:auto;max-height:78vh;object-fit:contain;
+  background:#7eab67;border:4px solid #5f7f48;border-radius:18px;touch-action:none
+}
+.side{
+  background:#fff8df;border:3px solid #8b5a2b;border-radius:18px;padding:14px;box-shadow:0 6px #65421f;
+  display:flex;flex-direction:column;gap:10px
+}
+.side h2{margin:0;color:#315f3c;font-size:20px}
+.status{
+  background:#edf7df;border:2px solid #93b76d;border-radius:14px;padding:10px;font-weight:900;line-height:1.35
+}
+button{
+  border:0;border-radius:14px;padding:12px 14px;font-weight:900;font-size:15px;cursor:pointer;
+  color:white;background:#3f8f51;box-shadow:0 5px #245d35
+}
+button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}
+button.soft{background:#8a6844;box-shadow:0 5px #60482f}
+button.warn{background:#b7644e;box-shadow:0 5px #7d4032}
+button:active{transform:translateY(3px);box-shadow:0 2px #333}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+small.note{color:#5b704e;line-height:1.35}
+.overlay{
+  position:fixed;inset:0;background:rgba(14,39,29,.62);display:flex;align-items:center;justify-content:center;
+  padding:18px;z-index:20
+}
+.card{
+  width:min(760px,95%);max-height:90vh;overflow:auto;background:#fff8df;border:4px solid #8b5a2b;
+  border-radius:22px;padding:22px;text-align:center;box-shadow:0 10px #5c3a1f
+}
+.card h1,.card h2{margin:0 0 12px;color:#2b5b39}
+.card p,.card li{font-size:17px;line-height:1.45}
+.card ul{text-align:left}
+.menuGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.modeRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.teacherPanel{text-align:left;background:#f0f7e5;border:2px solid #9fba78;border-radius:14px;padding:12px}
+.voiceRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.footer{text-align:center;background:#183326;color:#dcebd9;padding:8px;font-size:12px;font-weight:700}
+@media(max-width:860px){
+  main{grid-template-columns:1fr}
+  .side{order:2}
+  canvas{max-height:none}
+}
+@media(max-width:600px){
+  body{padding:3px}.app{border-radius:12px}.title{font-size:17px;width:100%;text-align:center}
+  header{justify-content:center}.pill{font-size:12px;padding:5px 8px}
+  main{padding:6px}.side{padding:10px}
+  .menuGrid{grid-template-columns:1fr}.modeRow{grid-template-columns:1fr}
+  .card{padding:16px}.card p,.card li{font-size:15px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="title">🐒 DAMAS DEL GRAN ÁRBOL</div>
+  <div class="hud">
+    <div class="pill">Turno: <span id="turnLabel">Equipo Hoja</span></div>
+    <div class="pill">🍃 <span id="greenCount">12</span></div>
+    <div class="pill">🍂 <span id="goldCount">12</span></div>
+  </div>
+</header>
+
+<main>
+  <div class="boardWrap">
+    <canvas id="board" width="760" height="760" aria-label="Tablero de damas"></canvas>
+  </div>
+  <aside class="side">
+    <h2>Partida</h2>
+    <div class="status" id="status">Elegí un modo para comenzar.</div>
+    <div class="controls">
+      <button onclick="showMenu()">Nueva partida</button>
+      <button class="secondary" onclick="toggleMusic()">🎵 <span id="musicText">Música: sí</span></button>
+      <button class="soft" onclick="showTeacher()">🦍 Modo Docente</button>
+      <button class="warn" onclick="undoMove()">↶ Deshacer</button>
+    </div>
+    <small class="note">
+      Tocá una ficha y después un casillero iluminado. Si hay una captura posible, debe realizarse.
+    </small>
+  </aside>
+</main>
+<div class="footer">Sencillo, nunca simple. Cada detalle está hecho con amor.</div>
+</div>
+
+<div class="overlay" id="menuOverlay">
+  <div class="card">
+    <h1>🌳 Damas del Gran Árbol</h1>
+    <p>Dos equipos de monitos se encuentran para jugar una partida tranquila bajo las ramas del Gran Árbol.</p>
+    <div class="menuGrid">
+      <button onclick="startPvp()">👥 Dos jugadores</button>
+      <button class="secondary" onclick="showAiLevels()">🤖 Contra la computadora</button>
+      <button class="soft" onclick="showTeacher()">🦍 Modo Docente</button>
+      <button class="soft" onclick="toggleMusic()">🎵 Activar/desactivar música</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="aiOverlay" style="display:none">
+  <div class="card">
+    <h2>Elegí la dificultad</h2>
+    <div class="modeRow">
+      <button onclick="startAi('easy')">Fácil</button>
+      <button class="secondary" onclick="startAi('medium')">Medio</button>
+      <button class="warn" onclick="startAi('hard')">Difícil</button>
+    </div>
+    <div class="voiceRow"><button class="soft" onclick="hideAi()">Volver</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="teacherOverlay" style="display:none">
+  <div class="card">
+    <h2>🦍 Modo Docente</h2>
+    <div class="teacherPanel">
+      <p><strong>Objetivo:</strong> capturar todas las fichas del equipo contrario o dejarlo sin movimientos.</p>
+      <p><strong>Cómo se juega:</strong> cada ficha avanza en diagonal por los casilleros oscuros. Para capturar, salta por encima de una ficha rival y cae en el casillero vacío que está detrás.</p>
+      <p><strong>Reglas importantes:</strong> si existe una captura, hay que realizarla. Si después de capturar se puede volver a saltar, la jugada continúa. Al llegar al extremo opuesto, el monito recibe una corona de hojas, puede moverse hacia ambos lados y recorrer varios casilleros por una diagonal libre.</p>
+      <p><strong>Estrategias:</strong> proteger las fichas, evitar dejarlas solas, controlar el centro y pensar qué puede responder el rival.</p>
+      <p><strong>Errores frecuentes:</strong> mover sobre casilleros claros, olvidar una captura disponible o dejar una ficha expuesta.</p>
+      <p><strong>Preguntas para conversar:</strong> ¿por qué elegiste esa jugada? ¿Qué podía hacer el rival después? ¿Había otra opción más segura?</p>
+    </div>
+    <div class="voiceRow">
+      <button onclick="speakRules()">🔊 Escuchar las reglas</button>
+      <button class="secondary" onclick="stopSpeaking()">⏹ Detener voz</button>
+      <button class="soft" onclick="hideTeacher()">Volver</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="endOverlay" style="display:none">
+  <div class="card">
+    <h2 id="endTitle">¡Partida terminada!</h2>
+    <p id="endText"></p>
+    <div class="buttons">
+      <button onclick="restartCurrent()">Jugar otra vez</button>
+      <button class="secondary" onclick="showMenu()">Elegir modo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+const canvas=document.getElementById('board');
+const ctx=canvas.getContext('2d');
+const statusEl=document.getElementById('status');
+const turnLabel=document.getElementById('turnLabel');
+const greenCount=document.getElementById('greenCount');
+const goldCount=document.getElementById('goldCount');
+
+const EMPTY=0, GREEN=1, GOLD=2, GREEN_K=3, GOLD_K=4;
+let board=[], turn=GREEN, selected=null, legalMoves=[], mustContinue=null;
+let mode='pvp', aiLevel='easy', gameOver=false, history=[];
+let musicOn=true, audioCtx=null, musicTimer=null, currentModeSnapshot={mode:'pvp',aiLevel:'easy'};
+
+function initBoard(){
+  board=Array.from({length:8},()=>Array(8).fill(EMPTY));
+  for(let r=0;r<3;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=GOLD;
+  for(let r=5;r<8;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=GREEN;
+  turn=GREEN;selected=null;legalMoves=[];mustContinue=null;gameOver=false;history=[];
+  updateAll();
+}
+
+function isGreen(p){return p===GREEN||p===GREEN_K}
+function isGold(p){return p===GOLD||p===GOLD_K}
+function isKing(p){return p===GREEN_K||p===GOLD_K}
+function enemyOf(p,q){return (isGreen(p)&&isGold(q))||(isGold(p)&&isGreen(q))}
+function dirsFor(p){
+  if(isKing(p)) return [[-1,-1],[-1,1],[1,-1],[1,1]];
+  return isGreen(p)?[[-1,-1],[-1,1]]:[[1,-1],[1,1]];
+}
+
+function inBounds(r,c){return r>=0&&r<8&&c>=0&&c<8}
+
+function capturesFor(r,c,b=board){
+  const p=b[r][c], out=[];
+  if(!p) return out;
+
+  // Las damas coronadas son "voladoras": recorren toda la diagonal.
+  // Pueden saltar la primera ficha rival que encuentran y caer en
+  // cualquiera de los casilleros vacíos que haya detrás.
+  if(isKing(p)){
+    for(const [dr,dc] of dirsFor(p)){
+      let rr=r+dr, cc=c+dc;
+      let enemy=null;
+
+      while(inBounds(rr,cc)){
+        const cell=b[rr][cc];
+
+        if(cell===EMPTY){
+          if(enemy){
+            out.push({
+              from:{r,c},
+              to:{r:rr,c:cc},
+              capture:{r:enemy.r,c:enemy.c}
+            });
+          }
+          rr+=dr; cc+=dc;
+          continue;
+        }
+
+        if(enemy) break;               // Ya había una pieza en esta diagonal.
+        if(enemyOf(p,cell)){
+          enemy={r:rr,c:cc};           // Primera rival encontrada.
+          rr+=dr; cc+=dc;
+          continue;
+        }
+        break;                         // Una ficha propia bloquea el camino.
+      }
+    }
+    return out;
+  }
+
+  // Fichas comunes: captura corta.
+  for(const [dr,dc] of dirsFor(p)){
+    const mr=r+dr, mc=c+dc, tr=r+dr*2, tc=c+dc*2;
+    if(inBounds(tr,tc)&&enemyOf(p,b[mr][mc])&&b[tr][tc]===EMPTY){
+      out.push({from:{r,c},to:{r:tr,c:tc},capture:{r:mr,c:mc}});
+    }
+  }
+  return out;
+}
+
+function normalMovesFor(r,c,b=board){
+  const p=b[r][c], out=[];
+  if(!p) return out;
+
+  // Una dama coronada puede avanzar cualquier cantidad de casilleros
+  // mientras la diagonal permanezca libre.
+  if(isKing(p)){
+    for(const [dr,dc] of dirsFor(p)){
+      let tr=r+dr, tc=c+dc;
+      while(inBounds(tr,tc)&&b[tr][tc]===EMPTY){
+        out.push({from:{r,c},to:{r:tr,c:tc},capture:null});
+        tr+=dr; tc+=dc;
+      }
+    }
+    return out;
+  }
+
+  for(const [dr,dc] of dirsFor(p)){
+    const tr=r+dr, tc=c+dc;
+    if(inBounds(tr,tc)&&b[tr][tc]===EMPTY){
+      out.push({from:{r,c},to:{r:tr,c:tc},capture:null});
+    }
+  }
+  return out;
+}
+
+function allMovesFor(player,b=board){
+  const captures=[], normals=[];
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+    const p=b[r][c];
+    if((player===GREEN&&isGreen(p))||(player===GOLD&&isGold(p))){
+      captures.push(...capturesFor(r,c,b));
+      normals.push(...normalMovesFor(r,c,b));
+    }
+  }
+  return captures.length?captures:normals;
+}
+
+function cloneBoard(b=board){return b.map(row=>row.slice())}
+
+function applyMoveToBoard(b,m){
+  const nb=cloneBoard(b);
+  let p=nb[m.from.r][m.from.c];
+  nb[m.from.r][m.from.c]=EMPTY;
+  nb[m.to.r][m.to.c]=p;
+  if(m.capture) nb[m.capture.r][m.capture.c]=EMPTY;
+  if(p===GREEN&&m.to.r===0) nb[m.to.r][m.to.c]=GREEN_K;
+  if(p===GOLD&&m.to.r===7) nb[m.to.r][m.to.c]=GOLD_K;
+  return nb;
+}
+
+function makeMove(m,fromAi=false){
+  if(gameOver) return;
+  history.push({
+    board:cloneBoard(),turn,selected,mustContinue,
+    legalMoves:JSON.parse(JSON.stringify(legalMoves))
+  });
+  board=applyMoveToBoard(board,m);
+  selected=null;legalMoves=[];
+
+  const movedPiece=board[m.to.r][m.to.c];
+  const follow=m.capture?capturesFor(m.to.r,m.to.c):[];
+  if(m.capture&&follow.length){
+    mustContinue={r:m.to.r,c:m.to.c};
+    selected=mustContinue;
+    legalMoves=follow;
+    setStatus('La captura continúa.');
+    updateAll();
+    if(mode==='ai'&&turn===GOLD) setTimeout(aiTurn,500);
+    return;
+  }
+
+  mustContinue=null;
+  turn=turn===GREEN?GOLD:GREEN;
+  updateAll();
+  checkEnd();
+
+  if(!gameOver&&mode==='ai'&&turn===GOLD&&!fromAi){
+    setStatus('La computadora está pensando...');
+    setTimeout(aiTurn,550);
+  }
+}
+
+function checkEnd(){
+  const g=countPieces(GREEN), y=countPieces(GOLD);
+  const moves=allMovesFor(turn);
+  if(g===0||y===0||moves.length===0){
+    gameOver=true;
+    let winner;
+    if(g===0) winner='Equipo Dorado';
+    else if(y===0) winner='Equipo Hoja';
+    else winner=turn===GREEN?'Equipo Dorado':'Equipo Hoja';
+    document.getElementById('endTitle').textContent='🌿 ¡Partida terminada!';
+    document.getElementById('endText').textContent=`Ganó ${winner}.`;
+    document.getElementById('endOverlay').style.display='flex';
+    playWin();
+  }
+}
+
+function countPieces(player){
+  let n=0;
+  for(const row of board) for(const p of row){
+    if(player===GREEN&&isGreen(p)) n++;
+    if(player===GOLD&&isGold(p)) n++;
+  }
+  return n;
+}
+
+function selectCell(r,c){
+  if(gameOver) return;
+  if(mode==='ai'&&turn===GOLD) return;
+
+  const clickedMove=legalMoves.find(m=>m.to.r===r&&m.to.c===c);
+  if(clickedMove){makeMove(clickedMove);return;}
+
+  const p=board[r][c];
+  const belongs=(turn===GREEN&&isGreen(p))||(turn===GOLD&&isGold(p));
+  if(!belongs) return;
+
+  const all=allMovesFor(turn);
+  const moves=all.filter(m=>m.from.r===r&&m.from.c===c);
+  if(moves.length){
+    selected={r,c};legalMoves=moves;
+    setStatus(moves[0].capture?'Captura disponible.':'Elegí un casillero iluminado.');
+    draw();
+  }
+}
+
+function aiTurn(){
+  if(gameOver||turn!==GOLD) return;
+  const moves=allMovesFor(GOLD);
+  if(!moves.length){checkEnd();return;}
+  let move;
+  if(aiLevel==='easy'){
+    move=moves[Math.floor(Math.random()*moves.length)];
+  }else if(aiLevel==='medium'){
+    move=chooseMedium(moves);
+  }else{
+    move=chooseHard(moves);
+  }
+  makeMove(move,true);
+  if(!gameOver&&turn===GOLD) setTimeout(aiTurn,450);
+}
+
+function chooseMedium(moves){
+  let best=[],score=-Infinity;
+  for(const m of moves){
+    const s=moveScore(m,board);
+    if(s>score){score=s;best=[m]}else if(s===score) best.push(m);
+  }
+  return best[Math.floor(Math.random()*best.length)];
+}
+
+function moveScore(m,b){
+  let s=0;
+  if(m.capture) s+=8;
+  const p=b[m.from.r][m.from.c];
+  if(!isKing(p)&&m.to.r===7) s+=12;
+  if(m.to.c>=2&&m.to.c<=5) s+=2;
+  const nb=applyMoveToBoard(b,m);
+  const opp=allMovesFor(GREEN,nb);
+  s-=opp.filter(x=>x.capture).length*3;
+  return s+Math.random()*.5;
+}
+
+function chooseHard(moves){
+  let bestMove=moves[0],best=-Infinity;
+  for(const m of moves){
+    const nb=applyMoveToBoard(board,m);
+    const val=minimax(nb,3,false,-Infinity,Infinity);
+    if(val>best){best=val;bestMove=m;}
+  }
+  return bestMove;
+}
+
+function minimax(b,depth,maximizing,alpha,beta){
+  if(depth===0) return evaluate(b);
+  const player=maximizing?GOLD:GREEN;
+  const moves=allMovesFor(player,b);
+  if(!moves.length) return maximizing?-999:999;
+  if(maximizing){
+    let value=-Infinity;
+    for(const m of moves){
+      value=Math.max(value,minimax(applyMoveToBoard(b,m),depth-1,false,alpha,beta));
+      alpha=Math.max(alpha,value);if(alpha>=beta)break;
+    }
+    return value;
+  }else{
+    let value=Infinity;
+    for(const m of moves){
+      value=Math.min(value,minimax(applyMoveToBoard(b,m),depth-1,true,alpha,beta));
+      beta=Math.min(beta,value);if(alpha>=beta)break;
+    }
+    return value;
+  }
+}
+
+function evaluate(b){
+  let s=0;
+  for(let r=0;r<8;r++) for(let c=0;c<8;c++){
+    const p=b[r][c];
+    if(p===GOLD)s+=5+r*.15;
+    if(p===GOLD_K)s+=9;
+    if(p===GREEN)s-=5+(7-r)*.15;
+    if(p===GREEN_K)s-=9;
+  }
+  return s;
+}
+
+function undoMove(){
+  if(!history.length||gameOver) return;
+  const h=history.pop();
+  board=h.board;turn=h.turn;selected=h.selected;mustContinue=h.mustContinue;legalMoves=h.legalMoves;
+  updateAll();
+}
+
+function updateAll(){
+  greenCount.textContent=countPieces(GREEN);
+  goldCount.textContent=countPieces(GOLD);
+  turnLabel.textContent=turn===GREEN?'Equipo Hoja':'Equipo Dorado';
+
+  const moves=allMovesFor(turn);
+  const captureRequired=moves.some(m=>m.capture);
+
+  if(mustContinue){
+    setStatus('Captura obligatoria: la misma ficha debe seguir comiendo.');
+  }else if(captureRequired){
+    setStatus('¡Captura obligatoria! Elegí una ficha que brilla.');
+  }else{
+    setStatus(turn===GREEN?'Turno del Equipo Hoja.':'Turno del Equipo Dorado.');
+  }
+  draw();
+}
+
+function setStatus(t){statusEl.textContent=t}
+
+function forcedCaptureOrigins(){
+  if(gameOver) return new Set();
+  const moves=allMovesFor(turn);
+  if(!moves.some(m=>m.capture)) return new Set();
+  return new Set(moves.filter(m=>m.capture).map(m=>m.from.r+','+m.from.c));
+}
+
+function draw(){
+  const W=canvas.width,H=canvas.height,margin=26,size=Math.min((W-margin*2)/8,(H-margin*2)/8);
+  const ox=(W-size*8)/2,oy=(H-size*8)/2;
+  ctx.clearRect(0,0,W,H);
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#b9e8ef');g.addColorStop(1,'#7fbf72');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  drawLeavesBackground(W,H);
+
+  ctx.save();ctx.translate(ox,oy);
+  ctx.fillStyle='#8b5a2b';ctx.fillRect(-12,-12,size*8+24,size*8+24);
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    ctx.fillStyle=(r+c)%2===0?'#e9d8a4':'#5f8b4e';
+    ctx.fillRect(c*size,r*size,size,size);
+  }
+  if(selected){
+    ctx.fillStyle='rgba(255,245,120,.45)';
+    ctx.fillRect(selected.c*size,selected.r*size,size,size);
+  }
+  for(const m of legalMoves){
+    ctx.fillStyle='rgba(98,181,238,.48)';
+    ctx.beginPath();ctx.arc(m.to.c*size+size/2,m.to.r*size+size/2,size*.18,0,Math.PI*2);ctx.fill();
+  }
+
+  // Si hay captura obligatoria, las fichas habilitadas brillan.
+  const forced=forcedCaptureOrigins();
+  const pulse=.70+.30*Math.sin(Date.now()/180);
+  for(const key of forced){
+    const [r,c]=key.split(',').map(Number);
+    ctx.save();
+    ctx.shadowColor='rgba(255,238,92,.95)';
+    ctx.shadowBlur=size*.20*pulse;
+    ctx.strokeStyle=`rgba(255,244,120,${.65+.30*pulse})`;
+    ctx.lineWidth=Math.max(4,size*.055);
+    ctx.beginPath();
+    ctx.arc(c*size+size/2,r*size+size/2,size*.39,0,Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++) if(board[r][c]) drawPiece(board[r][c],c*size+size/2,r*size+size/2,size);
+  ctx.restore();
+
+  // Mantiene vivo el brillo sin alterar la lógica del juego.
+  if(forced.size && !gameOver) requestAnimationFrame(draw);
+}
+
+function drawLeavesBackground(W,H){
+  ctx.fillStyle='rgba(40,95,49,.18)';
+  for(let i=0;i<28;i++){
+    const x=(i*97+41)%W,y=(i*61+53)%H;
+    ctx.beginPath();ctx.ellipse(x,y,18+(i%3)*5,8+(i%2)*3,(i%5)*.3,0,Math.PI*2);ctx.fill();
+  }
+}
+
+function drawPiece(p,x,y,size){
+  const brownTeam=isGreen(p);
+  ctx.save();ctx.translate(x,y);
+  const r=size*.34;
+
+  // Borde claro y sombra: las fichas se leen bien sobre cualquier casillero.
+  ctx.shadowColor='rgba(0,0,0,.28)';ctx.shadowBlur=6;ctx.shadowOffsetY=4;
+  ctx.fillStyle=brownTeam?'#8b5434':'#e0ad42';
+  ctx.strokeStyle=brownTeam?'#f1d2a2':'#fff0a3';
+  ctx.lineWidth=Math.max(2,size*.035);
+  ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.shadowColor='transparent';
+
+  // Cabeza y orejas.
+  ctx.fillStyle=brownTeam?'#5e3827':'#8b572d';
+  ctx.beginPath();ctx.arc(0,-r*.05,r*.52,0,Math.PI*2);ctx.fill();
+  ctx.beginPath();ctx.arc(-r*.48,-r*.14,r*.2,0,Math.PI*2);ctx.arc(r*.48,-r*.14,r*.2,0,Math.PI*2);ctx.fill();
+
+  // Rostro.
+  ctx.fillStyle=brownTeam?'#e4b77d':'#f1c983';
+  ctx.beginPath();ctx.ellipse(0,r*.10,r*.36,r*.28,0,0,Math.PI*2);ctx.fill();
+
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(-r*.14,-r*.12,r*.08,0,Math.PI*2);ctx.arc(r*.14,-r*.12,r*.08,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#1d2a23';
+  ctx.beginPath();ctx.arc(-r*.14,-r*.12,r*.035,0,Math.PI*2);ctx.arc(r*.14,-r*.12,r*.035,0,Math.PI*2);ctx.fill();
+
+  // Expresiones apenas diferentes para no depender solamente del color.
+  ctx.strokeStyle='#5b3424';
+  ctx.lineWidth=Math.max(1.5,size*.022);
+  ctx.lineCap='round';
+  ctx.beginPath();
+  if(brownTeam){
+    ctx.arc(0,r*.10,r*.13,.20,Math.PI-.20);
+  }else{
+    ctx.arc(0,r*.12,r*.12,.05,Math.PI-.05);
+    ctx.moveTo(r*.22,r*.03);ctx.lineTo(r*.27,r*.08);
+  }
+  ctx.stroke();
+
+  // Corona de hojas más clara para las damas.
+  if(isKing(p)){
+    ctx.fillStyle='#76a94d';
+    ctx.strokeStyle='#315f37';
+    ctx.lineWidth=Math.max(2,size*.025);
+    ctx.beginPath();
+    ctx.moveTo(-r*.42,-r*.58);
+    ctx.lineTo(-r*.28,-r*.90);
+    ctx.lineTo(-r*.08,-r*.69);
+    ctx.lineTo(r*.08,-r*.96);
+    ctx.lineTo(r*.28,-r*.69);
+    ctx.lineTo(r*.43,-r*.90);
+    ctx.lineTo(r*.42,-r*.56);
+    ctx.closePath();
+    ctx.fill();ctx.stroke();
+
+    ctx.fillStyle='#f4d35e';
+    ctx.beginPath();ctx.arc(0,-r*.72,r*.08,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+canvas.addEventListener('pointerdown',e=>{
+  const rect=canvas.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*(canvas.width/rect.width),y=(e.clientY-rect.top)*(canvas.height/rect.height);
+  const margin=26,size=Math.min((canvas.width-margin*2)/8,(canvas.height-margin*2)/8);
+  const ox=(canvas.width-size*8)/2,oy=(canvas.height-size*8)/2;
+  const c=Math.floor((x-ox)/size),r=Math.floor((y-oy)/size);
+  if(inBounds(r,c))selectCell(r,c);
+});
+
+function startPvp(){mode='pvp';currentModeSnapshot={mode,aiLevel};hideMenus();initBoard();startMusic()}
+function showAiLevels(){document.getElementById('menuOverlay').style.display='none';document.getElementById('aiOverlay').style.display='flex'}
+function hideAi(){document.getElementById('aiOverlay').style.display='none';document.getElementById('menuOverlay').style.display='flex'}
+function startAi(level){mode='ai';aiLevel=level;currentModeSnapshot={mode,aiLevel};hideMenus();initBoard();startMusic()}
+function restartCurrent(){document.getElementById('endOverlay').style.display='none';initBoard()}
+function hideMenus(){document.getElementById('menuOverlay').style.display='none';document.getElementById('aiOverlay').style.display='none'}
+function showMenu(){document.getElementById('endOverlay').style.display='none';document.getElementById('menuOverlay').style.display='flex'}
+function showTeacher(){document.getElementById('teacherOverlay').style.display='flex'}
+function hideTeacher(){document.getElementById('teacherOverlay').style.display='none';stopSpeaking()}
+
+function speakRules(){
+  stopSpeaking();
+  const text='Bienvenidos a Damas del Gran Árbol. Cada jugador tiene doce monitos. Las fichas avanzan en diagonal por los casilleros oscuros. Para capturar una ficha rival, hay que saltar por encima de ella y caer en el casillero vacío que está detrás. Si existe una captura, hay que realizarla. Las fichas que pueden comer aparecen iluminadas. Si después de capturar se puede volver a saltar, la jugada continúa. Al llegar al extremo opuesto, el monito recibe una corona de hojas, puede moverse hacia ambos lados y recorrer varios casilleros por una diagonal libre. Gana quien captura todas las fichas rivales o deja al otro equipo sin movimientos.';
+  const u=new SpeechSynthesisUtterance(text);u.lang='es-AR';u.rate=.92;u.pitch=1;
+  speechSynthesis.speak(u);
+}
+function stopSpeaking(){if('speechSynthesis'in window)speechSynthesis.cancel()}
+
+function initAudio(){
+  if(!musicOn)return;
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended')audioCtx.resume();
+}
+function tone(freq,dur,type='sine',vol=.03,when=0){
+  if(!musicOn)return;
+  initAudio();
+  const t=audioCtx.currentTime+when,o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=type;o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(audioCtx.destination);o.start(t);o.stop(t+dur+.05);
+}
+const N={C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,B4:493.88,C5:523.25,D5:587.33,E5:659.25,G3:196,B3:246.94};
+const prog=[
+  ['E4','G4','B4','D5'],['A4','C5','E5','G4'],['D4','F4','A4','C5'],
+  ['G4','B4','D5','F4'],['F4','A4','C5','E4'],['C4','E4','G4','B4'],
+  ['C4','E4','G4','B4'],['C4','E4','G4','B4'],['B3','D4','F4','A4']
+];
+let musicStep=0;
+function startMusic(){
+  stopMusic();
+  if(!musicOn)return;
+  initAudio();musicStep=0;playMusicStep();
+  musicTimer=setInterval(playMusicStep,950);
+}
+function stopMusic(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
+function playMusicStep(){
+  if(!musicOn)return;
+  const chord=prog[musicStep%prog.length];
+  chord.forEach((n,i)=>tone(N[n],.62,'sine',.012,i*.015));
+  const melody=chord[(musicStep+1)%chord.length];
+  tone(N[melody],.35,'triangle',.028,.08);
+  tone(120,.08,'square',.012,.02);
+  tone(160,.05,'square',.009,.48);
+  musicStep++;
+}
+function toggleMusic(){
+  musicOn=!musicOn;
+  document.getElementById('musicText').textContent='Música: '+(musicOn?'sí':'no');
+  if(musicOn)startMusic();else stopMusic();
+}
+function playWin(){tone(523,.18,'triangle',.05);tone(659,.18,'triangle',.05,.16);tone(784,.28,'triangle',.06,.32)}
+
+initBoard();
+</script>
+</body>
+</html>
