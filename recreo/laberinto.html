@@ -63,10 +63,83 @@ function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webki
 function tone(freq,dur,type='sine',vol=.05,delay=0){initAudio();const t=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(audioCtx.destination);o.start(t);o.stop(t+dur+.05)}
 function pluckSound(){tone(660,.12,'triangle',.05);tone(880,.15,'triangle',.04,.08)}function friendSound(){tone(392,.15,'sine',.04);tone(523,.2,'sine',.05,.12)}function bumpSound(){tone(110,.08,'square',.025)}function winSound(){tone(523,.16,'triangle',.06);tone(659,.16,'triangle',.06,.14);tone(784,.28,'triangle',.06,.28)}
 function midi(n){return 440*Math.pow(2,(n-69)/12)}
-function softNote(note,dur=.45,type='triangle',vol=.018,delay=0){tone(midi(note),dur,type,vol,delay)}
-function snare(delay=0){if(!audioCtx)return;const t=audioCtx.currentTime+delay,buffer=audioCtx.createBuffer(1,Math.floor(audioCtx.sampleRate*.08),audioCtx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,2);const src=audioCtx.createBufferSource(),f=audioCtx.createBiquadFilter(),g=audioCtx.createGain();src.buffer=buffer;f.type='highpass';f.frequency.value=1100;g.gain.setValueAtTime(.018,t);g.gain.exponentialRampToValueAtTime(.0001,t+.08);src.connect(f).connect(g).connect(audioCtx.destination);src.start(t)}
-function musicTick(){if(!audioCtx||!musicOn)return;const chords=[[62,65,69,72],[55,58,62,65],[60,64,67,71]],melody=[69,72,74,72,67,70,74,70,64,67,71,60],chord=chords[Math.floor(musicStep/4)%3],beat=60/76;chord.forEach((n,i)=>softNote(n-12,.62,'triangle',.007,i*.025));softNote(chord[0]-24,.55,'sine',.012);if(musicStep%2===1)snare(.02);softNote(melody[musicStep%12],.52,musicStep<8?'square':'triangle',.016,.04);musicStep=(musicStep+1)%12}
-function startMusic(){if(musicTimer)return;musicTick();musicTimer=setInterval(musicTick,Math.round(60000/76))}
+
+/* Piano sintetizado suave: cada nota combina dos armónicos y una caída lenta. */
+function pianoNote(note,dur=.8,vol=.018,delay=0){
+  if(!musicOn)return;
+  initAudio();
+  const t=audioCtx.currentTime+delay;
+  const master=audioCtx.createGain();
+  const filter=audioCtx.createBiquadFilter();
+  filter.type='lowpass';
+  filter.frequency.setValueAtTime(2300,t);
+  master.gain.setValueAtTime(.0001,t);
+  master.gain.exponentialRampToValueAtTime(vol,t+.025);
+  master.gain.exponentialRampToValueAtTime(.0001,t+dur);
+
+  const fundamental=audioCtx.createOscillator();
+  const harmonic=audioCtx.createOscillator();
+  const harmonicGain=audioCtx.createGain();
+  fundamental.type='triangle';
+  harmonic.type='sine';
+  fundamental.frequency.setValueAtTime(midi(note),t);
+  harmonic.frequency.setValueAtTime(midi(note)*2,t);
+  harmonic.detune.setValueAtTime(3,t);
+  harmonicGain.gain.value=.16;
+
+  fundamental.connect(filter);
+  harmonic.connect(harmonicGain).connect(filter);
+  filter.connect(master).connect(audioCtx.destination);
+  fundamental.start(t); harmonic.start(t);
+  fundamental.stop(t+dur+.08); harmonic.stop(t+dur+.08);
+}
+
+/*
+  Adaptación breve inspirada en el Nocturno Op. 9 n.º 2 de Chopin.
+  No reproduce una grabación: toda la música se genera en tiempo real.
+  Tonalidad: Mi bemol mayor. Pulso tranquilo, sin percusión.
+*/
+const nocturneMeasures=[
+  {bass:[39,46,51,55,58,63], melody:[[67,1.0],[70,.5],[67,.5],[75,1.0],[74,1.0]]},
+  {bass:[41,48,53,56,60,65], melody:[[72,1.0],[70,.5],[68,.5],[67,1.0],[65,1.0]]},
+  {bass:[43,50,55,58,62,67], melody:[[67,.75],[68,.25],[70,1.0],[74,1.0],[72,1.0]]},
+  {bass:[44,51,56,60,63,68], melody:[[70,1.0],[68,.5],[67,.5],[65,1.0],[63,1.0]]},
+  {bass:[39,46,51,55,58,63], melody:[[67,.5],[70,.5],[75,1.0],[77,.5],[75,.5],[74,1.0]]},
+  {bass:[41,48,53,56,60,65], melody:[[72,.75],[74,.25],[72,.5],[70,.5],[68,1.0],[67,1.0]]},
+  {bass:[43,50,55,58,62,67], melody:[[70,.5],[74,.5],[79,1.0],[77,.5],[75,.5],[74,1.0]]},
+  {bass:[39,46,51,55,58,63], melody:[[72,.75],[70,.25],[68,.5],[67,.5],[65,1.0],[63,1.0]]}
+];
+
+const NOCTURNE_BEAT=.52;
+const NOCTURNE_MEASURE_SECONDS=NOCTURNE_BEAT*6;
+
+function playNocturneMeasure(){
+  if(!audioCtx||!musicOn)return;
+  const measure=nocturneMeasures[musicStep%nocturneMeasures.length];
+
+  /* Mano izquierda: bajo y arpegio de seis notas. */
+  measure.bass.forEach((note,i)=>{
+    const emphasis=i===0?1.35:1;
+    pianoNote(note,NOCTURNE_BEAT*2.7,.009*emphasis,i*NOCTURNE_BEAT);
+  });
+
+  /* Mano derecha: melodía cantabile, levemente desplazada del arpegio. */
+  let cursor=.08;
+  measure.melody.forEach(([note,beats])=>{
+    pianoNote(note,Math.max(.48,beats*NOCTURNE_BEAT*1.75),.020,cursor);
+    cursor+=beats*NOCTURNE_BEAT;
+  });
+
+  musicStep=(musicStep+1)%nocturneMeasures.length;
+}
+
+function startMusic(){
+  if(musicTimer)return;
+  initAudio();
+  musicStep=0;
+  playNocturneMeasure();
+  musicTimer=setInterval(playNocturneMeasure,Math.round(NOCTURNE_MEASURE_SECONDS*1000));
+}
 function animate(t){animTime=t/1000;draw();requestAnimationFrame(animate)}
 window.addEventListener('keydown',e=>{const map={ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1],ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0]};if(map[e.key]){e.preventDefault();tryMove(...map[e.key])}});
 [['up',0,-1],['down',0,1],['left',-1,0],['right',1,0]].forEach(([id,dx,dy])=>document.getElementById(id).addEventListener('pointerdown',e=>{e.preventDefault();tryMove(dx,dy)}));
