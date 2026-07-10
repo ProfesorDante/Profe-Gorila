@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Lectura — Aula Virtual del Profesor Dante</title>
+<style>
+:root{--text:#17213a;--muted:#5d6f82;--blue:#4f7cff;--blue2:#2f62d2;--soft:#eef6ff;--border:#dcecff;--ok:#42b86b;--ok2:#2c8b4b;--bad:#fff1d8;--badtext:#7a4c00}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;color:var(--text);min-height:100vh;padding:18px;background:radial-gradient(circle at 10% 15%,rgba(79,124,255,.12),transparent 22%),radial-gradient(circle at 90% 20%,rgba(90,160,230,.18),transparent 20%),linear-gradient(180deg,#f6fbff,#fff)}
+.app{width:100%;max-width:960px;margin:auto;background:#fff;border-radius:28px;padding:26px;box-shadow:0 14px 36px rgba(0,0,0,.08);position:relative;overflow:hidden}.app:before{content:"LEER  ESCUCHAR  VOLVER A LEER  PENSAR  🦍";position:absolute;left:18px;right:18px;top:10px;text-align:center;font-size:18px;letter-spacing:7px;color:rgba(79,124,255,.13);white-space:nowrap}h1,h2,h3{margin-top:0}h1{text-align:center;font-size:38px;margin:28px 0 8px;color:#1d3c96}.subtitle{text-align:center;color:var(--muted);font-size:18px;line-height:1.4;margin-bottom:24px}.screen{display:none}.screen.active{display:block}button{border:0;border-radius:20px;padding:18px 20px;font-size:20px;cursor:pointer;background:var(--blue);color:#fff;font-weight:bold;box-shadow:0 6px 0 var(--blue2),0 10px 16px rgba(0,0,0,.08);transition:transform .05s,box-shadow .05s,opacity .2s,background .2s}button:active{transform:translateY(5px);box-shadow:0 1px 0 var(--blue2),0 4px 8px rgba(0,0,0,.08)}button:disabled{opacity:.7;cursor:default}.light{background:#f1f1f5;color:#333;box-shadow:0 6px 0 #d2d2dc}.menu-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.menu-grid.levels{grid-template-columns:repeat(2,1fr)}.menu-card{min-height:190px;color:#1b2a63;border:3px solid #e9edf9;border-radius:24px;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 8px 18px rgba(0,0,0,.06),0 6px 0 #d8ddf5}.menu-card .icono{font-size:52px;margin-bottom:10px}.menu-card h2{font-size:24px;margin:0 0 8px}.menu-card p{font-size:16px;font-weight:normal;color:#58677d;margin:0;line-height:1.35}.mayus,.n1{background:#f1f7ff}.imprenta,.n2{background:#f3fff2}.cursivaCard,.n3{background:#fff7ea}.docente{background:#f7f0ff}.backbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}.backbar button{font-size:17px;padding:12px 16px}.card{background:#fff;border:3px solid #e9edf9;border-radius:26px;padding:22px;margin:18px 0;box-shadow:0 8px 18px rgba(0,0,0,.05)}.card h2{color:#1d3c96;font-size:27px}.topline{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}.pill{background:#f4f7ff;border:1px solid #dfe8ff;padding:10px 14px;border-radius:999px;font-weight:bold;color:#44506a}.reading-card{background:#fff;border:3px solid #ececec;border-radius:26px;padding:34px 24px;margin:16px 0 18px;text-align:center}.reading-text{font-size:46px;font-weight:bold;line-height:1.5;min-height:120px;display:flex;align-items:center;justify-content:center;text-wrap:balance;animation:fadeIn .35s ease}.reading-text.upper{text-transform:uppercase;letter-spacing:2px}.reading-text.print{font-family:Arial,sans-serif}.reading-text.cursive{font-family:"Segoe Script","Lucida Handwriting","Brush Script MT","URW Chancery L",cursive;font-weight:500;letter-spacing:0;word-spacing:.18em;font-variant-ligatures:common-ligatures contextual}.syllable-line{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:.18em .34em}.syllable-word{display:inline-flex;align-items:center;gap:.08em}.syllable{display:inline-block;padding:.05em .12em;border-radius:.28em;transition:background .18s,color .18s,transform .18s}.syllable.active{background:#fff0a8;color:#7a4c00;transform:scale(1.08)}.syllable.done{background:#e5f8ec;color:#1f7a40}.full-reading{background:#e5f8ec;color:#1f7a40;border-radius:18px;padding:10px 16px}.tip{text-align:center;background:var(--soft);border:2px solid var(--border);border-radius:20px;padding:13px;color:#1b2a63;font-size:18px;font-weight:bold;margin:16px 0}.actions{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}.listen-btn{background:#fff0bd;color:#8a5200;box-shadow:0 6px 0 #ffd56f,0 10px 16px rgba(0,0,0,.06)}.listen-btn.listening{background:#ffe49a}.message{min-height:42px;text-align:center;font-size:20px;font-weight:bold;border-radius:18px;padding:10px 12px;margin-top:14px}.ok-message{background:#e5f8ec;color:#1f7a40}.bad-message{background:var(--bad);color:var(--badtext)}.challenge-title{text-align:center;font-size:30px;color:#1d3c96;margin-bottom:8px}.challenge-help{text-align:center;color:var(--muted);font-size:18px;margin-bottom:18px}.challenge-options{display:grid;gap:14px}.challenge-option{background:#f7f8ff;color:#1f2d7a;border:3px solid #e1e6ff;box-shadow:0 6px 0 #d8ddf5;font-size:24px;line-height:1.35;min-height:86px;text-align:left}.challenge-option.correct{background:var(--ok);color:#fff;border-color:var(--ok);box-shadow:0 6px 0 var(--ok2)}.challenge-option.wrong{background:#d7d7d7;color:#555;border-color:#d7d7d7;box-shadow:0 6px 0 #b9b9b9}.eval-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}.eval-card{min-height:180px;background:#f7f8ff;color:#1f2d7a;border:3px solid #e1e6ff;box-shadow:0 6px 0 #d8ddf5}.eval-card .face{display:block;font-size:48px;margin-bottom:8px}.eval-card.selected{background:#e5f8ec;color:#1f7a40;border-color:#bfe8ce;box-shadow:0 6px 0 #9fd5b2}.final-box{text-align:center;background:#eef6ff;border:2px solid #bfd6ff;border-radius:22px;padding:22px;margin-top:18px}.final-box h3{font-size:28px;color:#1d3c96;margin-bottom:8px}.docente-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.docente-box{border:2px solid var(--border);border-radius:22px;padding:18px;line-height:1.42}.docente-box h3{color:#1d3c96;font-size:22px}.docente-box p,.docente-box li{font-size:17px}.docente-destacado{background:#eef6ff}.docente-visual{background:#f7fbff;border:2px solid var(--border);border-radius:20px;padding:14px;text-align:center}.mini-chip{display:inline-block;background:#fff;border:2px solid #bfd6ff;border-radius:999px;padding:8px 12px;margin:4px;font-weight:bold}.footer-note{text-align:center;background:#f8f8fb;border:1px solid #e4e4ea;color:#666;padding:9px 12px;border-radius:14px;margin-top:20px;font-size:13px}@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}@media(max-width:760px){body{padding:10px}.app{padding:18px}.app:before{font-size:13px;letter-spacing:3px}h1{font-size:30px}.menu-grid,.menu-grid.levels,.docente-grid,.eval-grid{grid-template-columns:1fr}.reading-text{font-size:34px;min-height:100px}.challenge-option{font-size:20px}}
+</style>
+</head>
+<body>
+<main class="app">
+<h1>📖 Lectura</h1><p class="subtitle">Primero leé con tu voz. Después escuchá el modelo y volvé a intentarlo.</p>
+<section id="fontMenu" class="screen active"><div class="menu-grid">
+<button class="menu-card mayus" onclick="chooseFont('upper')"><div class="icono">ABC</div><h2>IMPRENTA MAYÚSCULA</h2><p>Para quienes están comenzando a alfabetizarse.</p></button>
+<button class="menu-card imprenta" onclick="chooseFont('print')"><div class="icono">Aa</div><h2>Imprenta</h2><p>Mayúsculas y minúsculas dentro de palabras y oraciones.</p></button>
+<button class="menu-card cursivaCard" onclick="chooseFont('cursive')"><div class="icono">✒️ Aa</div><h2>Cursiva</h2><p>Mayúsculas y minúsculas con una escritura manuscrita legible.</p></button>
+</div></section>
+<section id="levelMenu" class="screen"><div class="backbar"><button class="light" onclick="show('fontMenu')">← Cambiar tipo de letra</button><span class="pill" id="chosenFontLabel"></span></div><div class="menu-grid levels">
+<button class="menu-card n1" onclick="startLevel(1)"><div class="icono">🐶</div><h2>Nivel 1 — Palabras</h2><p>Leer palabras conocidas de distinta extensión.</p></button>
+<button class="menu-card n2" onclick="startLevel(2)"><div class="icono">🧒 📖</div><h2>Nivel 2 — Oraciones cortas</h2><p>Leer oraciones breves y claras.</p></button>
+<button class="menu-card n3" onclick="startLevel(3)"><div class="icono">🚀 🌙</div><h2>Nivel 3 — Oraciones largas</h2><p>Leer oraciones ampliadas con más información.</p></button>
+<button class="menu-card docente" onclick="show('teacher')"><div class="icono">🦍</div><h2>Modo Docente</h2><p>Orientaciones para acompañar la práctica lectora.</p></button>
+</div></section>
+<section id="reading" class="screen card"><div class="backbar"><button class="light" onclick="returnToLevels()">← Volver a los niveles</button><span class="pill" id="levelLabel"></span></div><div class="topline"><span class="pill" id="progressLabel">Lectura 1 de 20</span><span class="pill" id="listenCount">Escuchas: 0</span></div><div class="reading-card"><div id="readingText" class="reading-text"></div></div><div id="readingTip" class="tip">💡 Leé primero. Después escuchá cómo se lee y volvé a intentarlo.</div><div class="actions"><button id="listenBtn" class="listen-btn" onclick="listenModel()">🔊 Escuchar cómo se lee</button><button onclick="nextReading()">Siguiente lectura →</button></div></section>
+<section id="challenge" class="screen card"><div class="topline"><span class="pill">Desafío de atención</span><span class="pill" id="challengeNumber"></span></div><h2 class="challenge-title">¿Cuál de estas NO leíste?</h2><p class="challenge-help">Dos aparecieron en las últimas lecturas. Una es nueva.</p><div id="challengeOptions" class="challenge-options"></div><div id="challengeMessage" class="message"></div></section>
+<section id="evaluation" class="screen card"><h2>🌱 Autoevaluación</h2><p class="subtitle">Pensá con sinceridad cómo fue tu lectura de hoy.</p><div class="eval-grid"><button class="eval-card" onclick="selectEvaluation(this,'solo')"><span class="face">😊</span>La pude leer solo o sola.</button><button class="eval-card" onclick="selectEvaluation(this,'ayuda')"><span class="face">🤝</span>La pude leer con ayuda.</button><button class="eval-card" onclick="selectEvaluation(this,'todavia')"><span class="face">🌱</span>Todavía necesito seguir practicando.</button></div><div id="finalBox" class="final-box" style="display:none"><h3>¡Gracias por pensar en tu aprendizaje!</h3><p id="finalMessage"></p><button onclick="restartLevel()">Practicar otra ronda</button><button class="light" onclick="returnToLevels()">Elegir otro nivel</button></div></section>
+<section id="teacher" class="screen card"><div class="backbar"><button class="light" onclick="show('levelMenu')">← Volver</button></div><h2>🦍 Modo Docente</h2><p class="subtitle">Una guía para acompañar la lectura sin reemplazar al alumno.</p><div class="docente-grid"><div class="docente-box docente-destacado"><h3>Objetivo</h3><p>Desarrollar reconocimiento visual, seguridad y fluidez mediante lecturas reiteradas y la comparación con un modelo oral.</p><div class="docente-visual"><span class="mini-chip">Leo</span><span>→</span><span class="mini-chip">Escucho</span><span>→</span><span class="mini-chip">Vuelvo a leer</span></div></div><div class="docente-box"><h3>Progresión</h3><p>La actividad combina dos progresiones: tipo de letra y extensión del texto.</p><ul><li>Imprenta mayúscula.</li><li>Imprenta mayúscula y minúscula.</li><li>Cursiva mayúscula y minúscula.</li></ul></div><div class="docente-box"><h3>Uso de la voz</h3><p>La voz del navegador funciona como modelo lector. En imprenta mayúscula, las sílabas se separan e iluminan de manera visual mientras la voz lee el texto completo lentamente. Después se escucha una segunda lectura a velocidad normal. De este modo se evita que el sintetizador pronuncie sílabas aisladas de forma extraña. En imprenta y cursiva se ofrece directamente el modelo de lectura completa.</p></div><div class="docente-box"><h3>Desafío cada tres lecturas</h3><p>Después de tres textos aparece “¿Cuál de estas NO leíste?”. Dos opciones pertenecen al grupo anterior y una es nueva. No suma puntos ni quita vidas: ayuda a comprobar la atención.</p></div><div class="docente-box"><h3>Rol del adulto</h3><p>Acompañar sin anticipar inmediatamente. Se puede señalar el inicio, invitar a mirar nuevamente o sugerir escuchar el modelo. La meta no es terminar rápido.</p></div><div class="docente-box"><h3>Errores frecuentes</h3><ul><li>Adivinar por la primera letra.</li><li>Omitir palabras pequeñas.</li><li>Cambiar terminaciones.</li><li>Leer muy rápido sin atender al sentido.</li></ul></div><div class="docente-box"><h3>Preguntas para conversar</h3><ul><li>¿Qué palabra reconociste primero?</li><li>¿Dónde termina la oración?</li><li>¿Qué cambió después de escuchar?</li><li>¿Podés volver a leer más despacio?</li></ul></div><div class="docente-box"><h3>Autoevaluación</h3><p>El cierre no califica. Invita a reconocer si pudo leer con autonomía, con ayuda o si todavía necesita practicar. La sinceridad también se aprende.</p></div></div></section>
+<div class="footer-note">© 2026 Dante Martín · Recurso educativo creado con asistencia de IA · Licencia CC BY-NC 4.0</div>
+</main>
+<script>
+const TOTAL=20,screens=['fontMenu','levelMenu','reading','challenge','evaluation','teacher'];const fontLabels={upper:'IMPRENTA MAYÚSCULA',print:'Imprenta',cursive:'Cursiva'};
+const pools={1:['casa','gato','perro','luna','sol','mesa','silla','libro','lápiz','mochila','pelota','escuela','familia','mariposa','astronauta','bicicleta','elefante','ventana','helado','jirafa','zapato','conejo','estrella','camino','amigo','maestra','barco','nube','flor','árbol','corazón','payaso','tren','tortuga','castillo','guitarra','manzana','abeja','montaña','dinosaurio'],2:['El gato duerme.','La nena salta.','Mi perro corre.','El sol brilla.','La luna aparece.','El astronauta viaja.','Las flores crecen.','La abeja vuela.','Mi amigo lee.','La maestra explica.','El tren avanza.','La tortuga camina.','El bebé sonríe.','La familia cocina.','El pájaro canta.','La pelota rueda.','El barco navega.','La lluvia cae.','El conejo come.','La estrella brilla.','La niña dibuja.','El niño escribe.','Mi gato juega.','La rana salta.','El caballo corre.','La mamá abraza.','El papá cocina.','La puerta se abre.','El pez nada.','La mariposa vuela.','La escuela despierta.','El árbol crece.'],3:['El gato duerme tranquilo sobre el sillón azul.','La nena salta la soga en el patio.','Mi perro corre detrás de una pelota roja.','El sol ilumina las ventanas de la escuela.','La luna aparece lentamente detrás de las nubes.','El astronauta viaja por el espacio en una nave.','Las flores del jardín necesitan agua todos los días.','La abeja vuela entre las flores amarillas.','Mi amigo lee un cuento antes de dormir.','La maestra explica una actividad nueva en el aula.','El tren avanza rápido entre las montañas.','La tortuga camina despacio por el pasto.','El bebé sonríe cuando escucha una canción.','La familia cocina una cena rica y saludable.','El pájaro canta temprano sobre una rama.','La pelota rueda hasta el fondo del patio.','El barco navega tranquilo por el mar azul.','La lluvia cae suavemente sobre los techos.','El conejo come una zanahoria junto al árbol.','La estrella más brillante aparece por la noche.','La niña dibuja una casa con muchas ventanas.','El niño escribe una carta para su abuela.','Mi gato juega con un ovillo de lana.','La rana salta desde una piedra al agua.','El caballo corre libre por el campo verde.','La mamá abraza a su hija antes de salir.','El papá cocina pan casero para la merienda.','La puerta se abre cuando llega la maestra.','El pez nada entre plantas de muchos colores.','La mariposa vuela lentamente sobre el jardín.','La escuela recibe a los chicos cada mañana.','El árbol crece fuerte junto al río.']};
+const syllableMap={"a":["a"],"abeja":["a","be","ja"],"abraza":["abra","za"],"abre":["abre"],"abuela":["abue","la"],"actividad":["ac","ti","vi","dad"],"agua":["a","gua"],"al":["al"],"amarillas":["ama","ri","llas"],"amigo":["ami","go"],"antes":["an","tes"],"aparece":["apa","re","ce"],"astronauta":["as","tro","nau","ta"],"aula":["au","la"],"avanza":["avan","za"],"azul":["azul"],"barco":["bar","co"],"bebé":["be","bé"],"bicicleta":["bi","ci","cle","ta"],"brilla":["bri","lla"],"brillante":["bri","llan","te"],"caballo":["ca","ba","llo"],"cada":["ca","da"],"cae":["ca","e"],"camina":["ca","mi","na"],"camino":["ca","mino"],"campo":["cam","po"],"canción":["can","ción"],"canta":["can","ta"],"carta":["car","ta"],"casa":["ca","sa"],"casero":["ca","se","ro"],"castillo":["cas","ti","llo"],"cena":["ce","na"],"chicos":["chi","cos"],"cocina":["co","ci","na"],"colores":["co","lo","res"],"come":["co","me"],"con":["con"],"conejo":["co","ne","jo"],"corazón":["co","ra","zón"],"corre":["co","rre"],"crece":["cre","ce"],"crecen":["cre","cen"],"cuando":["cuan","do"],"cuento":["cuen","to"],"de":["de"],"del":["del"],"desde":["des","de"],"despacio":["des","pa","cio"],"despierta":["des","pier","ta"],"detrás":["de","trás"],"dibuja":["di","bu","ja"],"dinosaurio":["di","no","sau","rio"],"dormir":["dor","mir"],"duerme":["duer","me"],"días":["dí","as"],"el":["el"],"elefante":["e","le","fan","te"],"en":["en"],"entre":["en","tre"],"escribe":["es","cri","be"],"escucha":["es","cu","cha"],"escuela":["es","cue","la"],"espacio":["es","pa","cio"],"estrella":["es","tre","lla"],"explica":["ex","pli","ca"],"familia":["fa","mi","lia"],"flor":["flor"],"flores":["flo","res"],"fondo":["fon","do"],"fuerte":["fuer","te"],"gato":["ga","to"],"guitarra":["gui","ta","rra"],"hasta":["has","ta"],"helado":["he","la","do"],"hija":["hi","ja"],"ilumina":["ilu","mi","na"],"jardín":["jar","dín"],"jirafa":["ji","ra","fa"],"juega":["jue","ga"],"junto":["jun","to"],"la":["la"],"lana":["la","na"],"las":["las"],"lee":["le","e"],"lentamente":["len","ta","men","te"],"libre":["li","bre"],"libro":["li","bro"],"llega":["lle","ga"],"lluvia":["llu","via"],"los":["los"],"luna":["lu","na"],"lápiz":["lá","piz"],"maestra":["ma","es","tra"],"mamá":["ma","má"],"manzana":["man","za","na"],"mar":["mar"],"mariposa":["ma","ri","po","sa"],"mañana":["ma","ña","na"],"merienda":["me","rien","da"],"mesa":["me","sa"],"mi":["mi"],"mochila":["mo","chi","la"],"montaña":["mon","ta","ña"],"montañas":["mon","ta","ñas"],"muchas":["mu","chas"],"muchos":["mu","chos"],"más":["más"],"nada":["na","da"],"nave":["na","ve"],"navega":["na","ve","ga"],"necesitan":["ne","ce","si","tan"],"nena":["ne","na"],"niña":["ni","ña"],"niño":["ni","ño"],"noche":["no","che"],"nube":["nu","be"],"nubes":["nu","bes"],"nueva":["nue","va"],"ovillo":["ovi","llo"],"pan":["pan"],"papá":["pa","pá"],"para":["pa","ra"],"pasto":["pas","to"],"patio":["pa","tio"],"payaso":["pa","ya","so"],"pelota":["pe","lo","ta"],"perro":["pe","rro"],"pez":["pez"],"piedra":["pie","dra"],"plantas":["plan","tas"],"por":["por"],"puerta":["puer","ta"],"pájaro":["pá","ja","ro"],"rama":["ra","ma"],"rana":["ra","na"],"recibe":["re","ci","be"],"rica":["ri","ca"],"roja":["ro","ja"],"rueda":["rue","da"],"rápido":["rá","pi","do"],"río":["rí","o"],"salir":["salir"],"salta":["sal","ta"],"saludable":["salu","da","ble"],"se":["se"],"silla":["si","lla"],"sillón":["si","llón"],"sobre":["so","bre"],"soga":["so","ga"],"sol":["sol"],"sonríe":["son","ríe"],"su":["su"],"suavemente":["sua","ve","men","te"],"techos":["te","chos"],"temprano":["tem","prano"],"todos":["to","dos"],"tortuga":["tor","tu","ga"],"tranquilo":["tran","qui","lo"],"tren":["tren"],"un":["un"],"una":["una"],"ventana":["ven","ta","na"],"ventanas":["ven","ta","nas"],"verde":["ver","de"],"viaja":["via","ja"],"vuela":["vue","la"],"y":["y"],"zanahoria":["za","naho","ria"],"zapato":["za","pa","to"],"árbol":["ár","bol"],"diariamente":["dia","ria","men","te"]};
+
+
+let selectedFont='upper',currentLevel=1,sequence=[],readingIndex=0,groupTexts=[],listens=0,challengeCount=0,audioToken=0,audioTimers=[];
+function show(id){stopAudio();screens.forEach(x=>document.getElementById(x).classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo({top:0,behavior:'smooth'})}
+function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function chooseFont(font){selectedFont=font;document.getElementById('chosenFontLabel').textContent=fontLabels[font];show('levelMenu')}
+function startLevel(level){currentLevel=level;const sourcePool=pools[level];sequence=shuffle(sourcePool).slice(0,TOTAL);readingIndex=0;groupTexts=[];challengeCount=0;document.getElementById('levelLabel').textContent=level===1?'Nivel 1 — Palabras':level===2?'Nivel 2 — Oraciones cortas':'Nivel 3 — Oraciones largas';renderReading()}
+function renderReading(){
+  stopAudio();
+  listens=0;
+  document.getElementById('listenCount').textContent='Escuchas: 0';
+  document.getElementById('progressLabel').textContent=`Lectura ${readingIndex+1} de ${TOTAL}`;
+  const el=document.getElementById('readingText');
+  el.className='reading-text '+selectedFont;
+  el.textContent=sequence[readingIndex];
+  const btn=document.getElementById('listenBtn');
+  const tip=document.getElementById('readingTip');
+  if(selectedFont==='upper'){
+    btn.textContent='🧩 Ver sílabas y escuchar';
+    tip.textContent='💡 Leé primero. Después mirá las sílabas mientras escuchás una lectura lenta. Finalmente escuchá la lectura normal y volvé a leer.';
+  }else{
+    btn.textContent='🔊 Escuchar cómo se lee';
+    tip.textContent='💡 Leé primero. Después escuchá cómo se lee y volvé a intentarlo.';
+  }
+  show('reading');
+}
+function nextReading(){stopAudio();groupTexts.push(sequence[readingIndex]);readingIndex++;if(readingIndex>=TOTAL){show('evaluation');return}if(groupTexts.length===3)renderChallenge();else renderReading()}
+function renderChallenge(){stopAudio();challengeCount++;document.getElementById('challengeNumber').textContent=`Desafío ${challengeCount}`;const m=document.getElementById('challengeMessage');m.className='message';m.textContent='';const seen=shuffle(groupTexts).slice(0,2);const activePool=pools[currentLevel];const unused=activePool.filter(x=>!groupTexts.includes(x)&&!sequence.slice(0,readingIndex).includes(x));const unseen=shuffle(unused)[0]||activePool.find(x=>!groupTexts.includes(x));const opts=shuffle([...seen,unseen]);const cont=document.getElementById('challengeOptions');cont.innerHTML='';opts.forEach(text=>{const b=document.createElement('button');b.className='challenge-option '+selectedFont;if(selectedFont==='upper')b.style.textTransform='uppercase';b.textContent=text;b.onclick=()=>checkChallenge(b,text,unseen);cont.appendChild(b)});show('challenge')}
+function checkChallenge(button,text,correct){const m=document.getElementById('challengeMessage');if(text===correct){button.classList.add('correct');document.querySelectorAll('#challengeOptions button').forEach(b=>b.disabled=true);m.className='message ok-message';m.textContent='¡Muy bien! Esa lectura era nueva.';setTimeout(()=>{groupTexts=[];renderReading()},900)}else{button.classList.add('wrong');m.className='message bad-message';m.textContent='Esa sí apareció. Volvé a mirar las opciones.';setTimeout(()=>button.classList.remove('wrong'),500)}}
+function selectEvaluation(button,type){document.querySelectorAll('.eval-card').forEach(b=>b.classList.remove('selected'));button.classList.add('selected');const messages={solo:'Reconocer lo que ya podés hacer también es aprender. Seguí practicando para ganar cada vez más fluidez.',ayuda:'Pedir y usar ayuda es parte del aprendizaje. Cada nueva lectura puede darte un poco más de seguridad.',todavia:'Aprender a leer lleva tiempo. Lo importante es volver a intentarlo y reconocer cada pequeño avance.'};document.getElementById('finalMessage').textContent=messages[type];document.getElementById('finalBox').style.display='block'}
+function restartLevel(){document.getElementById('finalBox').style.display='none';document.querySelectorAll('.eval-card').forEach(b=>b.classList.remove('selected'));startLevel(currentLevel)}function returnToLevels(){document.getElementById('finalBox').style.display='none';document.querySelectorAll('.eval-card').forEach(b=>b.classList.remove('selected'));show('levelMenu')}
+function stopAudio(){
+  audioToken++;
+  audioTimers.forEach(clearTimeout);
+  audioTimers=[];
+  if('speechSynthesis'in window)speechSynthesis.cancel();
+  const btn=document.getElementById('listenBtn');
+  if(btn){
+    btn.disabled=false;
+    btn.classList.remove('listening');
+    btn.textContent=selectedFont==='upper'?'🧩 Ver sílabas y escuchar':'🔊 Escuchar cómo se lee';
+  }
+}
+
+function later(fn,delay,token){
+  const timer=setTimeout(()=>{if(token===audioToken)fn()},delay);
+  audioTimers.push(timer);
+}
+
+function speakPart(text,rate,token,onEnd){
+  if(token!==audioToken)return;
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='es-AR';
+  u.rate=rate;
+  u.pitch=1;
+  let ended=false;
+  function finish(){
+    if(ended||token!==audioToken)return;
+    ended=true;
+    if(onEnd)onEnd();
+  }
+  u.onend=finish;
+  u.onerror=finish;
+  speechSynthesis.speak(u);
+}
+
+
+function getSyllables(word){
+  const clean=word.toLowerCase().replace(/[^a-záéíóúüñ]/g,'');
+  return syllableMap[clean]||[clean];
+}
+
+function tokenizeReading(text){
+  return text.match(/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+|[.,;:!?¿¡]/g)||[];
+}
+
+function renderSyllables(text){
+  const el=document.getElementById('readingText');
+  el.className='reading-text upper syllable-line';
+  el.innerHTML='';
+  const tokens=tokenizeReading(text);
+  const syllableNodes=[];
+  tokens.forEach(token=>{
+    if(/^[.,;:!?¿¡]$/.test(token)){
+      const p=document.createElement('span');
+      p.textContent=token;
+      el.appendChild(p);
+      return;
+    }
+    const word=document.createElement('span');
+    word.className='syllable-word';
+    getSyllables(token).forEach(syl=>{
+      const span=document.createElement('span');
+      span.className='syllable';
+      span.textContent=syl.toUpperCase();
+      word.appendChild(span);
+      syllableNodes.push({node:span,text:syl});
+    });
+    el.appendChild(word);
+  });
+  return syllableNodes;
+}
+
+function finishListeningButton(){
+  const btn=document.getElementById('listenBtn');
+  btn.disabled=false;
+  btn.classList.remove('listening');
+  btn.textContent=selectedFont==='upper'?'🧩 Ver sílabas y escuchar otra vez':'🔊 Escuchar otra vez';
+}
+
+function listenSyllabically(){
+  stopAudio();
+  const token=audioToken;
+  listens++;
+  document.getElementById('listenCount').textContent=`Escuchas: ${listens}`;
+
+  const btn=document.getElementById('listenBtn');
+  btn.disabled=true;
+  btn.classList.add('listening');
+  btn.textContent='🧩 Mirá las sílabas y escuchá...';
+
+  const fullText=sequence[readingIndex];
+  const items=renderSyllables(fullText);
+
+  // La iluminación recorre las sílabas mientras la voz lee
+  // el texto completo lentamente. No se envían sílabas aisladas
+  // al sintetizador, para evitar pronunciaciones extrañas.
+  let visualIndex=0;
+  let visualTimer=null;
+
+  function highlightNext(){
+    if(token!==audioToken)return;
+
+    document.querySelectorAll('#readingText .syllable.active').forEach(n=>{
+      n.classList.remove('active');
+      n.classList.add('done');
+    });
+
+    if(visualIndex>=items.length)return;
+
+    items[visualIndex].node.classList.add('active');
+    visualIndex++;
+    visualTimer=setTimeout(highlightNext,currentLevel===1?700:600);
+    audioTimers.push(visualTimer);
+  }
+
+  highlightNext();
+
+  // Primera lectura: lenta.
+  speakPart(fullText,currentLevel===1?.48:.56,token,()=>{
+    if(token!==audioToken)return;
+
+    if(visualTimer)clearTimeout(visualTimer);
+    document.querySelectorAll('#readingText .syllable').forEach(n=>{
+      n.classList.remove('active');
+      n.classList.add('done');
+    });
+
+    btn.textContent='🔊 Ahora, lectura normal...';
+
+    // Pausa breve antes de la segunda lectura.
+    later(()=>{
+      if(token!==audioToken)return;
+
+      const el=document.getElementById('readingText');
+      el.className='reading-text upper';
+      el.innerHTML=`<span class="full-reading">${fullText.toUpperCase()}</span>`;
+
+      // Segunda lectura: velocidad normal.
+      speakPart(fullText,currentLevel===1?.70:.74,token,()=>{
+        if(token!==audioToken)return;
+        finishListeningButton();
+      });
+    },800,token);
+  });
+}
+
+function listenNormally(){
+  stopAudio();
+  const token=audioToken;
+  listens++;
+  document.getElementById('listenCount').textContent=`Escuchas: ${listens}`;
+  const btn=document.getElementById('listenBtn');
+  btn.disabled=true;
+  btn.classList.add('listening');
+  btn.textContent='🔊 Escuchando...';
+  speakPart(sequence[readingIndex],currentLevel===1?.78:.82,token,finishListeningButton);
+}
+
+function listenModel(){
+  if(!('speechSynthesis'in window))return;
+  selectedFont==='upper'?listenSyllabically():listenNormally();
+}
+</script>
+</body></html>
