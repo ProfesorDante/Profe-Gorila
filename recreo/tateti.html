@@ -42,7 +42,7 @@ button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}button.soft{backgro
 <script>
 const boardEl=document.getElementById('board'),statusEl=document.getElementById('status'),turnLabel=document.getElementById('turnLabel'),scoreLabel=document.getElementById('scoreLabel');
 const X='X',O='O',wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-let board=Array(9).fill(''),turn=X,mode='pvp',aiLevel='easy',roundOver=false,scores={X:0,O:0},musicOn=true,audioCtx=null,musicTimer=null,musicStep=0;
+let board=Array(9).fill(''),turn=X,mode='pvp',aiLevel='easy',roundOver=false,scores={X:0,O:0},musicOn=true,audioCtx=null,musicTimer=null,musicStep=0,nextAiStarter=X,aiTurnToken=0;
 
 function monkeySVG(team){
  const brown=team===X,ring=brown?'#8b5434':'#e0ad42',head=brown?'#5e3827':'#8b572d',face=brown?'#e4b77d':'#f1c983';
@@ -57,26 +57,136 @@ function playAt(i){if(roundOver||board[i]||(mode==='ai'&&turn===O))return;place(
 function place(i,p){board[i]=p;pluck();render();const r=getResult(board);if(r){finish(r);return}turn=turn===X?O:X;statusEl.textContent=turn===X?'Turno del Monito Marrón.':'Turno del Monito Dorado.';render()}
 function getResult(b){for(const l of wins){const[a,c,d]=l;if(b[a]&&b[a]===b[c]&&b[a]===b[d])return{winner:b[a],line:l}}if(b.every(Boolean))return{winner:null,line:[]};return null}
 function finish(r){roundOver=true;if(r.winner){scores[r.winner]++;render();[...boardEl.children].forEach((c,i)=>c.classList.toggle('win',r.line.includes(i)));winSound();endTitle.textContent='🍃 ¡Qué buena jugada!';endText.textContent=r.winner===X?'Ganó el Monito Marrón.':'Ganó el Monito Dorado.'}else{drawSound();endTitle.textContent='🌿 ¡Partida empatada!';endText.textContent='Los dos equipos jugaron muy bien.'}setTimeout(()=>endOverlay.style.display='flex',450)}
-function aiMove(){if(roundOver)return;const empty=board.map((v,i)=>v?'':i).filter(v=>v!=='');let m;if(aiLevel==='easy')m=empty[Math.floor(Math.random()*empty.length)];else if(aiLevel==='medium'){m=findWin(O)??findWin(X);if(m===undefined){const p=[4,0,2,6,8,1,3,5,7].filter(i=>!board[i]);m=Math.random()<.75?p[0]:empty[Math.floor(Math.random()*empty.length)]}}else m=bestMove();place(m,O)}
+function aiMove(token=aiTurnToken){if(token!==aiTurnToken||roundOver||mode!=='ai'||turn!==O)return;const empty=board.map((v,i)=>v?'':i).filter(v=>v!=='');if(!empty.length)return;let m;if(aiLevel==='easy')m=empty[Math.floor(Math.random()*empty.length)];else if(aiLevel==='medium'){m=findWin(O)??findWin(X);if(m===undefined){const p=[4,0,2,6,8,1,3,5,7].filter(i=>!board[i]);m=Math.random()<.75?p[0]:empty[Math.floor(Math.random()*empty.length)]}}else m=bestMove();place(m,O)}
 function findWin(p){for(let i=0;i<9;i++)if(!board[i]){const b=board.slice();b[i]=p;const r=getResult(b);if(r&&r.winner===p)return i}}
 function bestMove(){let bs=-Infinity,m=0;for(let i=0;i<9;i++)if(!board[i]){board[i]=O;const s=minimax(false);board[i]='';if(s>bs){bs=s;m=i}}return m}
 function minimax(max){const r=getResult(board);if(r)return r.winner===O?10:r.winner===X?-10:0;if(max){let b=-Infinity;for(let i=0;i<9;i++)if(!board[i]){board[i]=O;b=Math.max(b,minimax(false));board[i]=''}return b}else{let b=Infinity;for(let i=0;i<9;i++)if(!board[i]){board[i]=X;b=Math.min(b,minimax(true));board[i]=''}return b}}
-function restartRound(){board=Array(9).fill('');roundOver=false;turn=X;endOverlay.style.display='none';statusEl.textContent='Turno del Monito Marrón.';render()}
+function restartRound(){
+ aiTurnToken++;
+ board=Array(9).fill('');roundOver=false;endOverlay.style.display='none';
+ if(mode==='ai'){
+  turn=nextAiStarter;
+  nextAiStarter=nextAiStarter===X?O:X;
+ }else{
+  turn=X;
+ }
+ statusEl.textContent=turn===X?'Turno del Monito Marrón.':'La computadora comienza...';
+ render();
+ if(mode==='ai'&&turn===O){
+  const token=aiTurnToken;
+  setTimeout(()=>aiMove(token),500);
+ }
+}
 function nextRound(){restartRound()}
 function startPvp(){mode='pvp';scores={X:0,O:0};hideOverlays();restartRound();startMusic()}
 function showLevels(){menuOverlay.style.display='none';levelsOverlay.style.display='flex'}
 function backToMenu(){levelsOverlay.style.display='none';menuOverlay.style.display='flex'}
-function startAi(l){mode='ai';aiLevel=l;scores={X:0,O:0};hideOverlays();restartRound();startMusic()}
+function startAi(l){mode='ai';aiLevel=l;scores={X:0,O:0};nextAiStarter=X;hideOverlays();restartRound();startMusic()}
 function hideOverlays(){menuOverlay.style.display='none';levelsOverlay.style.display='none';endOverlay.style.display='none'}
 function showMenu(){stopMusic();endOverlay.style.display='none';levelsOverlay.style.display='none';menuOverlay.style.display='flex'}
 
-function initAudio(){if(!musicOn)return;if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}
-function tone(f,d,t='sine',v=.03,delay=0){if(!musicOn)return;initAudio();const now=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(v,now+.02);g.gain.exponentialRampToValueAtTime(.0001,now+d);o.connect(g).connect(audioCtx.destination);o.start(now);o.stop(now+d+.05)}
-const CH=[[261.63,329.63,392,493.88],[220,261.63,329.63,392],[293.66,349.23,440,523.25],[196,246.94,293.66,349.23]];
-function startMusic(){stopMusic();if(!musicOn)return;initAudio();musicStep=0;playMusicStep();musicTimer=setInterval(playMusicStep,1100)}
+function initAudio(){
+ if(!musicOn)return;
+ if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+ if(audioCtx.state==='suspended')audioCtx.resume();
+}
+function tone(f,d,t='sine',v=.03,delay=0){
+ if(!musicOn)return;
+ initAudio();
+ const now=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();
+ o.type=t;o.frequency.value=f;
+ g.gain.setValueAtTime(0,now);
+ g.gain.linearRampToValueAtTime(v,now+.018);
+ g.gain.exponentialRampToValueAtTime(.0001,now+d);
+ o.connect(g).connect(audioCtx.destination);o.start(now);o.stop(now+d+.05);
+}
+function midi(n){return 440*Math.pow(2,(n-69)/12)}
+function brass(note,dur=.34,vol=.022,delay=0){
+ if(!musicOn)return;
+ initAudio();
+ const t=audioCtx.currentTime+delay;
+ const master=audioCtx.createGain(),filter=audioCtx.createBiquadFilter();
+ filter.type='lowpass';filter.frequency.setValueAtTime(1250,t);filter.frequency.linearRampToValueAtTime(2200,t+.07);
+ master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(vol,t+.025);
+ master.gain.exponentialRampToValueAtTime(.0001,t+dur);
+ [0,-7].forEach((det,i)=>{
+  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=i?'sawtooth':'triangle';o.frequency.value=midi(note);o.detune.value=det;
+  g.gain.value=i?.24:.76;o.connect(g).connect(filter);
+  o.start(t);o.stop(t+dur+.06);
+ });
+ filter.connect(master).connect(audioCtx.destination);
+}
+function piano(note,dur=.25,vol=.009,delay=0){
+ tone(midi(note),dur,'triangle',vol,delay);
+ tone(midi(note)*2,dur*.72,'sine',vol*.20,delay+.01);
+}
+function brush(delay=0,strong=false){
+ if(!musicOn)return;
+ initAudio();
+ const t=audioCtx.currentTime+delay;
+ const len=Math.floor(audioCtx.sampleRate*(strong?.08:.045));
+ const b=audioCtx.createBuffer(1,len,audioCtx.sampleRate),data=b.getChannelData(0);
+ for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
+ const src=audioCtx.createBufferSource(),f=audioCtx.createBiquadFilter(),g=audioCtx.createGain();
+ src.buffer=b;f.type='highpass';f.frequency.value=strong?1500:2600;
+ g.gain.setValueAtTime(strong?.010:.005,t);g.gain.exponentialRampToValueAtTime(.0001,t+(strong?.08:.045));
+ src.connect(f).connect(g).connect(audioCtx.destination);src.start(t);
+}
+
+/* Arreglo original de jazz tradicional de Nueva Orleans
+   sobre la melodía de dominio público "When the Saints Go Marching In". */
+const SAINTS_MELODY=[
+  60,null,64,null,65,null,67,null,
+  60,null,64,null,65,null,67,null,
+  60,null,64,null,65,null,67,null,
+  64,null,60,null,64,null,62,null,
+  64,null,64,62,60,null,60,64,
+  67,null,67,65,null,65,64,null,
+  65,null,67,64,null,62,null,62,
+  60,null,null,null,null,null,null,null
+];
+const JAZZ_CHORDS=[
+ [60,64,67,70],[60,64,67,70],
+ [65,69,72,75],[60,64,67,70],
+ [67,71,74,77],[65,69,72,75],
+ [60,64,67,70],[67,71,74,77]
+];
+const WALKING_BASS=[
+ 36,40,43,46,41,45,48,45,
+ 43,47,50,53,36,40,43,46,
+ 41,45,48,51,36,40,43,46,
+ 43,47,50,53,36,43,46,47
+];
+const MUSIC_BPM=116;
+const MUSIC_BEAT=60/MUSIC_BPM;
+function playMusicStep(){
+ if(!musicOn||!audioCtx)return;
+ const s=musicStep%64,halfBeat=MUSIC_BEAT/2;
+ const melody=SAINTS_MELODY[s];
+ if(melody!==null)brass(melody+12,halfBeat*.82,.020,.025);
+ if(s%2===0){
+  const bass=WALKING_BASS[(s/2)%WALKING_BASS.length];
+  piano(bass,MUSIC_BEAT*.75,.013,0);
+ }else{
+  const chord=JAZZ_CHORDS[Math.floor(s/8)%JAZZ_CHORDS.length];
+  chord.forEach((n,i)=>piano(n,MUSIC_BEAT*.38,.0055,.018+i*.012));
+  brush(.01,s%4===3);
+ }
+ musicStep=(musicStep+1)%64;
+}
+function startMusic(){
+ stopMusic();
+ if(!musicOn)return;
+ initAudio();musicStep=0;playMusicStep();
+ musicTimer=setInterval(playMusicStep,Math.round(MUSIC_BEAT*500));
+}
 function stopMusic(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
-function playMusicStep(){const c=CH[musicStep%CH.length];c.forEach((f,i)=>tone(f,.75,'sine',.011,i*.02));tone(c[(musicStep+1)%c.length]*2,.3,'triangle',.022,.12);musicStep++}
-function toggleMusic(){musicOn=!musicOn;musicLabel.textContent='Música: '+(musicOn?'sí':'no');if(musicOn&&menuOverlay.style.display==='none')startMusic();else stopMusic()}
+function toggleMusic(){
+ musicOn=!musicOn;
+ musicLabel.textContent='Música: '+(musicOn?'sí':'no');
+ if(musicOn&&menuOverlay.style.display==='none')startMusic();else stopMusic();
+}
 function pluck(){tone(660,.1,'triangle',.04);tone(880,.12,'triangle',.03,.06)}
 function winSound(){tone(523,.15,'triangle',.05);tone(659,.15,'triangle',.05,.12);tone(784,.25,'triangle',.06,.24)}
 function drawSound(){tone(392,.18,'sine',.04);tone(349.23,.22,'sine',.035,.16)}
