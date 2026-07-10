@@ -485,14 +485,171 @@
       .dibujo { font-size: 70px; }
       .option { font-size: 30px; }
     }
+
+    .font-choice-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 22px;
+    }
+
+    .font-choice-card {
+      min-height: 195px;
+      color: #1b2a63;
+      border: 3px solid #e9edf9;
+      border-radius: 24px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 8px 18px rgba(0,0,0,.06), 0 6px 0 #d8ddf5;
+    }
+
+    .font-choice-card .muestra {
+      font-size: 50px;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      color: #1d3c96;
+    }
+
+    .font-choice-card h2 {
+      font-size: 23px;
+      margin: 0 0 8px;
+    }
+
+    .font-choice-card p {
+      font-size: 16px;
+      font-weight: normal;
+      color: #58677d;
+      margin: 0;
+      line-height: 1.35;
+    }
+
+    .font-upper-card { background: #f1f7ff; border-color: #c8ddff; }
+    .font-print-card { background: #f3fff2; border-color: #cdeec9; }
+    .font-cursive-card { background: #fff7ea; border-color: #ffd6a5; }
+
+    .muestra-upper {
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .muestra-print {
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+    }
+
+    .muestra-cursive {
+      font-family: "Segoe Script", "Lucida Handwriting", "Brush Script MT", "URW Chancery L", cursive;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+
+    .tipo-actual {
+      display: inline-block;
+      background: #f4f7ff;
+      border: 1px solid #dfe8ff;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: bold;
+      color: #44506a;
+    }
+
+    .app.font-upper .texto-aprendizaje {
+      font-family: Arial, sans-serif !important;
+      text-transform: uppercase !important;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .app.font-print .texto-aprendizaje {
+      font-family: Arial, sans-serif !important;
+      text-transform: none !important;
+      font-weight: bold;
+      letter-spacing: .5px;
+    }
+
+    .app.font-cursive .texto-aprendizaje {
+      font-family: "Segoe Script", "Lucida Handwriting", "Brush Script MT", "URW Chancery L", cursive !important;
+      text-transform: none !important;
+      font-weight: 500;
+      letter-spacing: 0;
+      font-variant-ligatures: common-ligatures contextual;
+    }
+
+    @media (max-width: 760px) {
+      .font-choice-grid { grid-template-columns: 1fr; }
+    }
+
+
+    .silabas-ayuda {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: .18em;
+      min-height: 1.4em;
+    }
+
+    .silaba-ayuda {
+      display: inline-block;
+      padding: .04em .12em;
+      border-radius: .3em;
+      transition: background .18s ease, color .18s ease, transform .18s ease;
+    }
+
+    .silaba-ayuda.activa {
+      background: #fff0a8;
+      color: #7a4c00;
+      transform: scale(1.08);
+    }
+
+    .silaba-ayuda.lista {
+      background: #e5f8ec;
+      color: #1f7a40;
+    }
+
   </style>
 </head>
 <body>
-  <main class="app">
+  <main class="app font-upper" id="app">
     <h1>Vocales y consonantes</h1>
     <p class="subtitle">Elegí una tarjeta para jugar con palabras sencillas.</p>
 
-    <section id="menu" class="screen active">
+
+    <section id="fontMenu" class="screen active">
+      <h2 style="text-align:center;color:#1d3c96">Elegí el tipo de letra</h2>
+      <p class="subtitle">La actividad será la misma. Solo cambiará la forma de escribir las palabras y las letras.</p>
+      <div class="font-choice-grid">
+        <button class="font-choice-card font-upper-card" onclick="elegirTipografia('upper')">
+          <div class="muestra muestra-upper">ABC</div>
+          <h2>IMPRENTA MAYÚSCULA</h2>
+          <p>Para quienes están comenzando a alfabetizarse.</p>
+        </button>
+
+        <button class="font-choice-card font-print-card" onclick="elegirTipografia('print')">
+          <div class="muestra muestra-print">Aa</div>
+          <h2>Imprenta</h2>
+          <p>Mayúsculas y minúsculas de imprenta.</p>
+        </button>
+
+        <button class="font-choice-card font-cursive-card" onclick="elegirTipografia('cursive')">
+          <div class="muestra muestra-cursive">Aa</div>
+          <h2>Cursiva</h2>
+          <p>Mayúsculas y minúsculas en escritura cursiva.</p>
+        </button>
+      </div>
+    </section>
+
+    <section id="activityMenu" class="screen">
+      <div class="backbar" style="justify-content:space-between;align-items:center">
+        <button class="light" onclick="showScreen('fontMenu')">← Cambiar tipo de letra</button>
+        <span class="tipo-actual" id="tipoActual">IMPRENTA MAYÚSCULA</span>
+      </div>
       <div class="menu-grid">
         <button class="menu-card vocales" onclick="showScreen('tarjetaVocales')">
           <div class="icono">🍎 A E I O U</div>
@@ -526,10 +683,10 @@
       </div>
       <div class="question-card">
         <div id="vocalEmoji" class="dibujo"></div>
-        <div id="vocalPalabra" class="palabra"></div>
-        <div id="vocalCompleta" class="palabra-completa"></div>
+        <div id="vocalPalabra" class="palabra texto-aprendizaje"></div>
+        <div id="vocalCompleta" class="palabra-completa texto-aprendizaje"></div>
         <div id="vocalConsigna" class="consigna"></div>
-        <button class="listen-btn" onclick="escucharPalabra(palabraVocalActual)">🔊 Escuchar palabra</button>
+        <button class="listen-btn" data-audio-help="true" onclick="escucharPalabra(palabraVocalActual)">🔊 Escuchar palabra</button>
       </div>
       <div id="vocalOpciones" class="options"></div>
       <div id="msgVocales" class="message"></div>
@@ -544,10 +701,10 @@
       </div>
       <div class="question-card">
         <div id="consEmoji" class="dibujo"></div>
-        <div id="consPalabra" class="palabra"></div>
-        <div id="consCompleta" class="palabra-completa"></div>
+        <div id="consPalabra" class="palabra texto-aprendizaje"></div>
+        <div id="consCompleta" class="palabra-completa texto-aprendizaje"></div>
         <div id="consConsigna" class="consigna"></div>
-        <button class="listen-btn" onclick="escucharPalabra(palabraConsonanteActual)">🔊 Escuchar palabra</button>
+        <button class="listen-btn" data-audio-help="true" onclick="escucharPalabra(palabraConsonanteActual)">🔊 Escuchar palabra</button>
       </div>
       <div id="consOpciones" class="options"></div>
       <div id="msgConsonantes" class="message"></div>
@@ -562,9 +719,9 @@
       </div>
       <div class="question-card">
         <div id="armarEmoji" class="dibujo"></div>
-        <div id="armarCompleta" class="palabra-completa"></div>
+        <div id="armarCompleta" class="palabra-completa texto-aprendizaje"></div>
         <div id="armarConsigna" class="consigna">Armá la palabra.</div>
-        <button class="listen-btn" onclick="escucharPalabra(palabraArmarVisible)">🔊 Escuchar palabra</button>
+        <button class="listen-btn" data-audio-help="true" onclick="escucharPalabra(palabraArmarVisible)">🔊 Escuchar palabra</button>
       </div>
       <div class="armar-zona">
         <p style="text-align:center;margin:0"><b>Letras:</b></p>
@@ -580,7 +737,7 @@
     </section>
 
     <section class="card screen" id="modoDocente">
-      <div class="backbar"><button class="light" onclick="showScreen('menu')">← Volver al menú</button></div>
+      <div class="backbar"><button class="light" onclick="showScreen('activityMenu')">← Volver al menú</button></div>
       <h2>🦍 Modo Docente</h2>
       <p class="ayuda">Una guía simple para usar esta actividad en el aula.</p>
 
@@ -617,6 +774,18 @@
           <p>Conviene invitar a decir la palabra en voz alta antes de tocar las letras.</p>
         </div>
 
+
+
+        <div class="docente-box">
+          <h3>Ayuda auditiva en imprenta mayúscula</h3>
+          <p>Cuando se elige imprenta mayúscula, la palabra se separa visualmente en sílabas. La voz lee primero la palabra completa lentamente y luego vuelve a leerla a velocidad normal. Las sílabas no se pronuncian de forma aislada, para evitar errores del sintetizador.</p>
+        </div>
+
+        <div class="docente-box">
+          <h3>Tipos de letra</h3>
+          <p>La actividad puede realizarse en imprenta mayúscula, imprenta mayúscula y minúscula o cursiva. La elección cambia la presentación visual, pero mantiene los mismos contenidos y la misma dificultad.</p>
+        </div>
+
         <div class="docente-box">
           <h3>Errores frecuentes</h3>
           <ul>
@@ -645,9 +814,58 @@
 
   <script>
     const TOTAL = 20;
-    const screens = ["menu", "tarjetaVocales", "tarjetaConsonantes", "tarjetaArmar", "modoDocente"];
+    const screens = ["fontMenu", "activityMenu", "tarjetaVocales", "tarjetaConsonantes", "tarjetaArmar", "modoDocente"];
     const VOCALES = ["A", "E", "I", "O", "U"];
     const CONSONANTES = "BCDFGHJKLMNÑPQRSTVWXYZ".split("");
+
+
+    const MAPA_SILABAS = {"abeja": ["a", "be", "ja"], "agua": ["a", "gua"], "auto": ["au", "to"], "avión": ["a", "vión"], "banana": ["ba", "na", "na"], "barco": ["bar", "co"], "bebe": ["be", "be"], "bici": ["bi", "ci"], "boca": ["bo", "ca"], "caballo": ["ca", "ba", "llo"], "cama": ["ca", "ma"], "casa": ["ca", "sa"], "conejo": ["co", "ne", "jo"], "corazón": ["co", "ra", "zón"], "dado": ["da", "do"], "dedos": ["de", "dos"], "estrella": ["es", "tre", "lla"], "flor": ["flor"], "fuego": ["fue", "go"], "gato": ["ga", "to"], "goma": ["go", "ma"], "hoja": ["ho", "ja"], "hormiga": ["hor", "mi", "ga"], "huevo": ["hue", "vo"], "leche": ["le", "che"], "leon": ["leon"], "libro": ["li", "bro"], "limón": ["li", "món"], "llave": ["lla", "ve"], "lluvia": ["llu", "via"], "luna": ["lu", "na"], "lápiz": ["lá", "piz"], "mama": ["ma", "ma"], "mano": ["ma", "no"], "manzana": ["man", "za", "na"], "mar": ["mar"], "mariposa": ["ma", "ri", "po", "sa"], "melón": ["me", "lón"], "mesa": ["me", "sa"], "mochila": ["mo", "chi", "la"], "mono": ["mono"], "nariz": ["na", "riz"], "nena": ["ne", "na"], "nene": ["ne", "ne"], "nube": ["nu", "be"], "ojo": ["ojo"], "oso": ["oso"], "oveja": ["ove", "ja"], "pan": ["pan"], "papa": ["pa", "pa"], "papel": ["pa", "pel"], "pasto": ["pas", "to"], "pato": ["pa", "to"], "pelota": ["pe", "lo", "ta"], "pera": ["pe", "ra"], "perro": ["pe", "rro"], "pez": ["pez"], "pie": ["pie"], "pizza": ["pi", "zza"], "puerta": ["puer", "ta"], "queso": ["que", "so"], "rana": ["ra", "na"], "regla": ["re", "gla"], "reloj": ["re", "loj"], "ropa": ["ro", "pa"], "rosa": ["ro", "sa"], "río": ["rí", "o"], "sapo": ["sapo"], "silla": ["si", "lla"], "sol": ["sol"], "sopa": ["so", "pa"], "taza": ["ta", "za"], "tigre": ["ti", "gre"], "tijera": ["ti", "je", "ra"], "tren": ["tren"], "uva": ["uva"], "vaca": ["va", "ca"], "vaso": ["va", "so"], "zapato": ["za", "pa", "to"], "árbol": ["ár", "bol"], "jirafa": ["ji", "ra", "fa"]};
+
+    const TIPOGRAFIAS = {
+      upper: { clase: "font-upper", nombre: "IMPRENTA MAYÚSCULA" },
+      print: { clase: "font-print", nombre: "Imprenta" },
+      cursive: { clase: "font-cursive", nombre: "Cursiva" }
+    };
+
+    let tipografiaActual = "upper";
+
+    function elegirTipografia(tipo) {
+      tipografiaActual = tipo;
+      const app = document.getElementById("app");
+      app.classList.remove("font-upper", "font-print", "font-cursive");
+      app.classList.add(TIPOGRAFIAS[tipo].clase);
+      document.getElementById("tipoActual").textContent = TIPOGRAFIAS[tipo].nombre;
+      actualizarBotonesAudio();
+
+      // Redibuja las actividades ya preparadas con la tipografía elegida.
+      if (palabraVocalActual) {
+        document.getElementById("vocalPalabra").textContent =
+          formatearTexto(dibujarPalabraConHuecos(vocalLetras, vocalPosiciones, vocalElegidas));
+        document.getElementById("vocalCompleta").textContent = formatearTexto(palabraVocalActual);
+        dibujarOpcionesVocales();
+      }
+
+      if (palabraConsonanteActual) {
+        document.getElementById("consPalabra").textContent =
+          formatearTexto(dibujarPalabraConHuecos(consLetras, consPosiciones, consElegidas));
+        document.getElementById("consCompleta").textContent = formatearTexto(palabraConsonanteActual);
+        dibujarOpcionesConsonantes();
+      }
+
+      if (palabraArmarVisible) {
+        document.getElementById("armarCompleta").textContent = formatearTexto(palabraArmarVisible);
+        dibujarArmar();
+      }
+
+      showScreen("activityMenu");
+    }
+
+    function formatearTexto(texto) {
+      if (texto === null || texto === undefined) return "";
+      const valor = String(texto);
+      return tipografiaActual === "upper" ? valor.toUpperCase() : valor.toLowerCase();
+    }
+
 
     const palabras = [
       { palabra:"MANZANA", emoji:"🍎" }, { palabra:"PERA", emoji:"🍐" }, { palabra:"UVA", emoji:"🍇" },
@@ -715,7 +933,7 @@
     }
 
     function mostrarPalabra(palabra) {
-      return palabra.toUpperCase();
+      return formatearTexto(palabra);
     }
 
     let audioToken = 0;
@@ -761,8 +979,153 @@
       window.speechSynthesis.speak(voz);
     }
 
+
+    function actualizarBotonesAudio() {
+      document.querySelectorAll('[data-audio-help="true"]').forEach(btn => {
+        btn.textContent = tipografiaActual === "upper"
+          ? "🧩 Ver sílabas y escuchar"
+          : "🔊 Escuchar palabra";
+      });
+    }
+
+    function silabasDe(palabra) {
+      const clave = String(palabra || "").toLowerCase();
+      return MAPA_SILABAS[clave] || [clave];
+    }
+
+    function obtenerZonaAyuda() {
+      if (document.getElementById("tarjetaVocales").classList.contains("active")) {
+        return {
+          el: document.getElementById("vocalPalabra"),
+          restaurar: () => {
+            document.getElementById("vocalPalabra").textContent =
+              formatearTexto(dibujarPalabraConHuecos(vocalLetras, vocalPosiciones, vocalElegidas));
+          }
+        };
+      }
+
+      if (document.getElementById("tarjetaConsonantes").classList.contains("active")) {
+        return {
+          el: document.getElementById("consPalabra"),
+          restaurar: () => {
+            document.getElementById("consPalabra").textContent =
+              formatearTexto(dibujarPalabraConHuecos(consLetras, consPosiciones, consElegidas));
+          }
+        };
+      }
+
+      const completa = document.getElementById("armarCompleta");
+      const yaVisible = completa.classList.contains("visible");
+      return {
+        el: completa,
+        restaurar: () => {
+          completa.textContent = formatearTexto(palabraArmarVisible);
+          if (!yaVisible) completa.classList.remove("visible");
+        },
+        preparar: () => completa.classList.add("visible")
+      };
+    }
+
+    function hablarConVelocidad(texto, velocidad, token, alTerminar) {
+      if (!texto || !("speechSynthesis" in window)) {
+        if (alTerminar) alTerminar();
+        return;
+      }
+
+      const voz = new SpeechSynthesisUtterance(String(texto).toLowerCase());
+      voz.lang = "es-AR";
+      voz.rate = velocidad;
+      voz.pitch = 1;
+
+      let finalizado = false;
+      function terminarUnaVez() {
+        if (finalizado || token !== audioToken) return;
+        finalizado = true;
+        if (alTerminar) alTerminar();
+      }
+
+      voz.onend = terminarUnaVez;
+      voz.onerror = terminarUnaVez;
+      window.speechSynthesis.speak(voz);
+    }
+
+    function escucharConApoyoSilabico(palabra) {
+      if (!palabra || !("speechSynthesis" in window)) return;
+
+      detenerAudio();
+      const token = audioToken;
+      const zona = obtenerZonaAyuda();
+      if (zona.preparar) zona.preparar();
+
+      const silabas = silabasDe(palabra);
+      zona.el.innerHTML = "";
+      zona.el.classList.add("silabas-ayuda");
+
+      const nodos = silabas.map(silaba => {
+        const span = document.createElement("span");
+        span.className = "silaba-ayuda";
+        span.textContent = silaba.toUpperCase();
+        zona.el.appendChild(span);
+        return span;
+      });
+
+      let indice = 0;
+      let timerVisual = null;
+
+      function iluminarSiguiente() {
+        if (token !== audioToken) return;
+
+        nodos.forEach(n => {
+          if (n.classList.contains("activa")) {
+            n.classList.remove("activa");
+            n.classList.add("lista");
+          }
+        });
+
+        if (indice >= nodos.length) return;
+
+        nodos[indice].classList.add("activa");
+        indice++;
+        timerVisual = setTimeout(iluminarSiguiente, 700);
+        audioTimers.push(timerVisual);
+      }
+
+      iluminarSiguiente();
+
+      // Primera lectura: palabra completa, lenta.
+      hablarConVelocidad(palabra, 0.48, token, () => {
+        if (token !== audioToken) return;
+
+        if (timerVisual) clearTimeout(timerVisual);
+        nodos.forEach(n => {
+          n.classList.remove("activa");
+          n.classList.add("lista");
+        });
+
+        programarAudio(() => {
+          if (token !== audioToken) return;
+
+          zona.el.classList.remove("silabas-ayuda");
+          zona.el.textContent = formatearTexto(palabra);
+
+          // Segunda lectura: palabra completa, a velocidad normal.
+          hablarConVelocidad(palabra, 0.70, token, () => {
+            if (token !== audioToken) return;
+            zona.el.classList.remove("silabas-ayuda");
+            zona.restaurar();
+          });
+        }, 800, token);
+      });
+    }
+
     function escucharPalabra(palabra) {
       if (!palabra || !("speechSynthesis" in window)) return;
+
+      if (tipografiaActual === "upper") {
+        escucharConApoyoSilabico(palabra);
+        return;
+      }
+
       detenerAudio();
       hablarTexto(palabra);
     }
@@ -859,8 +1222,8 @@
       vocalOpcionesActuales = generarOpcionesLetras(vocalRespuestas, "vocal");
 
       document.getElementById("vocalEmoji").textContent = item.emoji;
-      document.getElementById("vocalPalabra").textContent = data.mostrada;
-      document.getElementById("vocalCompleta").textContent = mostrarPalabra(item.palabra);
+      document.getElementById("vocalPalabra").textContent = formatearTexto(data.mostrada);
+      document.getElementById("vocalCompleta").textContent = formatearTexto(item.palabra);
       document.getElementById("vocalCompleta").classList.remove("visible");
       document.getElementById("vocalConsigna").textContent = vocalRespuestas.length === 1 ? "¿Qué vocal falta?" : "¿Qué vocales faltan?";
       setMessage("msgVocales", "", "");
@@ -872,8 +1235,8 @@
       cont.innerHTML = "";
       vocalOpcionesActuales.forEach(opcion => {
         const btn = document.createElement("button");
-        btn.className = "option";
-        btn.textContent = opcion.letra;
+        btn.className = "option texto-aprendizaje";
+        btn.textContent = formatearTexto(opcion.letra);
         if (opcion.usada) {
           btn.classList.add("usada");
           btn.disabled = true;
@@ -888,7 +1251,7 @@
       detenerAudio();
       document.getElementById("progVocales").textContent = "Actividad completa";
       document.getElementById("vocalEmoji").textContent = "🌟";
-      document.getElementById("vocalPalabra").textContent = "¡LISTO!";
+      document.getElementById("vocalPalabra").textContent = formatearTexto("¡LISTO!");
       document.getElementById("vocalCompleta").classList.remove("visible");
       document.getElementById("vocalConsigna").textContent = "Completaste los 20 ejercicios.";
       document.getElementById("vocalOpciones").innerHTML = "";
@@ -910,7 +1273,7 @@
         button.classList.add("correct");
         button.disabled = true;
 
-        document.getElementById("vocalPalabra").textContent = dibujarPalabraConHuecos(vocalLetras, vocalPosiciones, vocalElegidas);
+        document.getElementById("vocalPalabra").textContent = formatearTexto(dibujarPalabraConHuecos(vocalLetras, vocalPosiciones, vocalElegidas));
 
         if (vocalElegidas.length === vocalRespuestas.length) {
           disableButtons("#vocalOpciones button", true);
@@ -955,8 +1318,8 @@
       consOpcionesActuales = generarOpcionesLetras(consRespuestas, "consonante");
 
       document.getElementById("consEmoji").textContent = item.emoji;
-      document.getElementById("consPalabra").textContent = data.mostrada;
-      document.getElementById("consCompleta").textContent = mostrarPalabra(item.palabra);
+      document.getElementById("consPalabra").textContent = formatearTexto(data.mostrada);
+      document.getElementById("consCompleta").textContent = formatearTexto(item.palabra);
       document.getElementById("consCompleta").classList.remove("visible");
       document.getElementById("consConsigna").textContent = consRespuestas.length === 1 ? "¿Qué consonante falta?" : "¿Qué consonantes faltan?";
       setMessage("msgConsonantes", "", "");
@@ -968,8 +1331,8 @@
       cont.innerHTML = "";
       consOpcionesActuales.forEach(opcion => {
         const btn = document.createElement("button");
-        btn.className = "option";
-        btn.textContent = opcion.letra;
+        btn.className = "option texto-aprendizaje";
+        btn.textContent = formatearTexto(opcion.letra);
         if (opcion.usada) {
           btn.classList.add("usada");
           btn.disabled = true;
@@ -984,7 +1347,7 @@
       detenerAudio();
       document.getElementById("progConsonantes").textContent = "Actividad completa";
       document.getElementById("consEmoji").textContent = "🌟";
-      document.getElementById("consPalabra").textContent = "¡LISTO!";
+      document.getElementById("consPalabra").textContent = formatearTexto("¡LISTO!");
       document.getElementById("consCompleta").classList.remove("visible");
       document.getElementById("consConsigna").textContent = "Completaste los 20 ejercicios.";
       document.getElementById("consOpciones").innerHTML = "";
@@ -1006,7 +1369,7 @@
         button.classList.add("correct");
         button.disabled = true;
 
-        document.getElementById("consPalabra").textContent = dibujarPalabraConHuecos(consLetras, consPosiciones, consElegidas);
+        document.getElementById("consPalabra").textContent = formatearTexto(dibujarPalabraConHuecos(consLetras, consPosiciones, consElegidas));
 
         if (consElegidas.length === consRespuestas.length) {
           disableButtons("#consOpciones button", true);
@@ -1048,7 +1411,7 @@
       usadasArmar = [];
 
       document.getElementById("armarEmoji").textContent = item.emoji;
-      document.getElementById("armarCompleta").textContent = mostrarPalabra(item.palabra);
+      document.getElementById("armarCompleta").textContent = formatearTexto(item.palabra);
       document.getElementById("armarCompleta").classList.remove("visible");
       document.getElementById("armarConsigna").textContent = "Armá la palabra.";
       document.getElementById("btnRevisarArmar").disabled = false;
@@ -1065,8 +1428,8 @@
 
       letrasArmar.forEach(obj => {
         const btn = document.createElement("button");
-        btn.className = "letra-btn";
-        btn.textContent = obj.letra;
+        btn.className = "letra-btn texto-aprendizaje";
+        btn.textContent = formatearTexto(obj.letra);
         if (usadasArmar.includes(obj.index)) {
           btn.classList.add("usada");
           btn.disabled = true;
@@ -1081,8 +1444,8 @@
       } else {
         elegidasArmar.forEach(obj => {
           const span = document.createElement("span");
-          span.className = "letra-elegida";
-          span.textContent = obj.letra;
+          span.className = "letra-elegida texto-aprendizaje";
+          span.textContent = formatearTexto(obj.letra);
           elegidas.appendChild(span);
         });
       }
@@ -1140,6 +1503,7 @@
       }
     }
 
+    actualizarBotonesAudio();
     nuevaVocal();
     nuevaConsonante();
     nuevaArmar();
