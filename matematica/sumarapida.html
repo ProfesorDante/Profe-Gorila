@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sumas rápidas - 2.º grado</title>
-  
-<link rel="stylesheet" href="style.css">
-  
   <style>
     :root {
       --bg: #fff7df;
@@ -23,23 +20,23 @@
       --border: #ece4cf;
       --soft: #fff1c9;
     }
- 
+
     * { box-sizing: border-box; }
 
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background:
-    radial-gradient(circle at 10% 15%, rgba(255, 185, 62, .25), transparent 22%),
-    radial-gradient(circle at 90% 20%, rgba(79, 124, 255, .18), transparent 20%),
-    linear-gradient(180deg, #fff7df, #f6f7ff);
-  
-  color: var(--text);
-  min-height: 100vh;
-
-  padding: 18px;
-  padding-bottom: 140px; 
-}
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background:
+        radial-gradient(circle at 10% 15%, rgba(255, 185, 62, .25), transparent 22%),
+        radial-gradient(circle at 90% 20%, rgba(79, 124, 255, .18), transparent 20%),
+        linear-gradient(180deg, #fff7df, #f6f7ff);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 18px;
+    }
 
     .app {
       width: 100%;
@@ -51,8 +48,6 @@ body {
       border: 2px solid rgba(255,255,255,.8);
       position: relative;
       overflow: hidden;
-      
-  margin-bottom: 80px;
     }
 
     .app::before {
@@ -408,22 +403,22 @@ body {
   <main class="app">
     <section id="home" class="screen active">
       <h1>Sumas rápidas</h1>
-      <p class="subtitle">Practicá, mejorá y superá tus propias marcas</p>
+      <p class="subtitle">Practicá sumas sencillas y mejorá poco a poco</p>
       <div class="menu">
-        <button class="big-card" onclick="showNameScreen('practice')">
+        <button class="big-card" onclick="startMode('practice')">
           <span>▶</span>
           Empezar
-          <small>25 preguntas para practicar</small>
+          <small>25 sumas para practicar</small>
         </button>
-        <button class="big-card race-btn" onclick="showNameScreen('race')">
+        <button class="big-card race-btn" onclick="startMode('race')">
           <span>🏁</span>
           Carrera de sumas
-          <small>25 preguntas, 20 segundos por cuenta</small>
+          <small>25 sumas, 20 segundos por cuenta</small>
         </button>
-        <button class="big-card progress-btn" onclick="showProgress()">
-          <span>📈</span>
-          Mi progreso
-          <small>Mirar mis mejores rondas</small>
+        <button class="big-card progress-btn" onclick="startMode('round')">
+          <span>🎯</span>
+          Sumas redondas
+          <small>Resultados terminados en 0 o 5, hasta 999</small>
         </button>
         <button class="big-card teacher-btn" onclick="showTeacher()">
           <span>🦍</span>
@@ -436,20 +431,8 @@ body {
       </div>
     </section>
 
-    <section id="nameScreen" class="screen">
-      <div class="setup-box">
-        <h2 id="nameTitle">Antes de empezar</h2>
-        <p id="nameInfo" class="note">Esta ronda tiene 25 preguntas elegidas entre todas las combinaciones de 0 + 0 a 10 + 10.</p>
-        <label>Nombre del alumno/a</label>
-        <input id="studentName" placeholder="Escribí tu nombre" autocomplete="off" />
-        <button onclick="startGame()">Comenzar</button>
-        <button class="light" onclick="goHome()">Volver</button>
-      </div>
-    </section>
-
     <section id="game" class="screen">
       <div class="topbar">
-        <span class="pill" id="playerPill">Alumno/a</span>
         <span class="pill" id="modePill">Modo</span>
         <span class="pill" id="progressPill">1/25</span>
         <span class="pill" id="timerPill">Tiempo</span>
@@ -465,9 +448,7 @@ body {
     </section>
 
     <section id="results" class="screen">
-      <h2>Resultado de la ronda</h2>
-      <p id="resultName" class="note"></p>
-
+      <h2 id="resultTitle">Resultado de la ronda</h2>
       <div class="result-grid">
         <div class="stat"><strong id="statCorrect">0</strong>Correctas</div>
         <div class="stat"><strong id="statWrong">0</strong>Incorrectas</div>
@@ -485,20 +466,11 @@ body {
       </div>
     </section>
 
-    <section id="progress" class="screen">
-      <h2>Mi progreso</h2>
-      <label>Nombre del alumno/a</label>
-      <input id="progressName" placeholder="Escribí tu nombre" />
-      <button onclick="loadProgress()">Ver progreso</button>
-      <div id="progressContent"></div>
-      <button class="light" onclick="goHome()">Volver</button>
-    </section>
-
     <section id="teacher" class="screen">
       <div class="gorila-card">
         <div class="gorila-icon">🦍</div>
-        <h2>Profesor Gorila</h2>
-        <p class="note center">Una estrategia sencilla para empezar a sumar mejor.</p>
+        <h2>Modo docente</h2>
+        <p class="note center">Una estrategia sencilla para empezar a restar mejor.</p>
 
         <div class="strategy-box">
           <h3>¿Cómo enseño a sumar?</h3>
@@ -511,14 +483,13 @@ body {
           <div class="example-sum">6 + 4</div>
           <p>🧠 Guardo el <strong>6</strong> en mi mente.</p>
           <p>✋ Levanto <strong>4 dedos</strong>.</p>
-          <p>Mientras bajo un dedo, cuento:</p>
+          <p>Mientras bajo un dedo, cuento hacia adelante:</p>
           <div class="count-line">7 → 8 → 9 → 10</div>
           <div class="final-result">✅ Resultado: 10</div>
         </div>
 
         <p class="teacher-note">
-          Esta estrategia ayuda a que los chicos dejen de contar todo desde el principio
-          y empiecen a calcular mentalmente.
+          Esta estrategia ayuda a que los chicos dejen de contar todo desde el principio y empiecen a calcular mentalmente.
         </p>
 
         <button class="light" onclick="goHome()">Volver al inicio</button>
@@ -530,7 +501,7 @@ body {
     const QUESTION_COUNT = 25;
     const SECONDS_PER_RACE_QUESTION = 20;
 
-    const screens = ["home", "nameScreen", "game", "results", "progress", "teacher"];
+    const screens = ["home", "game", "results", "teacher"];
     const allQuestions = [];
     for (let a = 0; a <= 10; a++) {
       for (let b = 0; b <= 10; b++) {
@@ -538,10 +509,18 @@ body {
       }
     }
 
+    // Sumas de hasta tres cifras cuyo resultado termina en 0 o en 5.
+    // El resultado nunca supera 999.
+    function makeRoundQuestion() {
+      const answer = Math.floor(Math.random() * 200) * 5; // 0, 5, 10... 995
+      const a = Math.floor(Math.random() * (answer + 1));
+      const b = answer - a;
+      return { a, b, answer };
+    }
+
     let currentMode = "practice";
     let currentQuestions = [];
     let currentIndex = 0;
-    let currentStudent = "";
     let currentResults = [];
     let startTime = 0;
     let questionStartTime = 0;
@@ -560,16 +539,6 @@ body {
       show("home");
     }
 
-    function showNameScreen(mode) {
-      currentMode = mode;
-      document.getElementById("nameTitle").textContent = mode === "race" ? "Carrera de sumas" : "Práctica";
-      document.getElementById("nameInfo").textContent = mode === "race"
-        ? "Vas a resolver 25 preguntas. Tenés 20 segundos para cada cuenta."
-        : "Vas a resolver 25 preguntas elegidas entre todas las combinaciones de 0 + 0 a 10 + 10.";
-      show("nameScreen");
-      setTimeout(() => document.getElementById("studentName").focus(), 100);
-    }
-
     function shuffle(arr) {
       return [...arr].sort(() => Math.random() - 0.5);
     }
@@ -579,25 +548,31 @@ body {
       return shuffled.slice(0, Math.min(count, shuffled.length));
     }
 
-    function startGame() {
-      const name = document.getElementById("studentName").value.trim();
-      if (!name) {
-        alert("Primero escribí el nombre del alumno/a.");
-        return;
+    function roundQuestions(count) {
+      const questions = [];
+      const used = new Set();
+      while (questions.length < count) {
+        const q = makeRoundQuestion();
+        const key = `${q.a}+${q.b}`;
+        if (!used.has(key)) {
+          used.add(key);
+          questions.push(q);
+        }
       }
+      return questions;
+    }
 
-      currentStudent = name;
+    function startMode(mode) {
+      currentMode = mode;
       currentIndex = 0;
       currentResults = [];
       lastWrongQuestions = [];
       isReviewRound = false;
       startTime = Date.now();
-      currentQuestions = sampleQuestions(QUESTION_COUNT);
+      currentQuestions = mode === "round" ? roundQuestions(QUESTION_COUNT) : sampleQuestions(QUESTION_COUNT);
 
       clearInterval(timer);
-      if (currentMode === "race") {
-        remainingSeconds = SECONDS_PER_RACE_QUESTION;
-      }
+      if (currentMode === "race") remainingSeconds = SECONDS_PER_RACE_QUESTION;
 
       show("game");
       renderQuestion();
@@ -605,14 +580,23 @@ body {
 
     function generateOptions(correct) {
       const options = new Set([correct]);
-      const near = [correct - 1, correct + 1, correct - 2, correct + 2, correct + 3, correct - 3]
-        .filter(n => n >= 0 && n <= 20);
-      shuffle(near).forEach(n => {
-        if (options.size < 3) options.add(n);
-      });
-      while (options.size < 3) {
-        options.add(Math.floor(Math.random() * 21));
+
+      if (currentMode === "round") {
+        const near = [correct - 5, correct + 5, correct - 10, correct + 10, correct - 15, correct + 15]
+          .filter(n => n >= 0 && n <= 995);
+        shuffle(near).forEach(n => {
+          if (options.size < 3) options.add(n);
+        });
+        while (options.size < 3) options.add(Math.floor(Math.random() * 200) * 5);
+      } else {
+        const near = [correct - 1, correct + 1, correct - 2, correct + 2, correct + 3, correct - 3]
+          .filter(n => n >= 0 && n <= 20);
+        shuffle(near).forEach(n => {
+          if (options.size < 3) options.add(n);
+        });
+        while (options.size < 3) options.add(Math.floor(Math.random() * 21));
       }
+
       return shuffle([...options]);
     }
 
@@ -653,8 +637,9 @@ body {
     }
 
     function updateTopbar() {
-      document.getElementById("playerPill").textContent = currentStudent;
-      document.getElementById("modePill").textContent = currentMode === "race" ? "Carrera de sumas" : "Práctica";
+      document.getElementById("modePill").textContent = currentMode === "race"
+        ? "Carrera de sumas"
+        : currentMode === "round" ? "Sumas redondas" : "Práctica";
       document.getElementById("modePill").className = currentMode === "race" ? "pill race-pill" : "pill";
       document.getElementById("progressPill").textContent = `${currentIndex + 1}/${currentQuestions.length}`;
       document.getElementById("timerPill").textContent = currentMode === "race" ? `${remainingSeconds}s` : "Sin presión";
@@ -683,7 +668,6 @@ body {
       }
 
       currentResults.push({
-        student: currentStudent,
         mode: currentMode,
         a: q.a,
         b: q.b,
@@ -711,35 +695,17 @@ body {
 
     function finishGame() {
       clearInterval(timer);
-      saveRound();
       renderResults();
       show("results");
-    }
-
-    function saveRound() {
-      if (isReviewRound) return;
-      const data = JSON.parse(localStorage.getItem("sumasRapidasData") || "[]");
-      data.push({
-        student: currentStudent,
-        mode: currentMode,
-        date: new Date().toLocaleString(),
-        total: currentResults.length,
-        correct: currentResults.filter(r => r.correct).length,
-        wrong: currentResults.filter(r => !r.correct).length,
-        duration: ((Date.now() - startTime) / 1000).toFixed(1),
-        details: currentResults
-      });
-      localStorage.setItem("sumasRapidasData", JSON.stringify(data));
     }
 
     function renderResults() {
       const correct = currentResults.filter(r => r.correct).length;
       const wrong = currentResults.filter(r => !r.correct).length;
       const duration = ((Date.now() - startTime) / 1000).toFixed(1);
-
-      document.getElementById("resultName").textContent = isReviewRound
-        ? `${currentStudent} - Repaso de errores`
-        : `${currentStudent} - ${currentMode === "race" ? "Carrera de sumas" : "Práctica"}`;
+      document.getElementById("resultTitle").textContent = isReviewRound
+        ? "Resultado del repaso"
+        : currentMode === "round" ? "Resultado de sumas redondas" : "Resultado de la ronda";
       document.getElementById("statCorrect").textContent = correct;
       document.getElementById("statWrong").textContent = wrong;
       document.getElementById("statTime").textContent = `${duration}s`;
@@ -758,7 +724,7 @@ body {
         if (timeOuts >= 1) analysis += `Quedaron ${timeOuts} cuenta/s sin responder por tiempo. `;
         if (minusOne >= 2) analysis += "Aparece varias veces el patrón de responder uno menos. ";
         if (plusOne >= 2) analysis += "Aparece varias veces el patrón de responder uno más. ";
-        if (overTen >= 2) analysis += "Conviene reforzar sumas cuyo resultado supera 10. ";
+        if (overTen >= 2) analysis += "Conviene reforzar sumas con números más grandes. ";
         if (minusOne < 2 && plusOne < 2 && overTen < 2 && timeOuts === 0) analysis += "Por ahora parecen errores variados o de atención.";
       }
       document.getElementById("analysisText").textContent = analysis;
@@ -778,7 +744,8 @@ body {
 
     function startReview() {
       if (!lastWrongQuestions.length) return;
-      currentMode = "practice";
+      // Conserva el tipo de actividad para que las opciones sigan siendo adecuadas.
+      currentMode = currentMode === "race" ? "practice" : currentMode;
       currentQuestions = shuffle(lastWrongQuestions);
       currentIndex = 0;
       currentResults = [];
@@ -789,76 +756,9 @@ body {
       renderQuestion();
     }
 
-    function showProgress() {
-      document.getElementById("progressContent").innerHTML = "";
-      show("progress");
-    }
-
-    function loadProgress() {
-      const name = document.getElementById("progressName").value.trim().toLowerCase();
-      const data = JSON.parse(localStorage.getItem("sumasRapidasData") || "[]");
-      const rounds = data.filter(r => r.student.toLowerCase() === name);
-
-      if (!name) {
-        alert("Escribí un nombre.");
-        return;
-      }
-
-      if (!rounds.length) {
-        document.getElementById("progressContent").innerHTML = "<p class='note'>Todavía no hay registros para ese nombre.</p>";
-        return;
-      }
-
-      const bestAccuracy = [...rounds].sort((a,b) => (b.correct/b.total) - (a.correct/a.total))[0];
-      const latest = rounds[rounds.length - 1];
-
-      let html = `<div class="result-grid">
-        <div class="stat"><strong>${rounds.length}</strong>Rondas</div>
-        <div class="stat"><strong>${latest.correct}/${latest.total}</strong>Última</div>
-        <div class="stat"><strong>${Math.round((bestAccuracy.correct/bestAccuracy.total)*100)}%</strong>Mejor precisión</div>
-      </div>`;
-
-      html += "<h3>Últimas rondas</h3><table><tr><th>Fecha</th><th>Modo</th><th>Correctas</th><th>Tiempo</th></tr>";
-      rounds.slice(-8).reverse().forEach(r => {
-        const modeName = r.mode === "race" ? "Carrera de sumas" : "Práctica";
-        html += `<tr><td>${r.date}</td><td>${modeName}</td><td>${r.correct}/${r.total}</td><td>${r.duration}s</td></tr>`;
-      });
-      html += "</table>";
-
-      document.getElementById("progressContent").innerHTML = html;
-    }
-
     function showTeacher() {
       show("teacher");
     }
-
-    function downloadCSV() {
-      const data = JSON.parse(localStorage.getItem("sumasRapidasData") || "[]");
-      const rows = [["Alumno","Fecha","Modo","Cuenta","Respuesta correcta","Eligio","Correcta","Diferencia","Tiempo respuesta","Sin responder por tiempo"]];
-      data.forEach(round => {
-        round.details.forEach(d => {
-          const modeName = d.mode === "race" ? "Carrera de sumas" : "Práctica";
-          rows.push([d.student,d.date,modeName,`${d.a}+${d.b}`,d.correctAnswer,d.chosen,d.correct ? "SI" : "NO",d.difference,d.responseTime,d.timedOut ? "SI" : "NO"]);
-        });
-      });
-
-      const csv = rows.map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
-      const blob = new Blob([csv], {type: "text/csv;charset=utf-8;"});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "registro_sumas_rapidas.csv";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-
-    function clearData() {
-      if (confirm("¿Seguro que querés borrar todos los registros guardados en este navegador?")) {
-        localStorage.removeItem("sumasRapidasData");
-        showTeacher();
-      }
-    }
   </script>
-
 </body>
 </html>
