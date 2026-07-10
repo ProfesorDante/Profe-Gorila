@@ -34,49 +34,221 @@ const TOTAL=20,screens=['menu','tipo','genero','numero','docente'];
 const tipoQ=[["común","El ___ ladró toda la noche.","perro",["perro","Pedro","Argentina"]],["propio","Ayer, ___ ganó un partido.","Martina",["Martina","jugadora","equipo"]],["común","La ___ explicó la tarea.","maestra",["maestra","Lucía","Chile"]],["propio","___ vive cerca de mi casa.","Tomás",["Tomás","vecino","niño"]],["común","El ___ apagó el incendio.","bombero",["bombero","Julián","Rosario"]],["propio","Mi prima se llama ___.","Sofía",["Sofía","prima","nena"]],["común","La ___ floreció en primavera.","rosa",["rosa","Mendoza","Julia"]],["propio","___ es un país muy grande.","Argentina",["Argentina","país","mapa"]],["común","El ___ cuidó a los pacientes.","médico",["médico","Nicolás","Brasil"]],["propio","Mi tío viajó a ___.","Córdoba",["Córdoba","provincia","ciudad"]],["común","La ___ cayó del árbol.","hoja",["hoja","Laura","Salta"]],["propio","___ pintó un cuadro hermoso.","Camila",["Camila","pintora","artista"]],["común","El ___ cruzó la calle.","policía",["policía","Mateo","Uruguay"]],["propio","___ corre muy rápido.","Valentina",["Valentina","atleta","joven"]],["común","El ___ marcó un gol.","futbolista",["futbolista","Benjamín","Paraguay"]],["común","La ___ abrazó a su nieta.","abuela",["abuela","Ana","Perú"]],["común","La ___ llenó de alegría la fiesta.","música",["música","Micaela","México"]],["común","El ___ saltó de rama en rama.","mono",["mono","Martín","Bolivia"]],["propio","___ es la capital de la Argentina.","Buenos Aires",["Buenos Aires","ciudad","capital"]],["común","La ___ hizo reír a todos.","alegría",["alegría","Agustina","España"]],["común","El ___ arregló la canilla.","plomero",["plomero","Pablo","Neuquén"]],["propio","___ preparó una torta.","Daniela",["Daniela","cocinera","mamá"]],["común","La ___ cuidó el jardín.","jardinera",["jardinera","Josefina","Jujuy"]],["propio","___ juega en la plaza.","Facundo",["Facundo","amigo","niño"]],["común","El ___ pintó la pared.","pintor",["pintor","Ramiro","Italia"]],["propio","Mi perro se llama ___.","Toby",["Toby","perro","mascota"]],["común","La ___ cantó una canción.","cantante",["cantante","Carolina","Colombia"]],["propio","___ nada muy bien.","Julieta",["Julieta","nadadora","joven"]],["común","El ___ llevó una carta.","cartero",["cartero","Carlos","Canadá"]],["propio","___ escribió una historia.","Malena",["Malena","autora","alumna"]],["común","La ___ guardó los libros.","bibliotecaria",["bibliotecaria","Belén","Brasil"]],["propio","___ es una provincia argentina.","Mendoza",["Mendoza","provincia","montaña"]],["común","El ___ vendió pan caliente.","panadero",["panadero","Patricio","Portugal"]],["propio","___ adoptó un gato.","Emilia",["Emilia","nena","vecina"]],["común","La ___ atendió a la mascota.","veterinaria",["veterinaria","Verónica","Venezuela"]],["propio","___ visitó el museo.","Lautaro",["Lautaro","alumno","visitante"]],["común","El ___ tocó la guitarra.","músico",["músico","Manuel","Madrid"]],["propio","___ es un país vecino.","Chile",["Chile","país","frontera"]],["común","La ___ iluminó el cielo.","luna",["luna","Lola","Lima"]],["propio","___ leyó un poema.","Renata",["Renata","lectora","poeta"]],["común","El ___ manejó el colectivo.","chofer",["chofer","Diego","Ecuador"]],["propio","___ vive en mi edificio.","Bruno",["Bruno","vecino","hombre"]],["común","La ___ sintió mucho miedo.","niña",["niña","Milagros","Misiones"]],["propio","___ ganó una medalla.","Thiago",["Thiago","deportista","corredor"]],["común","El ___ creció junto al río.","árbol",["árbol","Álvaro","África"]],["propio","___ es una ciudad argentina.","Rosario",["Rosario","ciudad","puerto"]],["común","La ___ esperaba en la estación.","familia",["familia","Florencia","Francia"]],["propio","___ enseñó una canción.","Paula",["Paula","profesora","mujer"]],["común","El ___ llevó a su hijo al colegio.","papá",["papá","Federico","Formosa"]],["propio","___ preparó su mochila.","Santiago",["Santiago","estudiante","nene"]]];
 const genQ=[["La ___ pintó un cuadro.","niña",["niña","niño"]],["El ___ pintó un cuadro.","niño",["niño","niña"]],["La ___ explicó la tarea.","maestra",["maestra","maestro"]],["El ___ explicó la tarea.","maestro",["maestro","maestra"]],["La ___ apagó el incendio.","bombera",["bombera","bombero"]],["El ___ apagó el incendio.","bombero",["bombero","bombera"]],["La ___ atendió a los pacientes.","médica",["médica","médico"]],["El ___ atendió a los pacientes.","médico",["médico","médica"]],["La ___ saludó a su sobrina.","tía",["tía","tío"]],["El ___ saludó a su sobrina.","tío",["tío","tía"]],["La ___ cuidó a su nieto.","abuela",["abuela","abuelo"]],["El ___ cuidó a su nieto.","abuelo",["abuelo","abuela"]],["La ___ escribió un cuento.","autora",["autora","autor"]],["El ___ escribió un cuento.","autor",["autor","autora"]],["La ___ decoró la pared.","pintora",["pintora","pintor"]],["El ___ decoró la pared.","pintor",["pintor","pintora"]],["La ___ preparó la comida.","cocinera",["cocinera","cocinero"]],["El ___ preparó la comida.","cocinero",["cocinero","cocinera"]],["La ___ acompañó al paciente.","enfermera",["enfermera","enfermero"]],["El ___ acompañó al paciente.","enfermero",["enfermero","enfermera"]],["La ___ revisó al perro.","veterinaria",["veterinaria","veterinario"]],["El ___ revisó al perro.","veterinario",["veterinario","veterinaria"]],["La ___ horneó el pan.","panadera",["panadera","panadero"]],["El ___ horneó el pan.","panadero",["panadero","panadera"]],["La ___ repartió las cartas.","cartera",["cartera","cartero"]],["El ___ repartió las cartas.","cartero",["cartero","cartera"]],["La ___ ordenó los libros.","bibliotecaria",["bibliotecaria","bibliotecario"]],["El ___ ordenó los libros.","bibliotecario",["bibliotecario","bibliotecaria"]],["La ___ regó las plantas.","jardinera",["jardinera","jardinero"]],["El ___ regó las plantas.","jardinero",["jardinero","jardinera"]],["La ___ saludó a las familias.","directora",["directora","director"]],["El ___ saludó a las familias.","director",["director","directora"]],["La ___ actuó en la obra.","actriz",["actriz","actor"]],["El ___ actuó en la obra.","actor",["actor","actriz"]],["La ___ vivió en el castillo.","reina",["reina","rey"]],["El ___ vivió en el castillo.","rey",["rey","reina"]],["La ___ visitó el palacio.","princesa",["princesa","príncipe"]],["El ___ visitó el palacio.","príncipe",["príncipe","princesa"]],["La ___ descansó bajo el árbol.","leona",["leona","león"]],["El ___ descansó bajo el árbol.","león",["león","leona"]],["La ___ durmió en el sillón.","gata",["gata","gato"]],["El ___ durmió en el sillón.","gato",["gato","gata"]],["La ___ corrió por el parque.","perra",["perra","perro"]],["El ___ corrió por el parque.","perro",["perro","perra"]],["La ___ comió una zanahoria.","coneja",["coneja","conejo"]],["El ___ comió una zanahoria.","conejo",["conejo","coneja"]],["La ___ barrió la vereda.","vecina",["vecina","vecino"]],["El ___ barrió la vereda.","vecino",["vecino","vecina"]],["La ___ ordenó su habitación.","hermana",["hermana","hermano"]],["El ___ ordenó su habitación.","hermano",["hermano","hermana"]]];
 const numQ=[["El ___ duerme en la cueva.","oso",["oso","osos"]],["Los ___ duermen en la cueva.","osos",["osos","oso"]],["El ___ tiene pétalos rojos.","flor",["flor","flores"]],["Los ___ tienen pétalos rojos.","flores",["flores","flor"]],["El ___ voló sobre el árbol.","pájaro",["pájaro","pájaros"]],["Los ___ volaron sobre el árbol.","pájaros",["pájaros","pájaro"]],["El ___ está sobre la mesa.","llave",["llave","llaves"]],["Los ___ están sobre la mesa.","llaves",["llaves","llave"]],["El ___ juega con una pelota.","niño",["niño","niños"]],["Los ___ juegan con una pelota.","niños",["niños","niño"]],["La ___ cayó del árbol.","hoja",["hoja","hojas"]],["Las ___ cayeron del árbol.","hojas",["hojas","hoja"]],["El ___ cruzó la calle.","perro",["perro","perros"]],["Los ___ cruzaron la calle.","perros",["perros","perro"]],["La ___ está madura.","manzana",["manzana","manzanas"]],["Las ___ están maduras.","manzanas",["manzanas","manzana"]],["El ___ tiene muchas páginas.","libro",["libro","libros"]],["Los ___ tienen muchas páginas.","libros",["libros","libro"]],["La ___ ilumina el cielo.","estrella",["estrella","estrellas"]],["Las ___ iluminan el cielo.","estrellas",["estrellas","estrella"]],["El ___ duerme en la cama.","gato",["gato","gatos"]],["Los ___ duermen en la cama.","gatos",["gatos","gato"]],["El ___ crece en la plaza.","árbol",["árbol","árboles"]],["Los ___ crecen en la plaza.","árboles",["árboles","árbol"]],["La ___ está en el patio.","pelota",["pelota","pelotas"]],["Las ___ están en el patio.","pelotas",["pelotas","pelota"]],["El ___ espera en la esquina.","auto",["auto","autos"]],["Los ___ esperan en la esquina.","autos",["autos","auto"]],["La ___ vuela sobre las flores.","mariposa",["mariposa","mariposas"]],["Las ___ vuelan sobre las flores.","mariposas",["mariposas","mariposa"]],["La ___ busca néctar.","abeja",["abeja","abejas"]],["Las ___ buscan néctar.","abejas",["abejas","abeja"]],["El ___ está junto a la cama.","zapato",["zapato","zapatos"]],["Los ___ están junto a la cama.","zapatos",["zapatos","zapato"]],["El ___ está dentro de la cartuchera.","lápiz",["lápiz","lápices"]],["Los ___ están dentro de la cartuchera.","lápices",["lápices","lápiz"]],["El ___ está limpio.","plato",["plato","platos"]],["Los ___ están limpios.","platos",["platos","plato"]],["El ___ tapa el sol.","nube",["nube","nubes"]],["Los ___ tapan el sol.","nubes",["nubes","nube"]],["El ___ come una zanahoria.","conejo",["conejo","conejos"]],["Los ___ comen zanahorias.","conejos",["conejos","conejo"]],["La ___ está abierta.","ventana",["ventana","ventanas"]],["Las ___ están abiertas.","ventanas",["ventanas","ventana"]],["La ___ está cerca de la mesa.","silla",["silla","sillas"]],["Las ___ están cerca de la mesa.","sillas",["sillas","silla"]],["El ___ marca la hora.","reloj",["reloj","relojes"]],["Los ___ marcan la hora.","relojes",["relojes","reloj"]],["La ___ está en el aula.","mochila",["mochila","mochilas"]],["Las ___ están en el aula.","mochilas",["mochilas","mochila"]]];
-function show(id){screens.forEach(x=>document.getElementById(x).classList.remove('active'));document.getElementById(id).classList.add('active');scrollTo({top:0,behavior:'smooth'})}function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}function msg(id,t,c){let e=document.getElementById(id);e.className='message '+(c||'');e.textContent=t}function sentence(t){return t.replace('___','<span class="hueco">&nbsp;</span>')}function options(id,arr,fn){let c=document.getElementById(id);c.innerHTML='';shuffle(arr).forEach(x=>{let b=document.createElement('button');b.className='option';b.textContent=x;b.onclick=()=>fn(b,x);c.appendChild(b)})}function lock(sel){document.querySelectorAll(sel).forEach(b=>b.disabled=true)}
+function show(id){stopAudio();screens.forEach(x=>document.getElementById(x).classList.remove('active'));document.getElementById(id).classList.add('active');scrollTo({top:0,behavior:'smooth'})}function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}function msg(id,t,c){let e=document.getElementById(id);e.className='message '+(c||'');e.textContent=t}function sentence(t){return t.replace('___','<span class="hueco">&nbsp;</span>')}function options(id,arr,fn){let c=document.getElementById(id);c.innerHTML='';shuffle(arr).forEach(x=>{let b=document.createElement('button');b.className='option';b.textContent=x;b.onclick=()=>fn(b,x);c.appendChild(b)})}function lock(sel){document.querySelectorAll(sel).forEach(b=>b.disabled=true)}
 
-function speakText(text,rate=.84){
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang='es-AR';u.rate=rate;u.pitch=1;return u;
+
+let audioToken=0;
+let audioTimers=[];
+
+function stopAudio(){
+  audioToken++;
+  audioTimers.forEach(clearTimeout);
+  audioTimers=[];
+  if('speechSynthesis' in window)speechSynthesis.cancel();
 }
+
+function later(fn,delay,token){
+  const timer=setTimeout(()=>{
+    if(token===audioToken)fn();
+  },delay);
+  audioTimers.push(timer);
+}
+
+function speakText(text,rate=.84,token=audioToken,onEnd){
+  if(!text||!('speechSynthesis' in window)){
+    if(onEnd)onEnd();
+    return;
+  }
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='es-AR';
+  u.rate=rate;
+  u.pitch=1;
+  u.onend=()=>{
+    if(token===audioToken&&onEnd)onEnd();
+  };
+  u.onerror=()=>{
+    if(token===audioToken&&onEnd)onEnd();
+  };
+  speechSynthesis.speak(u);
+}
+
 function getSentenceData(item){
   return item.length===4?{text:item[1],opts:item[3]}:{text:item[0],opts:item[2]};
 }
+
 function listenSentence(item){
   if(!item||!('speechSynthesis' in window))return;
-  speechSynthesis.cancel();
+  stopAudio();
+  const token=audioToken;
   const data=getSentenceData(item);
   const parts=data.text.split('___');
-  const first=parts[0].trim();
-  const second=(parts[1]||'').trim();
-  const queue=[];
-  if(first)queue.push(first);
-  if(second)queue.push(second);
   let i=0;
-  function next(){
-    if(i>=queue.length)return;
-    const u=speakText(queue[i],.82);
-    u.onend=()=>{i++;if(i<queue.length)setTimeout(next,550)};
-    speechSynthesis.speak(u);
+
+  function nextPart(){
+    if(token!==audioToken||i>=parts.length)return;
+    const fragment=parts[i].trim();
+    i++;
+
+    if(fragment){
+      speakText(fragment,.82,token,()=>{
+        if(i<parts.length)later(nextPart,600,token);
+      });
+    }else if(i<parts.length){
+      later(nextPart,600,token);
+    }
   }
-  next();
+
+  nextPart();
 }
+
 function listenOptions(containerId){
   if(!('speechSynthesis' in window))return;
-  speechSynthesis.cancel();
-  const words=[...document.querySelectorAll('#'+containerId+' button')].map(b=>b.textContent.trim());
+  stopAudio();
+  const token=audioToken;
+  const words=[...document.querySelectorAll('#'+containerId+' button')]
+    .map(b=>b.textContent.trim())
+    .filter(Boolean);
   let i=0;
-  function next(){
-    if(i>=words.length)return;
-    const u=speakText(words[i],.8);
-    u.onend=()=>{i++;if(i<words.length)setTimeout(next,350)};
-    speechSynthesis.speak(u);
+
+  function nextWord(){
+    if(token!==audioToken||i>=words.length)return;
+    speakText(words[i],.8,token,()=>{
+      i++;
+      if(i<words.length)later(nextWord,350,token);
+    });
   }
-  next();
+
+  nextWord();
 }
-let iT=0,seqT=shuffle(tipoQ).slice(0,TOTAL),aT;function newT(){aT=seqT[iT];pTipo.textContent=`Ejercicio ${iT+1} de ${TOTAL}`;claseTipo.textContent=`Sustantivo ${aT[0]}`;oTipo.innerHTML=sentence(aT[1]);cTipo.textContent=aT[0]=='propio'?'Elegí un nombre propio. Recordá la mayúscula.':'Elegí un sustantivo común.';msg('mTipo','','');options('opTipo',aT[3],checkT)}function checkT(b,x){if(x==aT[2]){b.classList.add('correct');lock('#opTipo button');oTipo.textContent=aT[1].replace('___',x);msg('mTipo',aT[0]=='propio'?`¡Muy bien! ${x} nombra de manera particular y comienza con mayúscula.`:`¡Muy bien! ${x} nombra de manera general.`,'ok-message');setTimeout(()=>{iT++;iT<TOTAL?newT():finish('Tipo','Completaste sustantivos comunes y propios.')},900)}else{b.classList.add('wrong');msg('mTipo',aT[0]=='propio'?'Buscá un nombre particular con mayúscula.':'Buscá una palabra que nombre de manera general.','bad-message');setTimeout(()=>b.classList.remove('wrong'),450)}}
-let iG=0,seqG=shuffle(genQ).slice(0,TOTAL),aG;function newG(){aG=seqG[iG];pGenero.textContent=`Ejercicio ${iG+1} de ${TOTAL}`;oGenero.innerHTML=sentence(aG[0]);msg('mGenero','','');options('opGenero',aG[2],checkG)}function checkG(b,x){if(x==aG[1]){b.classList.add('correct');lock('#opGenero button');oGenero.textContent=aG[0].replace('___',x);msg('mGenero','¡Muy bien! La palabra concuerda con la oración.','ok-message');setTimeout(()=>{iG++;iG<TOTAL?newG():finish('Genero','Practicaste sustantivos femeninos y masculinos.')},850)}else{b.classList.add('wrong');msg('mGenero','Mirá la palabra que aparece antes del sustantivo.','bad-message');setTimeout(()=>b.classList.remove('wrong'),450)}}
-let iN=0,seqN=shuffle(numQ).slice(0,TOTAL),aN;function newN(){aN=seqN[iN];pNumero.textContent=`Ejercicio ${iN+1} de ${TOTAL}`;oNumero.innerHTML=sentence(aN[0]);msg('mNumero','','');options('opNumero',aN[2],checkN)}function checkN(b,x){if(x==aN[1]){b.classList.add('correct');lock('#opNumero button');oNumero.textContent=aN[0].replace('___',x);msg('mNumero',x.endsWith('s')?'¡Muy bien! La oración habla de más de uno.':'¡Muy bien! La oración habla de uno.','ok-message');setTimeout(()=>{iN++;iN<TOTAL?newN():finish('Numero','Practicaste sustantivos singulares y plurales.')},850)}else{b.classList.add('wrong');msg('mNumero','Mirá si la oración habla de uno o de varios.','bad-message');setTimeout(()=>b.classList.remove('wrong'),450)}}function finish(t,text){document.getElementById('p'+t).textContent='Actividad completa';document.getElementById('o'+t).textContent='🌟 ¡Completaste los 20 ejercicios!';document.getElementById('op'+t).innerHTML='';msg('m'+t,text,'finish-message')}
+
+function speakCompletedSentence(text,onComplete){
+  stopAudio();
+  const token=audioToken;
+
+  later(()=>{
+    speakText(text,.82,token,()=>{
+      if(token===audioToken&&onComplete)onComplete();
+    });
+  },450,token);
+}
+
+
+let iT=0,seqT=shuffle(tipoQ).slice(0,TOTAL),aT;
+function newT(){
+  stopAudio();
+  aT=seqT[iT];
+  pTipo.textContent=`Ejercicio ${iT+1} de ${TOTAL}`;
+  claseTipo.textContent=`Sustantivo ${aT[0]}`;
+  oTipo.innerHTML=sentence(aT[1]);
+  cTipo.textContent=aT[0]=='propio'
+    ?'Elegí un nombre propio. Recordá la mayúscula.'
+    :'Elegí un sustantivo común.';
+  msg('mTipo','','');
+  options('opTipo',aT[3],checkT);
+}
+function checkT(b,x){
+  if(x==aT[2]){
+    b.classList.add('correct');
+    lock('#opTipo button');
+    const completed=aT[1].replace('___',x);
+    oTipo.textContent=completed;
+    msg(
+      'mTipo',
+      aT[0]=='propio'
+        ?`¡Muy bien! ${x} nombra de manera particular y comienza con mayúscula.`
+        :`¡Muy bien! ${x} nombra de manera general.`,
+      'ok-message'
+    );
+    speakCompletedSentence(completed,()=>{
+      iT++;
+      iT<TOTAL
+        ?newT()
+        :finish('Tipo','Completaste sustantivos comunes y propios.');
+    });
+  }else{
+    b.classList.add('wrong');
+    msg(
+      'mTipo',
+      aT[0]=='propio'
+        ?'Buscá un nombre particular con mayúscula.'
+        :'Buscá una palabra que nombre de manera general.',
+      'bad-message'
+    );
+    setTimeout(()=>b.classList.remove('wrong'),450);
+  }
+}
+
+let iG=0,seqG=shuffle(genQ).slice(0,TOTAL),aG;
+function newG(){
+  stopAudio();
+  aG=seqG[iG];
+  pGenero.textContent=`Ejercicio ${iG+1} de ${TOTAL}`;
+  oGenero.innerHTML=sentence(aG[0]);
+  msg('mGenero','','');
+  options('opGenero',aG[2],checkG);
+}
+function checkG(b,x){
+  if(x==aG[1]){
+    b.classList.add('correct');
+    lock('#opGenero button');
+    const completed=aG[0].replace('___',x);
+    oGenero.textContent=completed;
+    msg('mGenero','¡Muy bien! La palabra concuerda con la oración.','ok-message');
+    speakCompletedSentence(completed,()=>{
+      iG++;
+      iG<TOTAL
+        ?newG()
+        :finish('Genero','Practicaste sustantivos femeninos y masculinos.');
+    });
+  }else{
+    b.classList.add('wrong');
+    msg('mGenero','Mirá la palabra que aparece antes del sustantivo.','bad-message');
+    setTimeout(()=>b.classList.remove('wrong'),450);
+  }
+}
+
+let iN=0,seqN=shuffle(numQ).slice(0,TOTAL),aN;
+function newN(){
+  stopAudio();
+  aN=seqN[iN];
+  pNumero.textContent=`Ejercicio ${iN+1} de ${TOTAL}`;
+  oNumero.innerHTML=sentence(aN[0]);
+  msg('mNumero','','');
+  options('opNumero',aN[2],checkN);
+}
+function checkN(b,x){
+  if(x==aN[1]){
+    b.classList.add('correct');
+    lock('#opNumero button');
+    const completed=aN[0].replace('___',x);
+    oNumero.textContent=completed;
+    msg(
+      'mNumero',
+      x.endsWith('s')
+        ?'¡Muy bien! La oración habla de más de uno.'
+        :'¡Muy bien! La oración habla de uno.',
+      'ok-message'
+    );
+    speakCompletedSentence(completed,()=>{
+      iN++;
+      iN<TOTAL
+        ?newN()
+        :finish('Numero','Practicaste sustantivos singulares y plurales.');
+    });
+  }else{
+    b.classList.add('wrong');
+    msg('mNumero','Mirá si la oración habla de uno o de varios.','bad-message');
+    setTimeout(()=>b.classList.remove('wrong'),450);
+  }
+}
+
+function finish(t,text){
+  stopAudio();
+  document.getElementById('p'+t).textContent='Actividad completa';
+  document.getElementById('o'+t).textContent='🌟 ¡Completaste los 20 ejercicios!';
+  document.getElementById('op'+t).innerHTML='';
+  msg('m'+t,text,'finish-message');
+}
+
 newT();newG();newN();
 </script></body></html>
