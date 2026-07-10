@@ -104,7 +104,8 @@ small.note{color:#5b704e;line-height:1.35}
       <button class="warn" onclick="undoMove()">↶ Deshacer</button>
     </div>
     <small class="note">
-      Tocá una ficha y después un casillero iluminado. Si hay una captura posible, debe realizarse.
+      Tocá una ficha y después un casillero iluminado. Si hay una captura posible, debe realizarse.<br>
+      🎼 Música: adaptación digital propia inspirada en <em>Clair de Lune</em>, de Claude Debussy.
     </small>
   </aside>
 </main>
@@ -118,8 +119,8 @@ small.note{color:#5b704e;line-height:1.35}
     <div class="menuGrid">
       <button onclick="startPvp()">👥 Dos jugadores</button>
       <button class="secondary" onclick="showAiLevels()">🤖 Contra la computadora</button>
-      <button class="soft" onclick="showTeacher()">🦍 Reglase</button>
-      <button class="soft" onclick="toggleMusic()">🎵 Activar/desactivar música</button>
+      <button class="soft" onclick="showTeacher()">🦍 Reglas</button>
+      <button class="soft" onclick="toggleMusic()">🎵 <span id="menuMusicText">Música activada</span></button>
     </div>
   </div>
 </div>
@@ -636,47 +637,165 @@ function speakRules(){
 function stopSpeaking(){if('speechSynthesis'in window)speechSynthesis.cancel()}
 
 function initAudio(){
-  if(!musicOn)return;
   if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  if(audioCtx.state==='suspended')audioCtx.resume();
+  if(audioCtx.state==='suspended') audioCtx.resume();
 }
-function tone(freq,dur,type='sine',vol=.03,when=0){
-  if(!musicOn)return;
+
+/* Convierte nombres como Db4, Ab4 o C5 en frecuencias.
+   La música se genera en tiempo real: no utiliza MP3 ni grabaciones externas. */
+function noteFrequency(note){
+  const match=/^([A-G])([b#]?)(-?\d)$/.exec(note);
+  if(!match) return 440;
+  const semitones={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  let value=semitones[match[1]];
+  if(match[2]==='b') value--;
+  if(match[2]==='#') value++;
+  const midi=(Number(match[3])+1)*12+value;
+  return 440*Math.pow(2,(midi-69)/12);
+}
+
+function tone(freq,dur,type='sine',vol=.03,when=0,destination=null){
+  if(!musicOn && !destination) return;
   initAudio();
-  const t=audioCtx.currentTime+when,o=audioCtx.createOscillator(),g=audioCtx.createGain();
-  o.type=type;o.frequency.setValueAtTime(freq,t);
-  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  o.connect(g).connect(audioCtx.destination);o.start(t);o.stop(t+dur+.05);
+  const t=audioCtx.currentTime+when;
+  const o=audioCtx.createOscillator();
+  const g=audioCtx.createGain();
+  o.type=type;
+  o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(.0001,t);
+  g.gain.exponentialRampToValueAtTime(Math.max(.0002,vol),t+.025);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(destination||audioCtx.destination);
+  o.start(t);
+  o.stop(t+dur+.08);
 }
-const N={C4:261.63,D4:293.66,E4:329.63,F4:349.23,G4:392,A4:440,B4:493.88,C5:523.25,D5:587.33,E5:659.25,G3:196,B3:246.94};
-const prog=[
-  ['E4','G4','B4','D5'],['A4','C5','E5','G4'],['D4','F4','A4','C5'],
-  ['G4','B4','D5','F4'],['F4','A4','C5','E4'],['C4','E4','G4','B4'],
-  ['C4','E4','G4','B4'],['C4','E4','G4','B4'],['B3','D4','F4','A4']
+
+let musicBus=null;
+let musicLoopTimer=null;
+let musicGeneration=0;
+
+/* Adaptación instrumental propia inspirada en Clair de Lune, de Claude Debussy.
+   Se genera en tiempo real con Web Audio: no usa MP3, internet ni grabaciones ajenas.
+   El arreglo combina melodía, bajos y arpegios para acompañar sin distraer. */
+const CLAIR_BEAT=.52;
+const CLAIR_LENGTH=72;
+
+const clairMelody=[
+  [0,'Ab4',2.2,.027],[2.5,'Db5',1.2,.031],[4,'Eb5',1.1,.030],
+  [5.5,'F5',2.0,.034],[8,'Eb5',1.1,.029],[9.5,'Db5',1.7,.031],
+  [12,'Ab4',1.5,.026],[14,'Bb4',1.2,.028],[15.5,'Db5',1.7,.032],
+  [18,'F5',2.0,.034],[20.5,'Ab5',1.4,.033],[22.3,'Gb5',1.3,.030],
+  [24,'F5',1.8,.032],[26.2,'Eb5',1.3,.029],[28,'Db5',2.2,.031],
+  [31,'Ab4',1.5,.025],[33,'Db5',1.2,.030],[34.5,'Eb5',1.2,.030],
+  [36,'F5',1.8,.033],[38.3,'Ab5',1.2,.032],[40,'Bb5',1.4,.033],
+  [42,'Ab5',1.3,.031],[43.7,'Gb5',1.2,.029],[45.5,'F5',1.8,.032],
+  [48,'Eb5',1.3,.029],[49.8,'Db5',1.8,.031],[52.2,'Bb4',1.3,.027],
+  [54,'Db5',1.6,.031],[56.2,'F5',1.6,.033],[58.3,'Eb5',1.3,.029],
+  [60,'Db5',1.8,.030],[62.5,'Ab4',1.4,.025],[64.5,'Bb4',1.2,.027],
+  [66,'Db5',2.0,.031],[69,'Ab4',2.4,.024]
 ];
-let musicStep=0;
+
+const clairHarmony=[
+  [0,'Db3',['Ab3','Db4','F4']],
+  [8,'Bb2',['F3','Ab3','Db4']],
+  [16,'Gb2',['Db3','Gb3','Bb3']],
+  [24,'Ab2',['Eb3','Ab3','C4']],
+  [32,'Db3',['Ab3','Db4','F4']],
+  [40,'Bb2',['F3','Bb3','Db4']],
+  [48,'Gb2',['Db3','Gb3','Bb3']],
+  [56,'Ab2',['Eb3','Gb3','C4']],
+  [64,'Db3',['Ab3','Db4','F4']]
+];
+
+function pianoVoice(note,startBeat,durationBeats,volume,bus){
+  const when=startBeat*CLAIR_BEAT;
+  const duration=Math.max(.22,durationBeats*CLAIR_BEAT);
+  const f=noteFrequency(note);
+  tone(f,duration,'sine',volume,when,bus);
+  tone(f*2,duration*.58,'triangle',volume*.12,when+.012,bus);
+  tone(f*.5,duration*.82,'sine',volume*.045,when,bus);
+}
+
+function scheduleArpeggio(baseBeat,bass,notes,bus){
+  pianoVoice(bass,baseBeat,6.8,.010,bus);
+  const pattern=[0,1,2,1,0,1,2,1];
+  pattern.forEach((index,step)=>{
+    pianoVoice(notes[index],baseBeat+step*.92,2.0,.0078,bus);
+  });
+}
+
+function scheduleClairCycle(generation){
+  if(!musicOn || generation!==musicGeneration) return;
+  initAudio();
+
+  const bus=audioCtx.createGain();
+  const now=audioCtx.currentTime;
+  bus.gain.setValueAtTime(.0001,now);
+  bus.gain.exponentialRampToValueAtTime(.62,now+2.2);
+  bus.connect(audioCtx.destination);
+  musicBus=bus;
+
+  clairHarmony.forEach(([beat,bass,notes])=>scheduleArpeggio(beat,bass,notes,bus));
+  clairMelody.forEach(([beat,note,duration,volume])=>pianoVoice(note,beat,duration,volume,bus));
+
+  const cycleMs=CLAIR_LENGTH*CLAIR_BEAT*1000;
+  musicLoopTimer=setTimeout(()=>{
+    if(generation!==musicGeneration) return;
+    const fadeNow=audioCtx.currentTime;
+    try{
+      bus.gain.cancelScheduledValues(fadeNow);
+      bus.gain.setValueAtTime(Math.max(.0001,bus.gain.value),fadeNow);
+      bus.gain.exponentialRampToValueAtTime(.0001,fadeNow+1.3);
+      setTimeout(()=>{try{bus.disconnect()}catch(e){}},1450);
+    }catch(e){}
+    scheduleClairCycle(generation);
+  },cycleMs-1300);
+}
+
 function startMusic(){
-  stopMusic();
-  if(!musicOn)return;
-  initAudio();musicStep=0;playMusicStep();
-  musicTimer=setInterval(playMusicStep,950);
+  if(!musicOn) return;
+  stopMusic(false);
+  initAudio();
+  scheduleClairCycle(musicGeneration);
 }
-function stopMusic(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
-function playMusicStep(){
-  if(!musicOn)return;
-  const chord=prog[musicStep%prog.length];
-  chord.forEach((n,i)=>tone(N[n],.62,'sine',.012,i*.015));
-  const melody=chord[(musicStep+1)%chord.length];
-  tone(N[melody],.35,'triangle',.028,.08);
-  tone(120,.08,'square',.012,.02);
-  tone(160,.05,'square',.009,.48);
-  musicStep++;
+
+function stopMusic(increment=true){
+  if(increment) musicGeneration++;
+  if(musicLoopTimer){
+    clearTimeout(musicLoopTimer);
+    musicLoopTimer=null;
+  }
+  if(musicBus && audioCtx){
+    const bus=musicBus;
+    const now=audioCtx.currentTime;
+    try{
+      bus.gain.cancelScheduledValues(now);
+      bus.gain.setValueAtTime(Math.max(.0001,bus.gain.value),now);
+      bus.gain.exponentialRampToValueAtTime(.0001,now+.45);
+      setTimeout(()=>{try{bus.disconnect()}catch(e){}},560);
+    }catch(e){}
+    musicBus=null;
+  }
 }
+
+function updateMusicLabels(){
+  document.getElementById('musicText').textContent='Música: '+(musicOn?'sí':'no');
+  const menuLabel=document.getElementById('menuMusicText');
+  if(menuLabel) menuLabel.textContent=musicOn?'Música activada':'Música desactivada';
+}
+
 function toggleMusic(){
   musicOn=!musicOn;
-  document.getElementById('musicText').textContent='Música: '+(musicOn?'sí':'no');
-  if(musicOn)startMusic();else stopMusic();
+  updateMusicLabels();
+  if(musicOn) startMusic(); else stopMusic();
 }
+
+/* Los navegadores exigen una primera interacción antes de reproducir sonido.
+   Como la música ya está activada, comienza con el primer toque o clic. */
+document.addEventListener('pointerdown',()=>{
+  if(musicOn && !musicBus) startMusic();
+},{once:true});
+
 function playWin(){tone(523,.18,'triangle',.05);tone(659,.18,'triangle',.05,.16);tone(784,.28,'triangle',.06,.32)}
 
 initBoard();
