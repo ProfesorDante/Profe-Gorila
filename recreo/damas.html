@@ -104,7 +104,7 @@ small.note{color:#5b704e;line-height:1.35}
       <button class="warn" onclick="undoMove()">↶ Deshacer</button>
     </div>
     <small class="note">
-      Tocá una ficha y después un casillero iluminado. Si hay una captura posible, debe realizarse.<br>
+      Tocá una ficha y después un casillero iluminado, o arrastrala hasta allí. Si hay una captura posible, debe realizarse.<br>
       🎼 Música: adaptación digital propia inspirada en <em>Clair de Lune</em>, de Claude Debussy.
     </small>
   </aside>
@@ -179,14 +179,16 @@ const goldCount=document.getElementById('goldCount');
 
 const EMPTY=0, GREEN=1, GOLD=2, GREEN_K=3, GOLD_K=4;
 let board=[], turn=GREEN, selected=null, legalMoves=[], mustContinue=null;
+let pendingPromotion=null, drag=null, promotionFx=null;
 let mode='pvp', aiLevel='easy', gameOver=false, history=[];
 let musicOn=true, audioCtx=null, musicTimer=null, currentModeSnapshot={mode:'pvp',aiLevel:'easy'};
+let nextStarter=GREEN;
 
-function initBoard(){
+function initBoard(startingPlayer=GREEN){
   board=Array.from({length:8},()=>Array(8).fill(EMPTY));
   for(let r=0;r<3;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=GOLD;
   for(let r=5;r<8;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=GREEN;
-  turn=GREEN;selected=null;legalMoves=[];mustContinue=null;gameOver=false;history=[];
+  turn=startingPlayer;selected=null;legalMoves=[];mustContinue=null;pendingPromotion=null;drag=null;promotionFx=null;gameOver=false;history=[];
   updateAll();
 }
 
@@ -290,36 +292,60 @@ function allMovesFor(player,b=board){
 
 function cloneBoard(b=board){return b.map(row=>row.slice())}
 
-function applyMoveToBoard(b,m){
+function applyMoveToBoard(b,m,promote=true){
   const nb=cloneBoard(b);
-  let p=nb[m.from.r][m.from.c];
+  const p=nb[m.from.r][m.from.c];
   nb[m.from.r][m.from.c]=EMPTY;
   nb[m.to.r][m.to.c]=p;
   if(m.capture) nb[m.capture.r][m.capture.c]=EMPTY;
-  if(p===GREEN&&m.to.r===0) nb[m.to.r][m.to.c]=GREEN_K;
-  if(p===GOLD&&m.to.r===7) nb[m.to.r][m.to.c]=GOLD_K;
+  if(promote){
+    if(p===GREEN&&m.to.r===0) nb[m.to.r][m.to.c]=GREEN_K;
+    if(p===GOLD&&m.to.r===7) nb[m.to.r][m.to.c]=GOLD_K;
+  }
   return nb;
 }
 
 function makeMove(m,fromAi=false){
   if(gameOver) return;
   history.push({
-    board:cloneBoard(),turn,selected,mustContinue,
+    board:cloneBoard(),turn,selected,mustContinue,pendingPromotion,
     legalMoves:JSON.parse(JSON.stringify(legalMoves))
   });
-  board=applyMoveToBoard(board,m);
-  selected=null;legalMoves=[];
 
-  const movedPiece=board[m.to.r][m.to.c];
+  // En una captura encadenada, una ficha común no se convierte en dama
+  // hasta que termina toda la jugada. Así nunca puede empezar a comer hacia
+  // atrás solamente por haber alcanzado la última fila a mitad del salto.
+  const movingPiece=board[m.from.r][m.from.c];
+  const reachesCrown=(movingPiece===GREEN&&m.to.r===0)||(movingPiece===GOLD&&m.to.r===7);
+  board=applyMoveToBoard(board,m,!m.capture);
+  if(m.capture) playCaptureSound(); else playMoveSound();
+  if(m.capture&&reachesCrown) pendingPromotion={r:m.to.r,c:m.to.c,piece:movingPiece};
+
+  selected=null;legalMoves=[];drag=null;
   const follow=m.capture?capturesFor(m.to.r,m.to.c):[];
   if(m.capture&&follow.length){
     mustContinue={r:m.to.r,c:m.to.c};
+    if(pendingPromotion){pendingPromotion.r=m.to.r;pendingPromotion.c=m.to.c;}
     selected=mustContinue;
     legalMoves=follow;
     setStatus('La captura continúa.');
     updateAll();
-    if(mode==='ai'&&turn===GOLD) setTimeout(aiTurn,500);
+    if(mode==='ai'&&turn===GOLD) setTimeout(aiTurn,300+Math.random()*300);
     return;
+  }
+
+  if(pendingPromotion){
+    const {r,c,piece}=pendingPromotion;
+    if(board[r][c]===piece){
+      board[r][c]=piece===GREEN?GREEN_K:GOLD_K;
+      promotionFx={r,c,start:performance.now()};
+      playCrownSound();
+    }
+    pendingPromotion=null;
+  }else if(m.capture&&reachesCrown){
+    board[m.to.r][m.to.c]=movingPiece===GREEN?GREEN_K:GOLD_K;
+    promotionFx={r:m.to.r,c:m.to.c,start:performance.now()};
+    playCrownSound();
   }
 
   mustContinue=null;
@@ -329,7 +355,7 @@ function makeMove(m,fromAi=false){
 
   if(!gameOver&&mode==='ai'&&turn===GOLD&&!fromAi){
     setStatus('La computadora está pensando...');
-    setTimeout(aiTurn,550);
+    setTimeout(aiTurn,300+Math.random()*300);
   }
 }
 
@@ -391,7 +417,7 @@ function aiTurn(){
     move=chooseHard(moves);
   }
   makeMove(move,true);
-  if(!gameOver&&turn===GOLD) setTimeout(aiTurn,450);
+  if(!gameOver&&turn===GOLD) setTimeout(aiTurn,300+Math.random()*300);
 }
 
 function chooseMedium(moves){
@@ -462,7 +488,7 @@ function evaluate(b){
 function undoMove(){
   if(!history.length||gameOver) return;
   const h=history.pop();
-  board=h.board;turn=h.turn;selected=h.selected;mustContinue=h.mustContinue;legalMoves=h.legalMoves;
+  board=h.board;turn=h.turn;selected=h.selected;mustContinue=h.mustContinue;pendingPromotion=h.pendingPromotion||null;legalMoves=h.legalMoves;drag=null;
   updateAll();
 }
 
@@ -511,9 +537,10 @@ function draw(){
     ctx.fillStyle='rgba(255,245,120,.45)';
     ctx.fillRect(selected.c*size,selected.r*size,size,size);
   }
+  const targetPulse=.82+.18*Math.sin(Date.now()/220);
   for(const m of legalMoves){
-    ctx.fillStyle='rgba(98,181,238,.48)';
-    ctx.beginPath();ctx.arc(m.to.c*size+size/2,m.to.r*size+size/2,size*.18,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=`rgba(98,181,238,${.38+.18*targetPulse})`;
+    ctx.beginPath();ctx.arc(m.to.c*size+size/2,m.to.r*size+size/2,size*(.16+.025*targetPulse),0,Math.PI*2);ctx.fill();
   }
 
   // Si hay captura obligatoria, las fichas habilitadas brillan.
@@ -532,11 +559,28 @@ function draw(){
     ctx.restore();
   }
 
-  for(let r=0;r<8;r++)for(let c=0;c<8;c++) if(board[r][c]) drawPiece(board[r][c],c*size+size/2,r*size+size/2,size);
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    if(!board[r][c]) continue;
+    if(drag&&drag.active&&drag.from.r===r&&drag.from.c===c) continue;
+    let pieceSize=size;
+    if(promotionFx&&promotionFx.r===r&&promotionFx.c===c){
+      const elapsed=performance.now()-promotionFx.start;
+      if(elapsed<650) pieceSize=size*(1+.12*Math.sin(Math.PI*elapsed/650));
+      else promotionFx=null;
+    }
+    drawPiece(board[r][c],c*size+size/2,r*size+size/2,pieceSize);
+  }
+  if(drag&&drag.active){
+    ctx.save();
+    ctx.globalAlpha=.94;
+    ctx.shadowColor='rgba(0,0,0,.32)';ctx.shadowBlur=12;ctx.shadowOffsetY=6;
+    drawPiece(drag.piece,drag.x-ox,drag.y-oy,size*1.06);
+    ctx.restore();
+  }
   ctx.restore();
 
   // Mantiene vivo el brillo sin alterar la lógica del juego.
-  if(forced.size && !gameOver) requestAnimationFrame(draw);
+  if((forced.size||legalMoves.length||promotionFx) && !gameOver) requestAnimationFrame(draw);
 }
 
 function drawLeavesBackground(W,H){
@@ -609,20 +653,71 @@ function drawPiece(p,x,y,size){
   ctx.restore();
 }
 
-canvas.addEventListener('pointerdown',e=>{
+function pointerBoardPosition(e){
   const rect=canvas.getBoundingClientRect();
-  const x=(e.clientX-rect.left)*(canvas.width/rect.width),y=(e.clientY-rect.top)*(canvas.height/rect.height);
+  const x=(e.clientX-rect.left)*(canvas.width/rect.width);
+  const y=(e.clientY-rect.top)*(canvas.height/rect.height);
   const margin=26,size=Math.min((canvas.width-margin*2)/8,(canvas.height-margin*2)/8);
   const ox=(canvas.width-size*8)/2,oy=(canvas.height-size*8)/2;
-  const c=Math.floor((x-ox)/size),r=Math.floor((y-oy)/size);
-  if(inBounds(r,c))selectCell(r,c);
+  return {x,y,size,ox,oy,c:Math.floor((x-ox)/size),r:Math.floor((y-oy)/size)};
+}
+
+canvas.addEventListener('pointerdown',e=>{
+  if(gameOver||(mode==='ai'&&turn===GOLD)) return;
+  const pos=pointerBoardPosition(e);
+  if(!inBounds(pos.r,pos.c)) return;
+
+  const p=board[pos.r][pos.c];
+  const belongs=(turn===GREEN&&isGreen(p))||(turn===GOLD&&isGold(p));
+  if(belongs){
+    selectCell(pos.r,pos.c);
+    const moves=legalMoves.filter(m=>m.from.r===pos.r&&m.from.c===pos.c);
+    if(moves.length){
+      drag={pointerId:e.pointerId,from:{r:pos.r,c:pos.c},piece:p,startX:pos.x,startY:pos.y,x:pos.x,y:pos.y,active:false};
+      canvas.setPointerCapture(e.pointerId);
+    }
+  }else{
+    selectCell(pos.r,pos.c);
+  }
 });
 
-function startPvp(){mode='pvp';currentModeSnapshot={mode,aiLevel};hideMenus();initBoard();startMusic()}
+canvas.addEventListener('pointermove',e=>{
+  if(!drag||drag.pointerId!==e.pointerId) return;
+  const pos=pointerBoardPosition(e);
+  drag.x=pos.x;drag.y=pos.y;
+  if(!drag.active&&Math.hypot(pos.x-drag.startX,pos.y-drag.startY)>8) drag.active=true;
+  if(drag.active) draw();
+});
+
+function finishPointer(e,cancelled=false){
+  if(!drag||drag.pointerId!==e.pointerId) return;
+  const current=drag;
+  const pos=pointerBoardPosition(e);
+  drag=null;
+  try{canvas.releasePointerCapture(e.pointerId)}catch(err){}
+
+  if(!cancelled&&current.active&&inBounds(pos.r,pos.c)){
+    const move=legalMoves.find(m=>m.from.r===current.from.r&&m.from.c===current.from.c&&m.to.r===pos.r&&m.to.c===pos.c);
+    if(move){makeMove(move);return;}
+  }
+  draw();
+}
+canvas.addEventListener('pointerup',e=>finishPointer(e,false));
+canvas.addEventListener('pointercancel',e=>finishPointer(e,true));
+canvas.addEventListener('lostpointercapture',()=>{if(drag){drag=null;draw();}});
+
+function beginNewMatch(){
+  const starter=nextStarter;
+  nextStarter=nextStarter===GREEN?GOLD:GREEN;
+  initBoard(starter);
+  setStatus(starter===GREEN?'Comienza el Equipo Hoja.':'Comienza el Equipo Dorado.');
+  if(mode==='ai'&&starter===GOLD) setTimeout(aiTurn,450+Math.random()*250);
+}
+function startPvp(){mode='pvp';currentModeSnapshot={mode,aiLevel};hideMenus();beginNewMatch();startMusic()}
 function showAiLevels(){document.getElementById('menuOverlay').style.display='none';document.getElementById('aiOverlay').style.display='flex'}
 function hideAi(){document.getElementById('aiOverlay').style.display='none';document.getElementById('menuOverlay').style.display='flex'}
-function startAi(level){mode='ai';aiLevel=level;currentModeSnapshot={mode,aiLevel};hideMenus();initBoard();startMusic()}
-function restartCurrent(){document.getElementById('endOverlay').style.display='none';initBoard()}
+function startAi(level){mode='ai';aiLevel=level;currentModeSnapshot={mode,aiLevel};hideMenus();beginNewMatch();startMusic()}
+function restartCurrent(){document.getElementById('endOverlay').style.display='none';beginNewMatch()}
 function hideMenus(){document.getElementById('menuOverlay').style.display='none';document.getElementById('aiOverlay').style.display='none'}
 function showMenu(){document.getElementById('endOverlay').style.display='none';document.getElementById('menuOverlay').style.display='flex'}
 function showTeacher(){document.getElementById('teacherOverlay').style.display='flex'}
@@ -731,8 +826,14 @@ function scheduleClairCycle(generation){
   const bus=audioCtx.createGain();
   const now=audioCtx.currentTime;
   bus.gain.setValueAtTime(.0001,now);
-  bus.gain.exponentialRampToValueAtTime(.62,now+2.2);
-  bus.connect(audioCtx.destination);
+  bus.gain.exponentialRampToValueAtTime(1.84,now+1.4);
+  const limiter=audioCtx.createDynamicsCompressor();
+  limiter.threshold.setValueAtTime(-8,now);
+  limiter.knee.setValueAtTime(10,now);
+  limiter.ratio.setValueAtTime(8,now);
+  limiter.attack.setValueAtTime(.003,now);
+  limiter.release.setValueAtTime(.22,now);
+  bus.connect(limiter).connect(audioCtx.destination);
   musicBus=bus;
 
   clairHarmony.forEach(([beat,bass,notes])=>scheduleArpeggio(beat,bass,notes,bus));
@@ -796,9 +897,12 @@ document.addEventListener('pointerdown',()=>{
   if(musicOn && !musicBus) startMusic();
 },{once:true});
 
+function playMoveSound(){tone(190,.07,'triangle',.035)}
+function playCaptureSound(){tone(145,.10,'square',.045);tone(95,.13,'triangle',.035,.05)}
+function playCrownSound(){tone(523,.12,'triangle',.05);tone(659,.14,'triangle',.05,.10);tone(784,.20,'sine',.055,.20)}
 function playWin(){tone(523,.18,'triangle',.05);tone(659,.18,'triangle',.05,.16);tone(784,.28,'triangle',.06,.32)}
 
-initBoard();
+initBoard(GREEN);
 </script>
 </body>
 </html>
