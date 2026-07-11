@@ -22,7 +22,65 @@ button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}button.soft{backgro
 .card{width:min(680px,95%);background:#fff8df;border:4px solid #8b5a2b;border-radius:22px;padding:22px;text-align:center;box-shadow:0 10px #5c3a1f}
 .card h1,.card h2{margin:0 0 12px;color:#2b5b39}.menuGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
 .footer{text-align:center;background:#183326;color:#dcebd9;padding:8px;font-size:12px;font-weight:700}
-@media(max-width:600px){body{padding:3px}.app{border-radius:12px}.title{font-size:17px;width:100%;text-align:center}header{justify-content:center}.pill{font-size:12px;padding:5px 8px}main{padding:10px}.board{gap:8px;padding:10px}.menuGrid,.levels{grid-template-columns:1fr}.card{padding:16px}}
+
+.mobile-label{display:none}
+@media(max-width:700px){
+  html,body{height:100%;min-height:100%;overflow:hidden}
+  body{padding:3px;align-items:flex-start}
+  .app{height:100dvh;width:100%;border-width:3px;border-radius:12px;display:flex;flex-direction:column}
+  header{padding:6px 8px;gap:5px;justify-content:center;flex:0 0 auto}
+  .title{font-size:15px;width:100%;text-align:center;line-height:1.05}
+  .hud{gap:5px;justify-content:center}
+  .pill{font-size:11px;padding:4px 7px;border-width:1px}
+  main{padding:6px;display:flex;flex-direction:column;min-height:0;flex:1}
+  .board{
+    width:min(100%,calc(100dvh - 176px));
+    max-width:none;
+    gap:6px;padding:8px;border-width:4px;border-radius:16px;
+    box-shadow:0 6px 0 #4f321c,0 10px 18px #0003
+  }
+  .cell{border-radius:12px}
+  .panel{
+    width:100%;margin:7px auto 0;padding:7px 8px;gap:6px;
+    border-width:2px;border-radius:12px;flex:0 0 auto
+  }
+  .status{font-size:12px;line-height:1.15;width:100%;text-align:center}
+  .controls{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+  button.action{padding:8px 6px;font-size:12px;border-radius:10px;box-shadow:0 3px #245d35}
+  .desktop-label{display:none}.mobile-label{display:inline}
+  .footer{display:none}
+  .overlay{padding:8px}
+  .card{padding:14px;max-height:94dvh;overflow:auto}
+  .card h1{font-size:22px}.card h2{font-size:20px}
+  .card p{margin:8px 0;font-size:14px}
+  .menuGrid,.levels{grid-template-columns:1fr;gap:8px}
+}
+@media(max-width:900px) and (orientation:landscape){
+  .app{height:100dvh}
+  header{padding:4px 8px;flex-wrap:nowrap}
+  .title{font-size:14px;width:auto;white-space:nowrap}
+  .hud{flex-wrap:nowrap;margin-left:auto}
+  main{
+    display:grid;grid-template-columns:minmax(0,1fr) 180px;
+    align-items:center;gap:7px;padding:5px;overflow:hidden
+  }
+  .board{
+    width:min(calc(100dvh - 54px),calc(100vw - 195px));
+    margin:auto;gap:5px;padding:6px;border-width:4px
+  }
+  .panel{
+    width:100%;margin:0;padding:8px;align-self:center;
+    display:flex;flex-direction:column
+  }
+  .status{font-size:12px}
+  .controls{grid-template-columns:1fr}
+  button.action{min-height:34px}
+  .overlay{padding:6px}
+  .card{width:min(580px,92%);padding:12px;max-height:94dvh}
+  .menuGrid,.levels{grid-template-columns:repeat(2,1fr)}
+  .levels{grid-template-columns:repeat(3,1fr)}
+}
+
 </style>
 </head>
 <body>
@@ -30,7 +88,7 @@ button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}button.soft{backgro
 <header><div class="title">🐒 TA-TE-TI DEL GRAN ÁRBOL</div><div class="hud"><div class="pill">Turno: <span id="turnLabel">Monito Marrón</span></div><div class="pill">Marcador: <span id="scoreLabel">0 - 0</span></div></div></header>
 <main>
 <div id="board" class="board"></div>
-<div class="panel"><div id="status" class="status">Elegí un modo para comenzar.</div><div class="controls"><button class="action" onclick="restartRound()">Nueva ronda</button><button class="action secondary" onclick="showMenu()">Cambiar modo</button><button class="action soft" onclick="toggleMusic()">🎵 <span id="musicLabel">Música: sí</span></button></div></div>
+<div class="panel"><div id="status" class="status">Elegí un modo para comenzar.</div><div class="controls"><button class="action" onclick="restartRound()"><span class="desktop-label">Nueva ronda</span><span class="mobile-label">↻ Ronda</span></button><button class="action secondary" onclick="showMenu()"><span class="desktop-label">Cambiar modo</span><span class="mobile-label">☰ Modo</span></button><button class="action soft" onclick="toggleMusic()">🎵 <span id="musicLabel">Música: sí</span></button></div></div>
 </main>
 <div class="footer">Una partida breve y tranquila en la Selva del Gran Árbol.</div>
 </div>
@@ -43,6 +101,7 @@ button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}button.soft{backgro
 const boardEl=document.getElementById('board'),statusEl=document.getElementById('status'),turnLabel=document.getElementById('turnLabel'),scoreLabel=document.getElementById('scoreLabel');
 const X='X',O='O',wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 let board=Array(9).fill(''),turn=X,mode='pvp',aiLevel='easy',roundOver=false,scores={X:0,O:0},musicOn=true,audioCtx=null,musicTimer=null,musicStep=0,nextAiStarter=X,aiTurnToken=0;
+const MASTER_VOLUME=1.8;
 
 function monkeySVG(team){
  const brown=team===X,ring=brown?'#8b5434':'#e0ad42',head=brown?'#5e3827':'#8b572d',face=brown?'#e4b77d':'#f1c983';
@@ -96,7 +155,7 @@ function tone(f,d,t='sine',v=.03,delay=0){
  const now=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();
  o.type=t;o.frequency.value=f;
  g.gain.setValueAtTime(0,now);
- g.gain.linearRampToValueAtTime(v,now+.018);
+ g.gain.linearRampToValueAtTime(Math.min(.22,v*MASTER_VOLUME),now+.018);
  g.gain.exponentialRampToValueAtTime(.0001,now+d);
  o.connect(g).connect(audioCtx.destination);o.start(now);o.stop(now+d+.05);
 }
@@ -107,7 +166,7 @@ function brass(note,dur=.34,vol=.022,delay=0){
  const t=audioCtx.currentTime+delay;
  const master=audioCtx.createGain(),filter=audioCtx.createBiquadFilter();
  filter.type='lowpass';filter.frequency.setValueAtTime(1250,t);filter.frequency.linearRampToValueAtTime(2200,t+.07);
- master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(vol,t+.025);
+ master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(Math.min(.22,vol*MASTER_VOLUME),t+.025);
  master.gain.exponentialRampToValueAtTime(.0001,t+dur);
  [0,-7].forEach((det,i)=>{
   const o=audioCtx.createOscillator(),g=audioCtx.createGain();
@@ -130,7 +189,7 @@ function brush(delay=0,strong=false){
  for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
  const src=audioCtx.createBufferSource(),f=audioCtx.createBiquadFilter(),g=audioCtx.createGain();
  src.buffer=b;f.type='highpass';f.frequency.value=strong?1500:2600;
- g.gain.setValueAtTime(strong?.010:.005,t);g.gain.exponentialRampToValueAtTime(.0001,t+(strong?.08:.045));
+ g.gain.setValueAtTime((strong?.010:.005)*MASTER_VOLUME,t);g.gain.exponentialRampToValueAtTime(.0001,t+(strong?.08:.045));
  src.connect(f).connect(g).connect(audioCtx.destination);src.start(t);
 }
 
