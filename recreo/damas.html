@@ -47,7 +47,7 @@ button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}
 button.soft{background:#8a6844;box-shadow:0 5px #60482f}
 button.warn{background:#b7644e;box-shadow:0 5px #7d4032}
 button:active{transform:translateY(3px);box-shadow:0 2px #333}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.controls{display:grid;grid-template-columns:1fr;gap:8px}
 small.note{color:#5b704e;line-height:1.35}
 .overlay{
   position:fixed;inset:0;background:rgba(14,39,29,.62);display:flex;align-items:center;justify-content:center;
@@ -77,6 +77,51 @@ small.note{color:#5b704e;line-height:1.35}
   .menuGrid{grid-template-columns:1fr}.modeRow{grid-template-columns:1fr}
   .card{padding:16px}.card p,.card li{font-size:15px}
 }
+
+
+/* Controles compactos sobre el tablero: visibles durante la partida en pantallas pequeñas. */
+.mobileGameBar{display:none;position:absolute;top:8px;right:8px;z-index:8;gap:6px}
+.mobileGameBar button{width:42px;height:42px;padding:0;border-radius:50%;font-size:19px;box-shadow:0 3px rgba(0,0,0,.28)}
+
+@media(max-width:860px){
+  html,body{height:100%;min-height:100%;overflow:hidden}
+  body{padding:0;align-items:stretch}
+  .app{width:100%;height:100dvh;border:0;border-radius:0;display:flex;flex-direction:column;box-shadow:none}
+  header{flex:0 0 auto;padding:5px 8px;gap:5px;flex-wrap:nowrap}
+  .title{font-size:14px;white-space:nowrap;width:auto;text-align:left}
+  .hud{gap:4px;flex-wrap:nowrap;margin-left:auto}
+  .pill{font-size:10px;padding:4px 6px;border-width:1px}
+  main{display:block;flex:1;min-height:0;padding:3px;background:#b9db95}
+  .boardWrap{height:100%;display:flex;align-items:center;justify-content:center}
+  canvas{width:auto;height:auto;max-width:100%;max-height:100%;border-width:3px;border-radius:10px}
+  .side,.footer{display:none}
+  .mobileGameBar{display:flex}
+  .overlay{padding:8px}
+  .card{width:min(620px,96%);max-height:94dvh;padding:14px;border-width:3px;border-radius:16px}
+  .card h1{font-size:24px}.card h2{font-size:21px}.card p,.card li{font-size:14px;line-height:1.35}
+  .menuGrid{grid-template-columns:1fr 1fr;gap:7px}.modeRow{gap:7px}
+  button{padding:10px 11px;font-size:14px;border-radius:12px}
+}
+
+@media(max-width:520px) and (orientation:portrait){
+  header{flex-wrap:wrap;justify-content:center}
+  .title{width:100%;text-align:center;font-size:13px}
+  .hud{margin:0 auto}
+  .app{height:100dvh}
+  main{padding:2px}
+  .mobileGameBar{top:6px;right:6px}
+  .mobileGameBar button{width:38px;height:38px;font-size:17px}
+}
+
+@media(max-height:520px) and (orientation:landscape){
+  header{padding:3px 6px}
+  .title{font-size:12px}
+  .pill{font-size:9px;padding:3px 5px}
+  main{padding:2px}
+  .mobileGameBar{top:5px;right:5px}
+  .mobileGameBar button{width:36px;height:36px;font-size:16px}
+}
+
 </style>
 </head>
 <body>
@@ -92,6 +137,11 @@ small.note{color:#5b704e;line-height:1.35}
 
 <main>
   <div class="boardWrap">
+    <div class="mobileGameBar" aria-label="Opciones de partida">
+      <button onclick="showMenu()" aria-label="Nueva partida" title="Nueva partida">↻</button>
+      <button class="secondary" onclick="toggleMusic()" aria-label="Activar o desactivar música" title="Música">🎵</button>
+      <button class="soft" onclick="showTeacher()" aria-label="Ver reglas" title="Reglas">🦍</button>
+    </div>
     <canvas id="board" width="760" height="760" aria-label="Tablero de damas"></canvas>
   </div>
   <aside class="side">
@@ -101,7 +151,6 @@ small.note{color:#5b704e;line-height:1.35}
       <button onclick="showMenu()">Nueva partida</button>
       <button class="secondary" onclick="toggleMusic()">🎵 <span id="musicText">Música: sí</span></button>
       <button class="soft" onclick="showTeacher()">🦍 Reglas</button>
-      <button class="warn" onclick="undoMove()">↶ Deshacer</button>
     </div>
     <small class="note">
       Tocá una ficha y después un casillero iluminado, o arrastrala hasta allí. Si hay una captura posible, debe realizarse.<br>
@@ -180,7 +229,7 @@ const goldCount=document.getElementById('goldCount');
 const EMPTY=0, GREEN=1, GOLD=2, GREEN_K=3, GOLD_K=4;
 let board=[], turn=GREEN, selected=null, legalMoves=[], mustContinue=null;
 let pendingPromotion=null, drag=null, promotionFx=null;
-let mode='pvp', aiLevel='easy', gameOver=false, history=[];
+let mode='pvp', aiLevel='easy', gameOver=false;
 let musicOn=true, audioCtx=null, musicTimer=null, currentModeSnapshot={mode:'pvp',aiLevel:'easy'};
 let nextStarter=GREEN;
 
@@ -188,7 +237,7 @@ function initBoard(startingPlayer=GREEN){
   board=Array.from({length:8},()=>Array(8).fill(EMPTY));
   for(let r=0;r<3;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=GOLD;
   for(let r=5;r<8;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=GREEN;
-  turn=startingPlayer;selected=null;legalMoves=[];mustContinue=null;pendingPromotion=null;drag=null;promotionFx=null;gameOver=false;history=[];
+  turn=startingPlayer;selected=null;legalMoves=[];mustContinue=null;pendingPromotion=null;drag=null;promotionFx=null;gameOver=false;
   updateAll();
 }
 
@@ -307,11 +356,6 @@ function applyMoveToBoard(b,m,promote=true){
 
 function makeMove(m,fromAi=false){
   if(gameOver) return;
-  history.push({
-    board:cloneBoard(),turn,selected,mustContinue,pendingPromotion,
-    legalMoves:JSON.parse(JSON.stringify(legalMoves))
-  });
-
   // En una captura encadenada, una ficha común no se convierte en dama
   // hasta que termina toda la jugada. Así nunca puede empezar a comer hacia
   // atrás solamente por haber alcanzado la última fila a mitad del salto.
@@ -485,12 +529,6 @@ function evaluate(b){
   return s;
 }
 
-function undoMove(){
-  if(!history.length||gameOver) return;
-  const h=history.pop();
-  board=h.board;turn=h.turn;selected=h.selected;mustContinue=h.mustContinue;pendingPromotion=h.pendingPromotion||null;legalMoves=h.legalMoves;drag=null;
-  updateAll();
-}
 
 function updateAll(){
   greenCount.textContent=countPieces(GREEN);
@@ -901,6 +939,15 @@ function playMoveSound(){tone(190,.07,'triangle',.035)}
 function playCaptureSound(){tone(145,.10,'square',.045);tone(95,.13,'triangle',.035,.05)}
 function playCrownSound(){tone(523,.12,'triangle',.05);tone(659,.14,'triangle',.05,.10);tone(784,.20,'sine',.055,.20)}
 function playWin(){tone(523,.18,'triangle',.05);tone(659,.18,'triangle',.05,.16);tone(784,.28,'triangle',.06,.32)}
+
+
+function refreshMobileLayout(){
+  // El canvas conserva su resolución interna; CSS calcula el mayor cuadrado
+  // posible dentro del espacio visible sin que el tablero quede recortado.
+  requestAnimationFrame(draw);
+}
+window.addEventListener('resize',refreshMobileLayout);
+window.addEventListener('orientationchange',()=>setTimeout(refreshMobileLayout,120));
 
 initBoard(GREEN);
 </script>
