@@ -34,6 +34,79 @@ body,.controls,.pad,.control{
   box-shadow:0 3px #1d3959;
 }
 
+
+/* Vista móvil optimizada: tablero vertical y controles compactos. */
+@media(max-width:700px){
+  html,body{height:100%;min-height:100%;overflow:hidden}
+  body{padding:0;align-items:stretch}
+  .app{
+    width:100%;height:100dvh;min-height:100dvh;border:0;border-radius:0;
+    display:flex;flex-direction:column;box-shadow:none
+  }
+  header{
+    flex:0 0 auto;display:grid;grid-template-columns:auto minmax(0,1fr);
+    align-items:center;gap:6px;padding:5px 6px;flex-wrap:nowrap
+  }
+  .title{width:auto;font-size:13px;line-height:1.05;text-align:left;white-space:nowrap}
+  .hud{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}
+  .pill{
+    min-width:0;padding:3px 5px;font-size:10px;text-align:center;
+    overflow:hidden;text-overflow:ellipsis
+  }
+  .game-wrap{
+    flex:1 1 auto;min-height:0;padding:3px;
+    display:flex;align-items:center;justify-content:center
+  }
+  canvas{
+    width:auto;max-width:100%;height:auto;
+    max-height:calc(100dvh - 151px);
+    border-width:3px;border-radius:9px
+  }
+  .controls{flex:0 0 auto;padding:3px 6px 5px}
+  .pad{width:168px;max-width:168px;gap:3px}
+  .control{
+    min-height:38px;height:38px;padding:2px;font-size:19px;
+    border-width:2px;box-shadow:0 3px #1d3959
+  }
+  .control.pressed{box-shadow:0 1px #1d3959}
+  .foot{display:none}
+  .overlay{inset:3px;padding:7px;border-radius:9px}
+  .card{
+    width:min(96%,560px);max-height:calc(100dvh - 72px);
+    overflow:auto;padding:12px;border-width:3px;border-radius:15px;
+    box-shadow:0 5px #5d3a1f
+  }
+  .card h1{font-size:21px}.card h2{font-size:20px}
+  .card p{font-size:13px;line-height:1.28;margin:6px 0}
+  .buttons{gap:6px;margin-top:9px}
+  button{padding:9px 11px;font-size:13px;border-radius:11px;box-shadow:0 3px #245f34}
+  .level-grid{grid-template-columns:repeat(5,1fr);gap:5px;margin-top:8px}
+  .level-btn{padding:7px 3px;font-size:12px}
+  .roster{font-size:12px;padding:7px;margin-top:7px}
+  .legend{font-size:11px;margin-top:5px}
+}
+@media(max-width:370px){
+  .title{font-size:11px}
+  .pill{font-size:9px;padding:3px}
+  .pad{width:150px;max-width:150px}
+  .control{height:35px;min-height:35px}
+  canvas{max-height:calc(100dvh - 142px)}
+}
+@media(max-width:700px) and (orientation:landscape){
+  header{grid-template-columns:auto 1fr;padding:3px 6px}
+  .hud{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .game-wrap{padding:2px 76px 2px 2px}
+  canvas{max-height:calc(100dvh - 45px)}
+  .controls{
+    position:absolute;right:4px;top:50%;transform:translateY(-42%);
+    width:70px;padding:2px;background:rgba(41,74,53,.88);border-radius:12px;z-index:2
+  }
+  .pad{width:66px;max-width:66px;gap:2px}
+  .control{height:31px;min-height:31px;font-size:15px}
+  .title{font-size:12px}
+  .pill{font-size:9px;padding:2px 4px}
+}
+
 </style>
 </head>
 <body>
@@ -56,7 +129,7 @@ const CLASSMATES=['Franchu','Martu','Lucy','Jose','Samy','Ori','Rousy','Vicky ch
 const SPECIAL_EVENTS={3:{type:'radio',label:'Radio de la Selva',icon:'📻'},6:{type:'glasses',label:'Anteojos Arcoíris',icon:'🌈'},9:{type:'trumpet',label:'Trompeta del Gran Árbol',icon:'🎺'},12:{type:'radio',label:'Radio Veloz',icon:'📻'},15:{type:'glasses',label:'Anteojos Nocturnos',icon:'🕶️'},18:{type:'trumpet',label:'Trompeta Dorada',icon:'🎺'}};
 const PALETTES={normal:{sky1:'#bfe9ef',sky2:'#8dcf74',cell1:'#c9e9a0',cell2:'#c3e397',wall:'#35643f',board:'#d8efb4',outline:'#527b45'},rainbow:{sky1:'#f6c7ef',sky2:'#a9d7ff',cell1:'#ffe5a7',cell2:'#c6f0d1',wall:'#6f5aa6',board:'#f8e8bd',outline:'#8a6ab1'},night:{sky1:'#27335f',sky2:'#476b72',cell1:'#9fc5a0',cell2:'#7aa989',wall:'#294c47',board:'#b9cfaa',outline:'#42645a'}};
 let level=1,maze=null,cols=9,rows=7,player={x:0,y:0},exit={x:0,y:0},bananas=[],friend=null,collected=0,steps=0,playing=false,moveLock=false,unlocked=Math.max(1,Number(localStorage.getItem('nitoUnlocked')||1)),audioCtx=null;
-let animTime=0,musicTimer=null,musicStep=0,musicOn=true;let foundClassmates=JSON.parse(localStorage.getItem('nitoFoundClassmates')||'[]');let specialItem=null,specialActive=false,currentPalette='normal',musicTempo=1;
+let animTime=0,musicTimer=null,musicStep=0,musicOn=true;let levelsReturnTo='start';let foundClassmates=JSON.parse(localStorage.getItem('nitoFoundClassmates')||'[]');let specialItem=null,specialActive=false,currentPalette='normal',musicTempo=1;
 function seededRandom(seed){let s=seed>>>0;return()=>{s+=0x6D2B79F5;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
 function dimensionsForLevel(n){const band=Math.floor((n-1)/4);return{cols:7+band*2,rows:7+band*2}}
 function generateMaze(c,r,seed){const rand=seededRandom(seed),grid=Array.from({length:r},()=>Array.from({length:c},()=>({visited:false,walls:{up:true,right:true,down:true,left:true}})));const stack=[{x:0,y:0}];grid[0][0].visited=true;while(stack.length){const cur=stack[stack.length-1],opts=[];DIRS.forEach(d=>{const nx=cur.x+d.dx,ny=cur.y+d.dy;if(nx>=0&&ny>=0&&nx<c&&ny<r&&!grid[ny][nx].visited)opts.push({...d,nx,ny})});if(!opts.length){stack.pop();continue}const p=opts[Math.floor(rand()*opts.length)],opp={up:'down',down:'up',left:'right',right:'left'};grid[cur.y][cur.x].walls[p.key]=false;grid[p.ny][p.nx].walls[opp[p.key]]=false;grid[p.ny][p.nx].visited=true;stack.push({x:p.nx,y:p.ny})}return grid}
@@ -86,13 +159,33 @@ function glassesSound(){tone(440,.12,'sine',.03);tone(554,.12,'sine',.03,.10);to
 
 function tryMove(dx,dy){if(!playing||moveLock)return;const key=dx===1?'right':dx===-1?'left':dy===1?'down':'up',cell=maze[player.y][player.x];if(cell.walls[key]){bumpSound();return}player.x+=dx;player.y+=dy;steps++;moveLock=true;setTimeout(()=>moveLock=false,70);checkCell();updateHud();draw()}
 function checkCell(){for(const b of bananas){if(!b.got&&b.x===player.x&&b.y===player.y){b.got=true;collected++;pluckSound()}}if(friend&&!friend.found&&friend.x===player.x&&friend.y===player.y){friend.found=true;friendSound();if(!foundClassmates.includes(friend.name)){foundClassmates.push(friend.name);localStorage.setItem('nitoFoundClassmates',JSON.stringify(foundClassmates))}showToast(`¡Encontraste a ${friend.name}!`)}if(specialItem&&!specialItem.got&&specialItem.x===player.x&&specialItem.y===player.y)activateSpecial();if(player.x===exit.x&&player.y===exit.y)finishLevel()}
-function finishLevel(){playing=false;winSound();if(level<TOTAL_LEVELS){unlocked=Math.max(unlocked,level+1);localStorage.setItem('nitoUnlocked',unlocked)}const all=collected===bananas.length,thisFriend=friend?(friend.found?`Encontraste a <strong>${friend.name}</strong>.`:`<strong>${friend.name}</strong> todavía espera en este laberinto.`):'En este nivel no había un compañero nuevo.',foundNow=CLASSMATES.filter(n=>foundClassmates.includes(n)),missingNow=CLASSMATES.filter(n=>!foundClassmates.includes(n)),eventText=specialItem?(specialItem.got?`<br>Evento: <strong>${specialItem.icon} ${specialItem.label}</strong>.`:`<br>Quedó un objeto especial por descubrir.`):'';document.getElementById('messageTitle').textContent=level===TOTAL_LEVELS?'🏫 ¡Nito llegó a la escuela!':'🌿 ¡Camino encontrado!';document.getElementById('messageText').innerHTML=`Bananas: <strong>${collected}/${bananas.length}</strong> · Pasos: <strong>${steps}</strong>.<br>${all?'¡Encontraste todas las bananas!':'Podés volver para buscar las que faltan.'}<br>${thisFriend}${eventText}<div class="roster"><strong>Compañeros encontrados:</strong><br><span class="found-names">${foundNow.length?foundNow.join(', '):'Todavía ninguno'}</span><br><br><strong>Compañeros que faltan:</strong><br><span class="missing-names">${missingNow.length?missingNow.join(', '):'¡Ya están todos!'}</span></div>`;const box=document.getElementById('messageButtons');box.innerHTML='';if(level<TOTAL_LEVELS)box.appendChild(makeButton('Siguiente nivel',()=>{hideMessage();startGame(level+1)}));else box.appendChild(makeButton('Jugar otra vez',()=>{hideMessage();startGame(1)}));box.appendChild(makeButton('Elegir nivel',()=>{hideMessage();showLevels()},'secondary'));document.getElementById('messageOverlay').style.display='flex'}
+function finishLevel(){playing=false;winSound();if(level<TOTAL_LEVELS){unlocked=Math.max(unlocked,level+1);localStorage.setItem('nitoUnlocked',unlocked)}const all=collected===bananas.length,thisFriend=friend?(friend.found?`Encontraste a <strong>${friend.name}</strong>.`:`<strong>${friend.name}</strong> todavía espera en este laberinto.`):'En este nivel no había un compañero nuevo.',foundNow=CLASSMATES.filter(n=>foundClassmates.includes(n)),missingNow=CLASSMATES.filter(n=>!foundClassmates.includes(n)),eventText=specialItem?(specialItem.got?`<br>Evento: <strong>${specialItem.icon} ${specialItem.label}</strong>.`:`<br>Quedó un objeto especial por descubrir.`):'';document.getElementById('messageTitle').textContent=level===TOTAL_LEVELS?'🏫 ¡Nito llegó a la escuela!':'🌿 ¡Camino encontrado!';document.getElementById('messageText').innerHTML=`Bananas: <strong>${collected}/${bananas.length}</strong> · Pasos: <strong>${steps}</strong>.<br>${all?'¡Encontraste todas las bananas!':'Podés volver para buscar las que faltan.'}<br>${thisFriend}${eventText}<div class="roster"><strong>Compañeros encontrados:</strong><br><span class="found-names">${foundNow.length?foundNow.join(', '):'Todavía ninguno'}</span><br><br><strong>Compañeros que faltan:</strong><br><span class="missing-names">${missingNow.length?missingNow.join(', '):'¡Ya están todos!'}</span></div>`;const box=document.getElementById('messageButtons');box.innerHTML='';if(level<TOTAL_LEVELS)box.appendChild(makeButton('Siguiente nivel',()=>{hideMessage();startGame(level+1)}));else box.appendChild(makeButton('Jugar otra vez',()=>{hideMessage();startGame(1)}));box.appendChild(makeButton('Elegir nivel',()=>{hideMessage();showLevels('message')},'secondary'));document.getElementById('messageOverlay').style.display='flex'}
 function makeButton(text,fn,cls=''){const b=document.createElement('button');b.textContent=text;b.onclick=fn;if(cls)b.className=cls;return b}
 function showToast(text){const el=document.createElement('div');el.textContent=text;Object.assign(el.style,{position:'absolute',left:'50%',top:'18px',transform:'translateX(-50%)',background:'#fff8df',color:'#285d3a',padding:'10px 16px',borderRadius:'999px',fontWeight:'900',border:'3px solid #8b5a2b',zIndex:5,boxShadow:'0 5px #5d3a1f'});document.querySelector('.game-wrap').appendChild(el);setTimeout(()=>el.remove(),1500)}
 function startGame(n){document.getElementById('startOverlay').style.display='none';document.getElementById('levelsOverlay').style.display='none';document.getElementById('messageOverlay').style.display='none';initAudio();startMusic();buildLevel(n)}
 function hideMessage(){document.getElementById('messageOverlay').style.display='none'}
-function showLevels(){const grid=document.getElementById('levelGrid');grid.innerHTML='';for(let i=1;i<=TOTAL_LEVELS;i++){const b=document.createElement('button');b.className='level-btn'+(i>unlocked?' locked':'');b.textContent=i;b.disabled=i>unlocked;b.onclick=()=>startGame(i);grid.appendChild(b)}document.getElementById('levelsOverlay').style.display='flex'}
-function hideLevels(){document.getElementById('levelsOverlay').style.display='none'}
+function showLevels(returnTo='start'){
+  levelsReturnTo=returnTo;
+  const grid=document.getElementById('levelGrid');
+  grid.innerHTML='';
+  for(let i=1;i<=TOTAL_LEVELS;i++){
+    const b=document.createElement('button');
+    b.className='level-btn'+(i>unlocked?' locked':'');
+    b.textContent=i;
+    b.disabled=i>unlocked;
+    b.onclick=()=>startGame(i);
+    grid.appendChild(b);
+  }
+  document.getElementById('levelsOverlay').style.display='flex';
+}
+function hideLevels(){
+  document.getElementById('levelsOverlay').style.display='none';
+  if(levelsReturnTo==='message'){
+    document.getElementById('messageOverlay').style.display='flex';
+  }else{
+    document.getElementById('startOverlay').style.display='flex';
+  }
+}
 function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}
 function tone(freq,dur,type='sine',vol=.05,delay=0){initAudio();const t=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(audioCtx.destination);o.start(t);o.stop(t+dur+.05)}
 function pluckSound(){tone(660,.12,'triangle',.05);tone(880,.15,'triangle',.04,.08)}function friendSound(){tone(392,.15,'sine',.04);tone(523,.2,'sine',.05,.12)}function bumpSound(){tone(110,.08,'square',.025)}function winSound(){tone(523,.16,'triangle',.06);tone(659,.16,'triangle',.06,.14);tone(784,.28,'triangle',.06,.28)}
@@ -230,7 +323,21 @@ document.addEventListener('dragstart',e=>{
   if(e.target.closest('.controls,.control,canvas'))e.preventDefault();
 });
 
-window.addEventListener('resize',draw);requestAnimationFrame(animate);
+function resizeCanvasForViewport(){
+  const mobile=window.innerWidth<=700;
+  const portrait=window.innerHeight>=window.innerWidth;
+  const targetW=mobile&&portrait?620:900;
+  const targetH=mobile&&portrait?820:620;
+  if(canvas.width!==targetW||canvas.height!==targetH){
+    canvas.width=targetW;
+    canvas.height=targetH;
+  }
+  draw();
+}
+window.addEventListener('resize',resizeCanvasForViewport);
+window.addEventListener('orientationchange',()=>setTimeout(resizeCanvasForViewport,80));
+resizeCanvasForViewport();
+requestAnimationFrame(animate);
 </script>
 </body>
 </html>
