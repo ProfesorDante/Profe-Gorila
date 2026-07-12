@@ -145,6 +145,56 @@ buildLevel=function(n){
   draw();
 };
 
+/* === CORRECCIÓN 3.9: BANANAS VISIBLES Y CONTADOR DESDE CERO === */
+/* Se descarta el antiguo banco permanente que podía ocultar bananas ya
+   recogidas en visitas anteriores. La aventura siempre empieza en cero. */
+try{
+  localStorage.removeItem('nitoBananaBank');
+  localStorage.removeItem('nitoBananaIds');
+}catch(_){ }
+permanentBananas=0;
+foundBananaIds.clear();
+updateBananaHud32();
+
+/* Un único modelo de banana, con cuerpo relleno, borde y brillo para que
+   siga siendo visible aun cuando las casillas se vuelven pequeñas. */
+drawBanana=function(x,y,size,ox,oy,i=0){
+  const cx=ox+(x+.5)*size;
+  const cy=oy+(y+.5)*size+Math.sin(animTime*3+i)*size*.035;
+  const s=Math.max(18,size*.42);
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(-.50);
+  ctx.shadowColor='rgba(94,65,5,.38)';
+  ctx.shadowBlur=Math.max(3,size*.07);
+  ctx.shadowOffsetY=Math.max(2,size*.035);
+
+  ctx.strokeStyle='#6f5008';
+  ctx.lineWidth=Math.max(8,size*.15);
+  ctx.beginPath();
+  ctx.arc(0,0,s*.48,.20,2.45);
+  ctx.stroke();
+
+  ctx.shadowColor='rgba(255,229,75,.9)';
+  ctx.shadowBlur=Math.max(5,size*.11);
+  ctx.strokeStyle='#ffd52f';
+  ctx.lineWidth=Math.max(6,size*.105);
+  ctx.stroke();
+
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='#fff39a';
+  ctx.lineWidth=Math.max(2,size*.027);
+  ctx.stroke();
+
+  ctx.fillStyle='#65470a';
+  for(const a of [.20,2.45]){
+    ctx.beginPath();
+    ctx.arc(Math.cos(a)*s*.48,Math.sin(a)*s*.48,Math.max(2,size*.028),0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.restore();
+};
+
 /* === FINAL DE LA AVENTURA 3.7 === */
 #finalAdventureOverlay{position:fixed;inset:0;z-index:60;background:rgba(10,29,22,.92);display:none;align-items:center;justify-content:center;padding:14px}
 .final-adventure-card{width:min(1120px,96vw);max-height:96dvh;overflow:auto;background:#fff8df;border:4px solid #8b5a2b;border-radius:22px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);text-align:center}
@@ -1236,16 +1286,15 @@ tryMove=function(dx,dy){
 let visionRadius=2.15;
 let visionGlasses=[];
 let bananaGate=null;
-let permanentBananas=Math.max(0,Number(localStorage.getItem('nitoBananaBank')||0));
-let foundBananaIds=new Set(JSON.parse(localStorage.getItem('nitoBananaIds')||'[]'));
+let permanentBananas=0;
+let foundBananaIds=new Set();
 let musicDiscoveries=new Set(JSON.parse(localStorage.getItem('nitoMusicDiscoveries')||'[]'));
 
 const BANANA_GATE_LEVELS={8:5,12:8,16:12,19:16};
 const MUSIC_LAYER_BY_EVENT={radio:'bass',trumpet:'clarinet',glasses:'strings'};
 
 function saveBananas(){
-  localStorage.setItem('nitoBananaBank',String(permanentBananas));
-  localStorage.setItem('nitoBananaIds',JSON.stringify([...foundBananaIds]));
+  /* Las bananas pertenecen a la partida actual y no se guardan en el navegador. */
 }
 function updateBananaHud32(){
   if(bananaLabel)bananaLabel.textContent=permanentBananas;
@@ -1344,8 +1393,8 @@ advanceGuardian=function(t){
 const buildLevel32Base=buildLevel;
 buildLevel=function(n){
   buildLevel32Base(n);
-  bananas.forEach((b,i)=>{b.persistId=`L${n}B${i}`;b.got=foundBananaIds.has(b.persistId)});
-  collected=bananas.filter(b=>b.got).length;
+  bananas.forEach((b,i)=>{b.persistId=`L${n}B${i}`;b.got=false});
+  collected=0;
   setupVisionGlasses();setupBananaGate();placeGuardian();updateBananaHud32();draw();
 };
 
@@ -1362,8 +1411,8 @@ collectQuietly=function(){
   const before=new Set(bananas.filter(b=>b.got).map(b=>b.persistId));
   collectQuietly32Base();
   for(const b of bananas){
-    if(b.got&&b.persistId&&!before.has(b.persistId)&&!foundBananaIds.has(b.persistId)){
-      foundBananaIds.add(b.persistId);permanentBananas++;saveBananas();
+    if(b.got&&b.persistId&&!before.has(b.persistId)){
+      permanentBananas++;
     }
   }
   for(const g of visionGlasses){
@@ -1596,7 +1645,7 @@ function rotateWallsForRun(walls,turns){
 }
 function applyRunRotationToBaseLevel(){
   const turns=RUN_ROTATION_TURNS;
-  if(!turns||!maze||cols!==rows){levelStart={...player};return;}
+  if(!turns||!maze||cols!==rows||level>6){levelStart={...player};return;}
   const size=cols;
   const rotated=Array.from({length:size},()=>Array(size));
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
@@ -1926,6 +1975,189 @@ finishLevel=function(){
   }
 };
 
+
+
+/* === ACTUALIZACIÓN 3.9: ROTACIÓN SEGURA + MECÁNICAS DE INTRODUCCIÓN ===
+   La rotación se conserva únicamente en los niveles 1 a 6. En los niveles
+   complejos se usa la orientación original para evitar superposiciones con
+   guardianes, vehículos, llaves y otras mecánicas dinámicas. */
+let level3Button=null;
+let level3GateOpen=false;
+let level4Trampoline=null;
+let level4Landing=null;
+let trampolineBusy=false;
+
+function occupiedForIntro39(){
+  const s=new Set([cellKey(levelStart),cellKey(exit)]);
+  bananas.forEach(b=>s.add(cellKey(b)));
+  if(friend)s.add(cellKey(friend));
+  if(specialItem)s.add(cellKey(specialItem));
+  if(vehicleItem)s.add(cellKey(vehicleItem));
+  for(const g of visionGlasses||[])s.add(cellKey(g));
+  return s;
+}
+
+function setupLevel3Button39(){
+  level3Button=null;level3GateOpen=false;
+  if(level!==3)return;
+  const occupied=occupiedForIntro39();
+  const path=shortestPath(levelStart,exit);
+  let candidates=allCells().filter(c=>!occupied.has(cellKey(c))&&neighborsOf(c.x,c.y).length===1);
+  const dist=distancesFrom(levelStart);
+  candidates.sort((a,b)=>{
+    const target=Math.max(3,Math.floor(path.length*.42));
+    return Math.abs((dist.get(cellKey(a))||0)-target)-Math.abs((dist.get(cellKey(b))||0)-target);
+  });
+  let chosen=candidates[0];
+  if(!chosen&&path.length>4){
+    const idx=Math.max(2,Math.min(path.length-2,Math.floor(path.length*.42)));
+    if(!occupied.has(cellKey(path[idx])))chosen=path[idx];
+  }
+  if(!chosen){
+    chosen=allCells().find(c=>!occupied.has(cellKey(c))&&!sameCell(c,exit));
+  }
+  if(chosen)level3Button={...chosen,pressed:false};
+}
+
+function setupLevel4Trampoline39(){
+  level4Trampoline=null;level4Landing=null;trampolineBusy=false;
+  if(level!==4)return;
+  const occupied=occupiedForIntro39();
+  const path=shortestPath(levelStart,exit);
+  if(path.length<6)return;
+  const sourceOptions=path.slice(2,Math.max(3,Math.floor(path.length*.45))).filter(c=>!occupied.has(cellKey(c)));
+  let source=sourceOptions[Math.floor(sourceOptions.length*.55)]||sourceOptions[0];
+  if(!source)source=allCells().find(c=>!occupied.has(cellKey(c))&&pathLength(levelStart,c)>=3);
+  if(!source)return;
+  occupied.add(cellKey(source));
+  const distFromSource=distancesFrom(source);
+  const distFromExit=distancesFrom(exit);
+  let landings=allCells().filter(c=>{
+    const ds=distFromSource.get(cellKey(c))??0;
+    const de=distFromExit.get(cellKey(c))??0;
+    return !occupied.has(cellKey(c))&&ds>=Math.max(5,Math.floor((cols+rows)/3))&&de>=2;
+  });
+  landings.sort((a,b)=>(distFromSource.get(cellKey(b))||0)-(distFromSource.get(cellKey(a))||0));
+  let landing=landings[0];
+  if(!landing){
+    landing=path.slice(Math.floor(path.length*.62),-1).find(c=>!occupied.has(cellKey(c)));
+  }
+  if(landing){level4Trampoline={...source};level4Landing={...landing};}
+}
+
+function moveHazardAwayFromStart39(g){
+  if(!g||!sameCell(g,levelStart))return;
+  if(Array.isArray(g.route)){
+    const safeIndex=g.route.findIndex(c=>!sameCell(c,levelStart)&&!sameCell(c,exit)&&(!friend||!sameCell(c,friend)));
+    if(safeIndex>=0){g.index=safeIndex;g.x=g.route[safeIndex].x;g.y=g.route[safeIndex].y;return;}
+  }
+  const forbidden=occupiedForIntro39();
+  const c=allCells().find(c=>!forbidden.has(cellKey(c))&&pathLength(levelStart,c)>=3);
+  if(c){g.x=c.x;g.y=c.y;}
+}
+
+function sanitizeDynamicStarts39(){
+  moveHazardAwayFromStart39(guardian);
+  moveHazardAwayFromStart39(extraGuardian);
+  const occupied=new Set([cellKey(levelStart),cellKey(exit)]);
+  if(friend)occupied.add(cellKey(friend));
+  bananas.forEach(b=>occupied.add(cellKey(b)));
+  const movable=[specialItem,vehicleItem];
+  for(const item of movable){
+    if(item&&sameCell(item,levelStart)){
+      const c=allCells().find(c=>!occupied.has(cellKey(c))&&pathLength(levelStart,c)>=2);
+      if(c){item.x=c.x;item.y=c.y;occupied.add(cellKey(c));}
+    }
+  }
+}
+
+const buildLevel39Base=buildLevel;
+buildLevel=function(n){
+  buildLevel39Base(n);
+  levelStart={...player};
+  sanitizeDynamicStarts39();
+  setupLevel3Button39();
+  setupLevel4Trampoline39();
+  updateMechanicHud();
+  draw();
+};
+
+const mechanicLabel39Base=mechanicLabel;
+mechanicLabel=function(){
+  if(level===3)return '🔘 botón de entrada';
+  if(level===4)return '🟣 trampolín selvático';
+  return mechanicLabel39Base();
+};
+
+const checkCell39Base=checkCell;
+checkCell=function(){
+  if(level===3&&level3Button&&!level3Button.pressed&&sameCell(player,level3Button)){
+    level3Button.pressed=true;level3GateOpen=true;
+    friendSound();showToast('🔘 ¡Botón activado! La entrada de la escuela se abrió.');
+  }
+  if(level===4&&level4Trampoline&&level4Landing&&!trampolineBusy&&sameCell(player,level4Trampoline)){
+    trampolineBusy=true;
+    player={...level4Landing};
+    steps++;
+    tone(330,.10,'sine',.035);tone(523,.18,'triangle',.045,.08);
+    showToast('🟣 ¡Boing! El trampolín llevó a Nito a otro rincón del mapa.');
+    setTimeout(()=>trampolineBusy=false,320);
+  }
+  checkCell39Base();
+};
+
+const finishLevel39Base=finishLevel;
+finishLevel=function(){
+  if(level===3&&!level3GateOpen){
+    bumpSound();showToast('🔒 La entrada está cerrada. Buscá el botón de la selva.');
+    return;
+  }
+  finishLevel39Base();
+};
+
+function drawIntroMechanics39(size,ox,oy){
+  if(level===3){
+    if(level3Button){
+      const cx=ox+(level3Button.x+.5)*size,cy=oy+(level3Button.y+.5)*size;
+      ctx.save();ctx.translate(cx,cy);
+      ctx.shadowColor=level3Button.pressed?'rgba(120,255,140,.9)':'rgba(255,229,92,.95)';
+      ctx.shadowBlur=size*.16;
+      ctx.fillStyle=level3Button.pressed?'#55b967':'#e9c63b';
+      ctx.strokeStyle='#654b1f';ctx.lineWidth=Math.max(2,size*.04);
+      ctx.beginPath();ctx.arc(0,0,size*.19,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#fff8cf';ctx.beginPath();ctx.arc(-size*.045,-size*.055,size*.055,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    if(!level3GateOpen){
+      const cx=ox+(exit.x+.5)*size,cy=oy+(exit.y+.5)*size;
+      ctx.save();ctx.translate(cx,cy);
+      ctx.fillStyle='rgba(39,83,43,.92)';ctx.fillRect(-size*.34,-size*.08,size*.68,size*.16);
+      ctx.fillStyle='#305f37';
+      for(let i=-2;i<=2;i++){ctx.beginPath();ctx.arc(i*size*.12,0,size*.10,0,Math.PI*2);ctx.fill();}
+      ctx.font=`${Math.max(17,size*.30)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🔒',0,-size*.22);
+      ctx.restore();
+    }
+  }
+  if(level===4&&level4Trampoline){
+    const cx=ox+(level4Trampoline.x+.5)*size,cy=oy+(level4Trampoline.y+.5)*size;
+    ctx.save();ctx.translate(cx,cy+Math.sin(animTime*5)*size*.025);
+    ctx.shadowColor='rgba(186,102,255,.9)';ctx.shadowBlur=size*.16;
+    ctx.fillStyle='#9551cf';ctx.strokeStyle='#4f2d72';ctx.lineWidth=Math.max(3,size*.05);
+    ctx.beginPath();ctx.ellipse(0,size*.08,size*.28,size*.13,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#d9b6ff';ctx.lineWidth=Math.max(2,size*.035);
+    for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(i*size*.10,-size*.13);ctx.lineTo(i*size*.10,size*.02);ctx.stroke();}
+    ctx.fillStyle='#f1ddff';ctx.fillRect(-size*.30,-size*.17,size*.60,size*.10);
+    ctx.restore();
+  }
+}
+
+const draw39Base=draw;
+draw=function(){
+  draw39Base();
+  if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  drawIntroMechanics39(size,ox,oy);
+};
 </script>
 
 </body>
