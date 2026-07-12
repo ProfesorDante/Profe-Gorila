@@ -145,7 +145,7 @@ function dimensionsForLevel(n){const band=Math.floor((n-1)/4);return{cols:7+band
 function generateMaze(c,r,seed){const rand=seededRandom(seed),grid=Array.from({length:r},()=>Array.from({length:c},()=>({visited:false,walls:{up:true,right:true,down:true,left:true}})));const stack=[{x:0,y:0}];grid[0][0].visited=true;while(stack.length){const cur=stack[stack.length-1],opts=[];DIRS.forEach(d=>{const nx=cur.x+d.dx,ny=cur.y+d.dy;if(nx>=0&&ny>=0&&nx<c&&ny<r&&!grid[ny][nx].visited)opts.push({...d,nx,ny})});if(!opts.length){stack.pop();continue}const p=opts[Math.floor(rand()*opts.length)],opp={up:'down',down:'up',left:'right',right:'left'};grid[cur.y][cur.x].walls[p.key]=false;grid[p.ny][p.nx].walls[opp[p.key]]=false;grid[p.ny][p.nx].visited=true;stack.push({x:p.nx,y:p.ny})}return grid}
 function farthestCell(sx,sy){const q=[{x:sx,y:sy,d:0}],seen=new Set([sx+','+sy]);let best=q[0];while(q.length){const cur=q.shift();if(cur.d>best.d)best=cur;for(const d of DIRS){if(!maze[cur.y][cur.x].walls[d.key]){const nx=cur.x+d.dx,ny=cur.y+d.dy,k=nx+','+ny;if(!seen.has(k)){seen.add(k);q.push({x:nx,y:ny,d:cur.d+1})}}}}return best}
 function randomOpenCells(count,seed,forbidden){const rand=seededRandom(seed),cells=[];for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const k=x+','+y;if(!forbidden.has(k))cells.push({x,y})}for(let i=cells.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]]}return cells.slice(0,count)}
-function buildLevel(n){level=n;const d=dimensionsForLevel(n);cols=d.cols;rows=d.rows;maze=generateMaze(cols,rows,8241+n*9973);player={x:0,y:0};exit=farthestCell(0,0);const forbidden=new Set(['0,0',exit.x+','+exit.y]),bananaCount=Math.min(2+Math.floor(n/3),7),hasClassmate=n<=18,hasSpecial=Boolean(SPECIAL_EVENTS[n]),cells=randomOpenCells(bananaCount+(hasClassmate?1:0)+(hasSpecial?1:0),441+n*331,forbidden);bananas=cells.slice(0,bananaCount).map(c=>({...c,got:false}));let idx=bananaCount;friend=hasClassmate?{...cells[idx++],found:false,name:CLASSMATES[n-1]}:null;specialItem=hasSpecial?{...cells[idx++],got:false,...SPECIAL_EVENTS[n]}:null;specialActive=false;currentPalette='normal';musicTempo=1;updateEventHud();collected=0;steps=0;playing=true;updateHud();draw()}
+function buildLevel(n){level=n;const d=dimensionsForLevel(n);cols=d.cols;rows=d.rows;maze=generateMaze(cols,rows,8241+n*9973);player={x:0,y:0};exit=farthestCell(0,0);const forbidden=new Set(['0,0',exit.x+','+exit.y]),bananaCount=Math.min(2+Math.floor(n/3),7),hasClassmate=n<=18,hasSpecial=Boolean(SPECIAL_EVENTS[n]),cells=randomOpenCells(bananaCount+(hasClassmate?1:0)+(hasSpecial?1:0),441+n*331,forbidden);bananas=cells.slice(0,bananaCount).map(c=>({...c,got:false}));let idx=bananaCount;friend=hasClassmate?{...cells[idx++],found:false,name:CLASSMATES[n-1]}:null;specialItem=hasSpecial?{...cells[idx++],got:false,...SPECIAL_EVENTS[n]}:null;specialActive=false;currentPalette='normal';musicTempo=1;applyRunRotationToBaseLevel();updateEventHud();collected=0;steps=0;playing=true;updateHud();draw()}
 function updateHud(){levelLabel.textContent=level;bananaLabel.textContent=collected;bananaTotal.textContent=bananas.length;stepsLabel.textContent=steps}
 function cellMetrics(){const margin=30,cw=(canvas.width-margin*2)/cols,ch=(canvas.height-margin*2)/rows,size=Math.min(cw,ch),boardW=size*cols,boardH=size*rows;return{size,ox:(canvas.width-boardW)/2,oy:(canvas.height-boardH)/2}}
 function roundRect(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
@@ -370,9 +370,9 @@ const BOSS_LEVELS={
   19:{icon:'🐢',name:'Tortuga Gigante',message:'La Tortuga Gigante cerró el paso. ¡Probemos otra ruta!'}
 };
 
-const WHIRLPOOL_LEVELS=new Set([8,16]);
+const WHIRLPOOL_LEVELS=new Set([8,16,20]);
 const DARK_LEVELS=new Set([11,17]);
-const FALSE_HOUSE_LEVELS=new Set([14,20]);
+const FALSE_HOUSE_LEVELS=new Set([14,18,20]);
 const SECRET_LEVELS=new Set([4,5,6,9,10,12,15,18,20]);
 
 let secretLinks=[];
@@ -672,13 +672,13 @@ draw=function(){
 };
 
 function drawFalseHouse(x,y,size,ox,oy){
+  /* La casa falsa es visualmente creíble: no tiene signo, brillo ni pista. */
   const px=ox+x*size,py=oy+y*size;
   ctx.save();ctx.translate(px+size/2,py+size/2);
-  ctx.fillStyle='#74543d';ctx.fillRect(-size*.26,-size*.16,size*.52,size*.36);
-  ctx.fillStyle='#dccb9b';ctx.fillRect(-size*.16,-size*.06,size*.32,size*.24);
-  ctx.fillStyle='#6f5a9f';ctx.beginPath();ctx.moveTo(-size*.32,-size*.16);ctx.lineTo(0,-size*.42);ctx.lineTo(size*.32,-size*.16);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#283d55';ctx.fillRect(-size*.06,size*.02,size*.12,size*.16);
-  ctx.fillStyle='#fff';ctx.font=`900 ${Math.max(10,size*.17)}px Arial`;ctx.textAlign='center';ctx.fillText('?',0,-size*.20);
+  ctx.fillStyle='#8b5a2b';ctx.fillRect(-size*.28,-size*.18,size*.56,size*.38);
+  ctx.fillStyle='#f7e4b1';ctx.fillRect(-size*.18,-size*.08,size*.36,size*.26);
+  ctx.fillStyle='#a43f3f';ctx.beginPath();ctx.moveTo(-size*.34,-size*.18);ctx.lineTo(0,-size*.45);ctx.lineTo(size*.34,-size*.18);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#4b79a8';ctx.fillRect(-size*.07,size*.02,size*.14,size*.16);
   ctx.restore();
 }
 
@@ -702,8 +702,13 @@ animate=function(t){
 
 const LOGIC_LEVELS={
   6:{kind:'water',itemIcon:'🚣',itemName:'Bote',obstacleIcon:'💧'},
+  9:{kind:'lock',itemIcon:'🗝️',itemName:'Llave',obstacleIcon:'🔒'},
   10:{kind:'bridge',itemIcon:'🪵',itemName:'Tabla',obstacleIcon:'🕳️'},
-  15:{kind:'lock',itemIcon:'🗝️',itemName:'Llave',obstacleIcon:'🔒'}
+  12:{kind:'water',itemIcon:'🚣',itemName:'Bote',obstacleIcon:'💧'},
+  16:{kind:'lock',itemIcon:'🗝️',itemName:'Llave',obstacleIcon:'🔒'},
+  18:{kind:'water',itemIcon:'🚣',itemName:'Bote',obstacleIcon:'💧'},
+  19:{kind:'bridge',itemIcon:'🪵',itemName:'Tabla',obstacleIcon:'🕳️'},
+  20:{kind:'lock',itemIcon:'🗝️',itemName:'Llave',obstacleIcon:'🔒'}
 };
 
 let logicChallenge=null;
@@ -1360,6 +1365,401 @@ playNocturneMeasure=function(){
 const updateHud32Base=updateHud;
 updateHud=function(){updateHud32Base();updateBananaHud32();};
 updateBananaHud32();
+/* === ACTUALIZACIÓN 3.3: HABITANTES, VEHÍCULOS Y RUTA DEL GRAN EXPLORADOR === */
+const GUARDIAN_PERSONALITIES={
+  gorilla1:{icon:'🦍',name:'Gorila curioso',step:1450,pause:700,canUseSecrets:false,mode:'patrol'},
+  parrot:{icon:'🦜',name:'Loro explorador',step:760,pause:160,canUseSecrets:false,mode:'fly'},
+  elephant:{icon:'🐘',name:'Elefante paseandero',step:1700,pause:900,canUseSecrets:false,mode:'patrol'},
+  sloth:{icon:'🦥',name:'Perezoso soñador',step:2100,pause:2300,canUseSecrets:false,mode:'patrol'},
+  gorilla2:{icon:'🦍',name:'Gorila ágil',step:900,pause:250,canUseSecrets:true,mode:'chase'},
+  turtle:{icon:'🐢',name:'Tortuga gigante',step:1850,pause:350,canUseSecrets:false,mode:'chase'}
+};
+const GUARDIAN_PLAN={7:['gorilla1'],12:['parrot'],13:['elephant'],15:['sloth'],16:['gorilla1'],17:['gorilla2'],18:['parrot'],19:['turtle'],20:['gorilla2','turtle']};
+const VEHICLE_PLAN={7:{type:'skates',icon:'🛼',name:'Patines',speed:.74},13:{type:'bike',icon:'🚲',name:'Bicicleta',speed:.55},19:{type:'skateboard',icon:'🛹',name:'Patineta',speed:.62},20:{type:'skates',icon:'🛼',name:'Patines',speed:.72}};
+let extraGuardian=null;
+let vehicleItem=null;
+let currentVehicle=null;
+let turtleDash=null;
+let explorerRoute=null;
+let levelSecretFound=false;
+
+function cumulativeBananasThrough(n){let total=0;for(let i=1;i<=n;i++)total+=Math.min(2+Math.floor(i/3),7);return total}
+function pickSafeCell(seedOffset=0,avoid=new Set()){
+  const dist=distancesFrom({x:0,y:0});
+  const list=allCells().filter(c=>!avoid.has(cellKey(c))&&!sameCell(c,exit)&&(!friend||!sameCell(c,friend)));
+  list.sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+  return list[(seedOffset*7+level*3)%Math.max(1,list.length)]||null;
+}
+function guardianRouteFor(cfg,offset=0){
+  const forbidden=new Set(['0,0',cellKey(exit)]);if(friend)forbidden.add(cellKey(friend));
+  const cells=allCells().filter(c=>!forbidden.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
+  if(!cells.length)return[];
+  let start=cells[(Math.floor(cells.length*(.22+offset*.31))+level)%cells.length];
+  const target=Math.max(9,Math.floor(cols*rows*(cfg.mode==='fly'?.65:.75)));
+  const route=[start],visited=new Set([cellKey(start)]),stack=[start];
+  while(stack.length&&visited.size<target){
+    const cur=stack[stack.length-1];
+    let ns;
+    if(cfg.mode==='fly'){
+      ns=DIRS.map(d=>({x:cur.x+d.dx,y:cur.y+d.dy})).filter(n=>n.x>=0&&n.y>=0&&n.x<cols&&n.y<rows&&!forbidden.has(cellKey(n)));
+    }else ns=neighborsOf(cur.x,cur.y).filter(n=>!forbidden.has(cellKey(n)));
+    ns.sort((a,b)=>(visited.has(cellKey(a))?1:0)-(visited.has(cellKey(b))?1:0));
+    const next=ns.find(n=>!visited.has(cellKey(n)));
+    if(next){visited.add(cellKey(next));route.push(next);stack.push(next)}else{stack.pop();if(stack.length)route.push(stack[stack.length-1])}
+  }
+  return route.length>=6?route:[];
+}
+function makeGuardian(kind,offset=0){
+  const cfg=GUARDIAN_PERSONALITIES[kind],route=guardianRouteFor(cfg,offset);if(!route.length)return null;
+  return {...cfg,kind,route,index:0,x:route[0].x,y:route[0].y,nextAt:performance.now()+1500+offset*450,pauseUntil:0};
+}
+placeGuardian=function(){
+  guardian=null;extraGuardian=null;turtleDash=null;
+  const plan=GUARDIAN_PLAN[level]||[];
+  guardian=plan[0]?makeGuardian(plan[0],0):null;
+  extraGuardian=plan[1]?makeGuardian(plan[1],1):null;
+};
+function chooseGuardianNext(g){
+  if(!g)return null;
+  if(g.mode==='chase'){
+    const path=shortestPath({x:g.x,y:g.y},player);
+    if(path.length>1)return path[1];
+  }
+  g.index=(g.index+1)%g.route.length;return g.route[g.index];
+}
+function moveOneGuardian(g,t){
+  if(!g||!playing||t<g.nextAt||t<g.pauseUntil)return;
+  if(g.kind==='turtle'&&turtleDash){
+    const d=turtleDash.dir,nx=g.x+d.dx,ny=g.y+d.dy;
+    const key=d.key;
+    if(nx<0||ny<0||nx>=cols||ny>=rows||maze[g.y][g.x].walls[key]){
+      vehicleItem={x:g.x,y:g.y,...VEHICLE_PLAN[19],got:false};turtleDash=null;g.nextAt=t+650;return;
+    }
+    g.x=nx;g.y=ny;g.nextAt=t+115;return;
+  }
+  const next=chooseGuardianNext(g);if(!next)return;
+  if(sameCell(next,player)){g.nextAt=t+350;return}
+  g.x=next.x;g.y=next.y;g.nextAt=t+g.step;g.pauseUntil=t+g.pause;
+  if(g.kind==='turtle'&&vehicleItem&&!vehicleItem.got&&vehicleItem.type==='skateboard'&&sameCell(g,vehicleItem)){
+    const d=DIRS.find(d=>!maze[g.y][g.x].walls[d.key])||DIRS[1];
+    vehicleItem.got=true;turtleDash={dir:d};friendSound();
+  }
+}
+advanceGuardian=function(t){moveOneGuardian(guardian,t);moveOneGuardian(extraGuardian,t)};
+
+function setupVehicle(){
+  currentVehicle=null;vehicleItem=null;
+  const cfg=VEHICLE_PLAN[level];if(!cfg)return;
+  const avoid=occupiedKeys();if(logicChallenge)avoid.add(cellKey(logicChallenge.item));
+  const cell=pickSafeCell(2,avoid);if(cell)vehicleItem={...cell,...cfg,got:false};
+}
+function setupExplorerRoute(){
+  explorerRoute=null;if(level<18)return;
+  const required=cumulativeBananasThrough(level-1);
+  const normal=pathLength({x:0,y:0},exit),walls=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)for(const d of [{dx:1,dy:0,key:'right'},{dx:0,dy:1,key:'down'}]){
+    const nx=x+d.dx,ny=y+d.dy;if(nx>=cols||ny>=rows||!maze[y][x].walls[d.key])continue;
+    const a={x,y},b={x:nx,y:ny};setEdgeOpen(a,b,true);const len=pathLength({x:0,y:0},exit);setEdgeOpen(a,b,false);
+    if(Number.isFinite(len)&&normal-len>=2)walls.push({a,b,gain:normal-len});
+  }
+  walls.sort((a,b)=>b.gain-a.gain);explorerRoute={required,opened:false,walls:walls.slice(0,3)};
+}
+function openExplorerRoute(){
+  if(!explorerRoute||explorerRoute.opened||permanentBananas<explorerRoute.required)return false;
+  explorerRoute.opened=true;explorerRoute.walls.forEach(w=>setEdgeOpen(w.a,w.b,true));
+  if(guardian)guardian.step*=1.35;if(extraGuardian)extraGuardian.step*=1.35;
+  friendSound();draw();return true;
+}
+
+const buildLevel33Base=buildLevel;
+buildLevel=function(n){buildLevel33Base(n);levelSecretFound=false;setupVehicle();setupExplorerRoute();placeGuardian();draw()};
+
+const collectQuietly33Base=collectQuietly;
+collectQuietly=function(){
+  collectQuietly33Base();
+  if(vehicleItem&&!vehicleItem.got&&sameCell(player,vehicleItem)){
+    vehicleItem.got=true;currentVehicle=vehicleItem;pluckSound();
+  }
+};
+
+const tryMove33Base=tryMove;
+tryMove=function(dx,dy){
+  const wasLocked=moveLock;tryMove33Base(dx,dy);
+  if(!wasLocked&&currentVehicle&&moveLock)setTimeout(()=>{moveLock=false},Math.max(20,Math.round(70*currentVehicle.speed)));
+  if((guardian&&sameCell(player,guardian))||(extraGuardian&&sameCell(player,extraGuardian))){resetToStart();return}
+  if(explorerRoute&&!explorerRoute.opened&&permanentBananas>=explorerRoute.required&&sameCell(player,{x:0,y:0}))openExplorerRoute();
+};
+
+function drawGuardian33(g,size,ox,oy){if(!g)return;const cx=ox+(g.x+.5)*size,cy=oy+(g.y+.5)*size;ctx.save();ctx.translate(cx,cy+Math.sin(animTime*3)*size*.025);ctx.font=`${Math.max(23,size*.48)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(g.icon,0,0);ctx.restore()}
+function drawVehicle33(size,ox,oy){if(!vehicleItem||vehicleItem.got)return;const cx=ox+(vehicleItem.x+.5)*size,cy=oy+(vehicleItem.y+.5)*size;ctx.save();ctx.translate(cx,cy+Math.sin(animTime*4)*size*.03);ctx.font=`${Math.max(24,size*.46)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(vehicleItem.icon,0,0);ctx.restore()}
+function drawExplorerRoute33(size,ox,oy){if(!explorerRoute||explorerRoute.opened)return;const cx=ox+size*.68,cy=oy+size*.68;ctx.save();ctx.translate(cx,cy);ctx.fillStyle='#f7df72';ctx.strokeStyle='#7a5426';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,size*.32,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.font=`900 ${Math.max(10,size*.14)}px Arial`;ctx.fillStyle='#4f381d';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`🍌 ${explorerRoute.required}`,0,0);ctx.restore()}
+const draw33Base=draw;
+draw=function(){draw33Base();if(!maze)return;const {size,ox,oy}=cellMetrics();drawGuardian33(extraGuardian,size,ox,oy);drawVehicle33(size,ox,oy);drawExplorerRoute33(size,ox,oy)};
+
+/* Revelación discreta al final: confirma que atravesar una pared no fue un error. */
+const isFalseWallMove33Base=isFalseWallMove;
+isFalseWallMove=function(x1,y1,x2,y2){const yes=isFalseWallMove33Base(x1,y1,x2,y2);if(yes)levelSecretFound=true;return yes};
+const finishLevel33Base=finishLevel;
+finishLevel=function(){
+  finishLevel33Base();
+  if(levelSecretFound){const p=document.getElementById('messageText');if(p)p.innerHTML+=`<div style="margin-top:8px;font-weight:900;color:#397448">🌿 Descubriste un pasadizo secreto.</div>`}
+};
+
+
+/* === ACTUALIZACIÓN 3.4: PROGRESIÓN Y VARIANTE DE AVENTURA ===
+   La orientación se elige una sola vez al cargar el juego:
+   2 de cada 3 partidas conservan el mapa original; la restante usa
+   una rotación segura de 90, 180 o 270 grados. Se mantiene durante
+   los 20 niveles y no cambia al volver al inicio de una pantalla. */
+const RUN_ROTATION_TURNS=Math.random()<2/3?0:[1,2,3][Math.floor(Math.random()*3)];
+
+function rotatePointForRun(c,turns,size){
+  if(!c)return c;
+  let x=c.x,y=c.y;
+  for(let i=0;i<turns;i++) [x,y]=[size-1-y,x];
+  return {...c,x,y};
+}
+function rotateWallsForRun(walls,turns){
+  let w={...walls};
+  for(let i=0;i<turns;i++)w={up:w.left,right:w.up,down:w.right,left:w.down};
+  return w;
+}
+function applyRunRotationToBaseLevel(){
+  const turns=RUN_ROTATION_TURNS;
+  if(!turns||!maze||cols!==rows)return;
+  const size=cols;
+  const rotated=Array.from({length:size},()=>Array(size));
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    const np=rotatePointForRun({x,y},turns,size);
+    rotated[np.y][np.x]={...maze[y][x],walls:rotateWallsForRun(maze[y][x].walls,turns)};
+  }
+  maze=rotated;
+  player=rotatePointForRun(player,turns,size);
+  exit=rotatePointForRun(exit,turns,size);
+  bananas=bananas.map(b=>rotatePointForRun(b,turns,size));
+  if(friend)friend=rotatePointForRun(friend,turns,size);
+  if(specialItem)specialItem=rotatePointForRun(specialItem,turns,size);
+}
+
+/* Si una ruta compleja no llega a generarse, crea una patrulla válida
+   sobre un camino real. Esto garantiza la presencia del guardián del 17. */
+const makeGuardian34Base=makeGuardian;
+makeGuardian=function(kind,offset=0){
+  let g=makeGuardian34Base(kind,offset);
+  if(g)return g;
+  const cfg=GUARDIAN_PERSONALITIES[kind];
+  const forbidden=new Set(['0,0',cellKey(exit)]);
+  if(friend)forbidden.add(cellKey(friend));
+  const candidates=allCells().filter(c=>!forbidden.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
+  let best=[];
+  for(let i=0;i<candidates.length;i+=Math.max(1,Math.floor(candidates.length/12))){
+    for(let j=i+1;j<candidates.length;j+=Math.max(1,Math.floor(candidates.length/12))){
+      const path=shortestPath(candidates[i],candidates[j]).filter(c=>!forbidden.has(cellKey(c)));
+      if(path.length>best.length)best=path;
+    }
+  }
+  if(best.length<2)return null;
+  return {...cfg,kind,route:best,index:0,x:best[0].x,y:best[0].y,nextAt:performance.now()+1500+offset*450,pauseUntil:0};
+};
+
+/* ACTUALIZACIÓN 3.5 — DOS CASAS INDISTINGUIBLES
+   Mientras falta el compañero, ambas casas están grises y cerradas.
+   Al encontrarlo, las dos se iluminan y se desbloquean al mismo tiempo. */
+drawFalseHouse=function(x,y,size,ox,oy){
+  const unlockedSchool=!friend||friend.found;
+  const px=ox+x*size,py=oy+y*size;
+  ctx.save();ctx.translate(px+size/2,py+size/2);
+  if(unlockedSchool){
+    const pulse=.5+.5*Math.sin(animTime*5);
+    ctx.shadowColor='rgba(255,226,83,.95)';
+    ctx.shadowBlur=size*(.12+.10*pulse);
+  }
+  ctx.fillStyle=unlockedSchool?'#8b5a2b':'#6f746f';
+  ctx.fillRect(-size*.28,-size*.18,size*.56,size*.38);
+  ctx.fillStyle=unlockedSchool?'#f7e4b1':'#aeb4ae';
+  ctx.fillRect(-size*.18,-size*.08,size*.36,size*.26);
+  ctx.fillStyle=unlockedSchool?'#a43f3f':'#555d5a';
+  ctx.beginPath();
+  ctx.moveTo(-size*.34,-size*.18);
+  ctx.lineTo(0,-size*.45);
+  ctx.lineTo(size*.34,-size*.18);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=unlockedSchool?'#4b79a8':'#444b49';
+  ctx.fillRect(-size*.07,size*.02,size*.14,size*.16);
+  if(!unlockedSchool){
+    ctx.shadowColor='transparent';
+    ctx.font=`${Math.max(16,size*.30)}px Arial`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('🔒',0,size*.02);
+  }
+  ctx.restore();
+};
+
+/* Antes de encontrar al compañero, ambas casas se comportan igual:
+   simplemente están cerradas. Solo después se revela cuál era la falsa. */
+const checkCell34Base=checkCell;
+checkCell=function(){
+  if(falseExit&&sameCell(player,falseExit)){
+    if(friend&&!friend.found){bumpSound();return}
+    resetToStart();return;
+  }
+  checkCell34Base();
+};
+
+
+
+/* === ACTUALIZACIÓN 3.6: EXPLORACIÓN INTENCIONAL ===
+   - Los anteojos aparecen con tiempo suficiente para aprovecharlos.
+   - Las bananas quedan fuera del recorrido obligatorio.
+   - El nivel 5 presenta un guardián lento y predecible.
+   - Los atajos de amistad solo se aceptan si reducen claramente el regreso. */
+
+GUARDIAN_PERSONALITIES.gorilla0={
+  icon:'🦍',name:'Gorila tranquilo',step:1850,pause:1050,
+  canUseSecrets:false,mode:'patrol'
+};
+GUARDIAN_PLAN[5]=['gorilla0'];
+
+function uniqueCells36(cells){
+  const seen=new Set();
+  return cells.filter(c=>{const k=cellKey(c);if(seen.has(k))return false;seen.add(k);return true});
+}
+
+function requiredRouteKeys36(){
+  const route=[];
+  if(friend){
+    route.push(...shortestPath({x:0,y:0},friend));
+    route.push(...shortestPath(friend,exit));
+  }else route.push(...shortestPath({x:0,y:0},exit));
+  return new Set(uniqueCells36(route).map(cellKey));
+}
+
+function staticForbiddenKeys36(){
+  const s=new Set(['0,0',cellKey(exit)]);
+  if(friend)s.add(cellKey(friend));
+  if(specialItem)s.add(cellKey(specialItem));
+  if(falseExit)s.add(cellKey(falseExit));
+  if(logicChallenge&&logicChallenge.item)s.add(cellKey(logicChallenge.item));
+  if(vehicleItem)s.add(cellKey(vehicleItem));
+  for(const g of visionGlasses||[])s.add(cellKey(g));
+  return s;
+}
+
+/* Las bananas enseñan a desviarse: ninguna queda en la ruta obligatoria.
+   Se priorizan callejones y celdas alejadas del recorrido principal. */
+function repositionBananas36(){
+  if(!bananas.length)return;
+  const route=requiredRouteKeys36();
+  const forbidden=staticForbiddenKeys36();
+  const routeCells=[...route].map(k=>{const [x,y]=k.split(',').map(Number);return{x,y}});
+  const branchDistance=c=>routeCells.length?Math.min(...routeCells.map(r=>Math.abs(r.x-c.x)+Math.abs(r.y-c.y))):0;
+  let candidates=allCells().filter(c=>!route.has(cellKey(c))&&!forbidden.has(cellKey(c)));
+  candidates.sort((a,b)=>{
+    const deadA=neighborsOf(a.x,a.y).length===1?1:0,deadB=neighborsOf(b.x,b.y).length===1?1:0;
+    const da=branchDistance(a),db=branchDistance(b);
+    const startA=pathLength({x:0,y:0},a),startB=pathLength({x:0,y:0},b);
+    return (deadB-deadA)||(db-da)||(startB-startA);
+  });
+  /* En mapas excepcionalmente lineales, se conserva fuera al menos del camino
+     directo a la casa, pero nunca se impide construir el nivel. */
+  if(candidates.length<bananas.length){
+    const direct=new Set(shortestPath({x:0,y:0},exit).map(cellKey));
+    const extra=allCells().filter(c=>!direct.has(cellKey(c))&&!forbidden.has(cellKey(c))&&!candidates.some(q=>sameCell(q,c)));
+    candidates.push(...extra);
+  }
+  const chosen=[];
+  for(const c of candidates){
+    const spacing=chosen.every(q=>Math.abs(q.x-c.x)+Math.abs(q.y-c.y)>=2);
+    if(spacing)chosen.push(c);
+    if(chosen.length===bananas.length)break;
+  }
+  for(const c of candidates){
+    if(chosen.length===bananas.length)break;
+    if(!chosen.some(q=>sameCell(q,c)))chosen.push(c);
+  }
+  bananas.forEach((b,i)=>{if(chosen[i]){b.x=chosen[i].x;b.y=chosen[i].y}});
+}
+
+/* Anteojos útiles: nunca junto a la casa y preferentemente en un ramal
+   alcanzable durante la primera mitad o zona media de la exploración. */
+setupVisionGlasses=function(){
+  visionGlasses=[];visionRadius=2.15;
+  const amount=level===11?1:(level===17?3:0);
+  if(!amount)return;
+  const fromStart=distancesFrom({x:0,y:0});
+  const fromExit=distancesFrom(exit);
+  const mainLength=Math.max(1,pathLength({x:0,y:0},exit));
+  const route=requiredRouteKeys36();
+  const forbidden=staticForbiddenKeys36();
+  bananas.forEach(b=>forbidden.add(cellKey(b)));
+  let candidates=allCells().filter(c=>{
+    const ds=fromStart.get(cellKey(c))??Infinity;
+    const de=fromExit.get(cellKey(c))??Infinity;
+    return !forbidden.has(cellKey(c)) && de>=Math.max(4,Math.floor(mainLength*.32)) && ds>=3;
+  });
+  candidates.sort((a,b)=>{
+    const branchA=route.has(cellKey(a))?0:1,branchB=route.has(cellKey(b))?0:1;
+    const da=fromStart.get(cellKey(a))||0,db=fromStart.get(cellKey(b))||0;
+    const target=mainLength*.48;
+    return (branchB-branchA)||(Math.abs(da-target)-Math.abs(db-target));
+  });
+  const chosen=[];
+  for(const c of candidates){
+    if(chosen.every(q=>pathLength(q,c)>=Math.max(4,Math.floor((cols+rows)/6))))chosen.push(c);
+    if(chosen.length===amount)break;
+  }
+  for(const c of candidates){
+    if(chosen.length===amount)break;
+    if(!chosen.some(q=>sameCell(q,c)))chosen.push(c);
+  }
+  visionGlasses=chosen.map(c=>({...c,got:false}));
+};
+
+/* Atajo de amistad: debe sentirse como una recompensa verdadera.
+   Se exige una reducción importante y se favorece una abertura cerca del
+   compañero que conecte con una zona claramente más próxima a la escuela. */
+setupFriendShortcut=function(){
+  friendShortcut=null;
+  if(level<4||!friend)return;
+  const before=pathLength(friend,exit);
+  if(!Number.isFinite(before)||before<4)return;
+  const distFriend=distancesFrom(friend),distExit=distancesFrom(exit);
+  const candidates=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    for(const d of [{dx:1,dy:0,key:'right'},{dx:0,dy:1,key:'down'}]){
+      const nx=x+d.dx,ny=y+d.dy;
+      if(nx>=cols||ny>=rows||!maze[y][x].walls[d.key])continue;
+      const a={x,y},b={x:nx,y:ny};
+      if(sameCell(a,{x:0,y:0})||sameCell(b,{x:0,y:0})||sameCell(a,exit)||sameCell(b,exit))continue;
+      setEdgeOpen(a,b,true);const after=pathLength(friend,exit);setEdgeOpen(a,b,false);
+      if(!Number.isFinite(after))continue;
+      const gain=before-after;
+      const near=Math.min(distFriend.get(cellKey(a))??999,distFriend.get(cellKey(b))??999);
+      const exitDelta=Math.abs((distExit.get(cellKey(a))??999)-(distExit.get(cellKey(b))??999));
+      const ratio=gain/before;
+      if(gain>=Math.max(3,Math.ceil(before*.22))&&near<=Math.max(5,Math.floor(before*.38))){
+        candidates.push({a,b,gain,ratio,near,exitDelta,score:gain*12+ratio*25+exitDelta*2-near});
+      }
+    }
+  }
+  candidates.sort((u,v)=>v.score-u.score);
+  if(candidates[0])friendShortcut={a:candidates[0].a,b:candidates[0].b,opened:false,gain:candidates[0].gain};
+};
+
+/* Última pasada de construcción: conserva identificadores persistentes,
+   pero reubica visualmente bananas y anteojos con las nuevas reglas. */
+const buildLevel36Base=buildLevel;
+buildLevel=function(n){
+  buildLevel36Base(n);
+  repositionBananas36();
+  setupVisionGlasses();
+  setupFriendShortcut();
+  setupBananaGate();
+  setupVehicle();
+  placeGuardian();
+  updateBananaHud32();
+  draw();
+};
 </script>
 
 </body>
