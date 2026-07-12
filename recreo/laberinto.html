@@ -129,25 +129,6 @@ body,.controls,.pad,.control{
   .final-adventure-actions button{width:100%;flex:0 0 auto}
 }
 
-
-/* Salida permanente al menú de Recreo. */
-.exit-recreo{
-  position:fixed;left:max(8px,env(safe-area-inset-left));top:max(8px,env(safe-area-inset-top));
-  z-index:80;border:2px solid #fff0b0;border-radius:999px;padding:8px 12px;
-  background:#315f3c;color:#fff8df;font:900 13px Arial,sans-serif;
-  box-shadow:0 4px #183326,0 7px 16px rgba(0,0,0,.25);cursor:pointer;
-}
-.exit-recreo:active{transform:translateY(2px);box-shadow:0 2px #183326}
-@media(max-width:700px){
-  .exit-recreo{top:auto;bottom:max(7px,env(safe-area-inset-bottom));left:max(7px,env(safe-area-inset-left));
-    padding:7px 9px;font-size:0;opacity:.9}
-  .exit-recreo::before{content:'🏠';font-size:20px}
-}
-@media(max-width:700px) and (orientation:landscape){
-  .exit-recreo{bottom:5px;left:5px;padding:5px 7px}
-  .exit-recreo::before{font-size:17px}
-}
-
 </style>
 
 <style>
@@ -161,8 +142,6 @@ body,.controls,.pad,.control{
 
 </head>
 <body>
-<button id="exitRecreoButton" class="exit-recreo" type="button" onclick="exitToRecreo()" aria-label="Volver al menú de Recreo" title="Volver a Recreo">🏠 Recreo</button>
-
 <div class="app">
 <header><div class="title">🐒 NITO Y EL LABERINTO</div><div class="hud"><div class="pill">Nivel <span id="levelLabel">1</span>/20</div><div class="pill">🍌 <span id="bananaLabel">0</span>/<span id="bananaTotal">0</span></div><div class="pill">👣 <span id="stepsLabel">0</span></div><div id="eventPill" class="pill event-pill" style="display:none">✨ <span id="eventLabel"></span></div></div></header>
 <div class="game-wrap"><canvas id="game" width="900" height="620"></canvas>
@@ -182,24 +161,11 @@ body,.controls,.pad,.control{
       <button onclick="downloadFinalMemory()">📷 Guardar recuerdo</button>
       <button class="secondary" onclick="replayAfterFinal()">↻ Volver a jugar</button>
       <button class="soft" onclick="chooseLevelAfterFinal()">🗺 Elegir nivel</button>
-      <button class="soft" onclick="exitToRecreo()">🏠 Otros juegos</button>
     </div>
   </div>
 </div>
 <script>
 'use strict';
-
-/* Vuelve al índice de la carpeta recreo. Funciona también si el juego está dentro de un iframe. */
-function exitToRecreo(){
-  try{ if(typeof stopHeldMove==='function') stopHeldMove(); }catch(_e){}
-  try{ if(typeof musicTimer!=='undefined'&&musicTimer){clearInterval(musicTimer);musicTimer=null;} }catch(_e){}
-  const target='./index.html';
-  try{
-    if(window.top&&window.top!==window){window.top.location.assign(target);}
-    else{window.location.assign(target);}
-  }catch(_e){window.location.href=target;}
-}
-
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
 const levelLabel=document.getElementById('levelLabel'),bananaLabel=document.getElementById('bananaLabel'),bananaTotal=document.getElementById('bananaTotal'),stepsLabel=document.getElementById('stepsLabel');
 const TOTAL_LEVELS=20,DIRS=[{dx:0,dy:-1,key:'up'},{dx:1,dy:0,key:'right'},{dx:0,dy:1,key:'down'},{dx:-1,dy:0,key:'left'}];
