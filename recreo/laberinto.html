@@ -107,6 +107,28 @@ body,.controls,.pad,.control{
   .pill{font-size:9px;padding:2px 4px}
 }
 
+
+
+/* === FINAL DE LA AVENTURA 3.7 === */
+#finalAdventureOverlay{position:fixed;inset:0;z-index:60;background:rgba(10,29,22,.92);display:none;align-items:center;justify-content:center;padding:14px}
+.final-adventure-card{width:min(1120px,96vw);max-height:96dvh;overflow:auto;background:#fff8df;border:4px solid #8b5a2b;border-radius:22px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);text-align:center}
+.final-adventure-image{display:block;width:100%;height:auto;max-height:76dvh;object-fit:contain;border-radius:14px;border:3px solid #5d8a45;background:#dff4dc}
+.final-adventure-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:12px 4px 4px}
+.final-adventure-actions button{min-width:190px}
+@media(max-width:700px){
+  #finalAdventureOverlay{padding:4px}
+  .final-adventure-card{width:100%;max-height:100dvh;border-radius:12px;padding:6px;border-width:3px}
+  .final-adventure-image{max-height:calc(100dvh - 112px);border-radius:8px;border-width:2px}
+  .final-adventure-actions{gap:6px;padding:7px 2px 2px}
+  .final-adventure-actions button{min-width:0;flex:1 1 135px;padding:9px 8px;font-size:13px}
+}
+@media(max-width:700px) and (orientation:landscape){
+  .final-adventure-card{display:grid;grid-template-columns:minmax(0,1fr) 175px;gap:7px;align-items:center;overflow:hidden}
+  .final-adventure-image{max-height:calc(100dvh - 14px)}
+  .final-adventure-actions{flex-direction:column;padding:2px}
+  .final-adventure-actions button{width:100%;flex:0 0 auto}
+}
+
 </style>
 
 <style>
@@ -129,6 +151,18 @@ body,.controls,.pad,.control{
 </div>
 <div class="controls"><div class="pad"><button id="up" class="control">▲</button><button id="left" class="control">◀</button><button id="down" class="control">▼</button><button id="right" class="control">▶</button></div></div>
 <div class="foot">Encontrá la salida con calma. No hay reloj, no hay castigos y siempre podés volver a intentar.</div>
+</div>
+
+
+<div id="finalAdventureOverlay" aria-hidden="true">
+  <div class="final-adventure-card" role="dialog" aria-modal="true" aria-label="Aventura completada">
+    <img id="finalAdventureImage" class="final-adventure-image" src="../img/laberintofinal.png" alt="Nito y sus amigos celebran frente a la Escuela del Gran Árbol">
+    <div class="final-adventure-actions">
+      <button onclick="downloadFinalMemory()">📷 Guardar recuerdo</button>
+      <button class="secondary" onclick="replayAfterFinal()">↻ Volver a jugar</button>
+      <button class="soft" onclick="chooseLevelAfterFinal()">🗺 Elegir nivel</button>
+    </div>
+  </div>
 </div>
 <script>
 'use strict';
@@ -1760,6 +1794,65 @@ buildLevel=function(n){
   updateBananaHud32();
   draw();
 };
+
+
+/* === FINAL DE LA AVENTURA 3.7 ===
+   La imagen se aloja fuera del HTML, en /img/laberintofinal.png.
+   Como el juego está dentro de una carpeta del sitio, se carga con ../img/. */
+const FINAL_MEMORY_URL='../img/laberintofinal.png';
+
+function showFinalAdventure(){
+  const overlay=document.getElementById('finalAdventureOverlay');
+  const img=document.getElementById('finalAdventureImage');
+  if(img&&img.getAttribute('src')!==FINAL_MEMORY_URL)img.src=FINAL_MEMORY_URL;
+  document.getElementById('messageOverlay').style.display='none';
+  overlay.style.display='flex';
+  overlay.setAttribute('aria-hidden','false');
+}
+
+function hideFinalAdventure(){
+  const overlay=document.getElementById('finalAdventureOverlay');
+  overlay.style.display='none';
+  overlay.setAttribute('aria-hidden','true');
+}
+
+async function downloadFinalMemory(){
+  try{
+    const response=await fetch(FINAL_MEMORY_URL,{cache:'no-store'});
+    if(!response.ok)throw new Error('No se pudo cargar la imagen');
+    const blob=await response.blob();
+    const objectUrl=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=objectUrl;a.download='laberintofinal.png';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(objectUrl),1500);
+  }catch(error){
+    const a=document.createElement('a');
+    a.href=FINAL_MEMORY_URL;a.download='laberintofinal.png';a.target='_blank';
+    document.body.appendChild(a);a.click();a.remove();
+  }
+}
+
+function replayAfterFinal(){
+  hideFinalAdventure();
+  hideMessage();
+  startGame(1);
+}
+
+function chooseLevelAfterFinal(){
+  hideFinalAdventure();
+  hideMessage();
+  showLevels('start');
+}
+
+const finishLevelFinal37Base=finishLevel;
+finishLevel=function(){
+  finishLevelFinal37Base();
+  if(level===TOTAL_LEVELS){
+    setTimeout(showFinalAdventure,420);
+  }
+};
+
 </script>
 
 </body>
