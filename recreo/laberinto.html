@@ -110,91 +110,6 @@ body,.controls,.pad,.control{
 
 
 
-/* === CORRECCIÓN 3.8: INICIO ROTADO Y OBJETOS VISIBLES === */
-function nearestFreeCellFromStart38(forbidden){
-  const q=[{...levelStart}],seen=new Set([cellKey(levelStart)]);
-  while(q.length){
-    const cur=q.shift();
-    if(!forbidden.has(cellKey(cur)))return cur;
-    for(const n of neighborsOf(cur.x,cur.y)){
-      const k=cellKey(n);if(!seen.has(k)){seen.add(k);q.push(n)}
-    }
-  }
-  return null;
-}
-function preventStartOverlaps38(){
-  const occupied=new Set([cellKey(levelStart),cellKey(exit)]);
-  if(friend){
-    if(sameCell(friend,levelStart)||sameCell(friend,exit)){
-      const c=nearestFreeCellFromStart38(occupied);if(c){friend.x=c.x;friend.y=c.y}
-    }
-    occupied.add(cellKey(friend));
-  }
-  for(const b of bananas){
-    if(occupied.has(cellKey(b))){
-      const c=nearestFreeCellFromStart38(occupied);if(c){b.x=c.x;b.y=c.y}
-    }
-    occupied.add(cellKey(b));
-  }
-}
-const buildLevel38Base=buildLevel;
-buildLevel=function(n){
-  buildLevel38Base(n);
-  levelStart={...player};
-  preventStartOverlaps38();
-  draw();
-};
-
-/* === CORRECCIÓN 3.9: BANANAS VISIBLES Y CONTADOR DESDE CERO === */
-/* Se descarta el antiguo banco permanente que podía ocultar bananas ya
-   recogidas en visitas anteriores. La aventura siempre empieza en cero. */
-try{
-  localStorage.removeItem('nitoBananaBank');
-  localStorage.removeItem('nitoBananaIds');
-}catch(_){ }
-permanentBananas=0;
-foundBananaIds.clear();
-updateBananaHud32();
-
-/* Un único modelo de banana, con cuerpo relleno, borde y brillo para que
-   siga siendo visible aun cuando las casillas se vuelven pequeñas. */
-drawBanana=function(x,y,size,ox,oy,i=0){
-  const cx=ox+(x+.5)*size;
-  const cy=oy+(y+.5)*size+Math.sin(animTime*3+i)*size*.035;
-  const s=Math.max(18,size*.42);
-  ctx.save();
-  ctx.translate(cx,cy);
-  ctx.rotate(-.50);
-  ctx.shadowColor='rgba(94,65,5,.38)';
-  ctx.shadowBlur=Math.max(3,size*.07);
-  ctx.shadowOffsetY=Math.max(2,size*.035);
-
-  ctx.strokeStyle='#6f5008';
-  ctx.lineWidth=Math.max(8,size*.15);
-  ctx.beginPath();
-  ctx.arc(0,0,s*.48,.20,2.45);
-  ctx.stroke();
-
-  ctx.shadowColor='rgba(255,229,75,.9)';
-  ctx.shadowBlur=Math.max(5,size*.11);
-  ctx.strokeStyle='#ffd52f';
-  ctx.lineWidth=Math.max(6,size*.105);
-  ctx.stroke();
-
-  ctx.shadowBlur=0;
-  ctx.strokeStyle='#fff39a';
-  ctx.lineWidth=Math.max(2,size*.027);
-  ctx.stroke();
-
-  ctx.fillStyle='#65470a';
-  for(const a of [.20,2.45]){
-    ctx.beginPath();
-    ctx.arc(Math.cos(a)*s*.48,Math.sin(a)*s*.48,Math.max(2,size*.028),0,Math.PI*2);
-    ctx.fill();
-  }
-  ctx.restore();
-};
-
 /* === FINAL DE LA AVENTURA 3.7 === */
 #finalAdventureOverlay{position:fixed;inset:0;z-index:60;background:rgba(10,29,22,.92);display:none;align-items:center;justify-content:center;padding:14px}
 .final-adventure-card{width:min(1120px,96vw);max-height:96dvh;overflow:auto;background:#fff8df;border:4px solid #8b5a2b;border-radius:22px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);text-align:center}
@@ -1630,7 +1545,7 @@ finishLevel=function(){
    2 de cada 3 partidas conservan el mapa original; la restante usa
    una rotación segura de 90, 180 o 270 grados. Se mantiene durante
    los 20 niveles y no cambia al volver al inicio de una pantalla. */
-const RUN_ROTATION_TURNS=Math.random()<2/3?0:[1,2,3][Math.floor(Math.random()*3)];
+const RUN_ROTATION_TURNS=0; // Rotación eliminada: todos los niveles conservan su orientación original.
 
 function rotatePointForRun(c,turns,size){
   if(!c)return c;
@@ -1977,10 +1892,9 @@ finishLevel=function(){
 
 
 
-/* === ACTUALIZACIÓN 3.9: ROTACIÓN SEGURA + MECÁNICAS DE INTRODUCCIÓN ===
-   La rotación se conserva únicamente en los niveles 1 a 6. En los niveles
-   complejos se usa la orientación original para evitar superposiciones con
-   guardianes, vehículos, llaves y otras mecánicas dinámicas. */
+/* === ACTUALIZACIÓN 4.0: SIN ROTACIÓN + MECÁNICAS DE INTRODUCCIÓN ===
+   Todos los niveles conservan su orientación original. Esto evita que
+   guardianes, llaves, compañeros y demás objetos se superpongan al inicio. */
 let level3Button=null;
 let level3GateOpen=false;
 let level4Trampoline=null;
@@ -2158,6 +2072,86 @@ draw=function(){
   const {size,ox,oy}=cellMetrics();
   drawIntroMechanics39(size,ox,oy);
 };
+
+
+/* === ESTABILIZACIÓN 4.0: INICIO LIMPIO Y BANANAS VISIBLES === */
+function updateBananaHud40(){
+  if(bananaLabel)bananaLabel.textContent=String(collected||0);
+  if(bananaTotal)bananaTotal.textContent=String(Array.isArray(bananas)?bananas.length:0);
+  const slash=bananaTotal&&bananaTotal.previousSibling;
+  if(slash&&slash.nodeType===Node.TEXT_NODE&&!slash.textContent.includes('/'))slash.textContent='/';
+}
+
+/* Un único modelo de banana, grande, relleno y con contorno oscuro. */
+drawBanana=function(x,y,size,ox,oy,i=0){
+  const cx=ox+(x+.5)*size;
+  const cy=oy+(y+.5)*size+Math.sin(animTime*3+i)*size*.035;
+  const r=Math.max(10,size*.23);
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(-.48);
+  ctx.shadowColor='rgba(77,53,6,.38)';
+  ctx.shadowBlur=Math.max(3,size*.07);
+  ctx.shadowOffsetY=Math.max(2,size*.03);
+  ctx.strokeStyle='#6f5008';
+  ctx.lineWidth=Math.max(8,size*.17);
+  ctx.beginPath();ctx.arc(0,0,r,.18,2.45);ctx.stroke();
+  ctx.shadowColor='rgba(255,226,50,.85)';
+  ctx.shadowBlur=Math.max(4,size*.10);
+  ctx.strokeStyle='#ffd52f';
+  ctx.lineWidth=Math.max(6,size*.125);
+  ctx.stroke();
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='#fff3a0';
+  ctx.lineWidth=Math.max(2,size*.028);
+  ctx.stroke();
+  ctx.fillStyle='#5d4315';
+  ctx.beginPath();
+  ctx.arc(r*Math.cos(.18),r*Math.sin(.18),Math.max(2,size*.032),0,Math.PI*2);
+  ctx.arc(r*Math.cos(2.45),r*Math.sin(2.45),Math.max(2,size*.032),0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+};
+
+/* Refuerzo final de construcción: ninguna banana queda marcada al iniciar. */
+const buildLevel40Base=buildLevel;
+buildLevel=function(n){
+  buildLevel40Base(n);
+  for(const b of bananas)b.got=false;
+  collected=0;
+  permanentBananas=0;
+  if(foundBananaIds&&typeof foundBananaIds.clear==='function')foundBananaIds.clear();
+  updateBananaHud40();
+  draw();
+};
+
+/* El HUD se actualiza siempre con las bananas de la pantalla actual. */
+const updateHud40Base=updateHud;
+updateHud=function(){
+  updateHud40Base();
+  updateBananaHud40();
+};
+
+/* Estado inicial inequívoco: nunca mostrar la victoria al cargar la página. */
+(function initializeCleanScreen40(){
+  try{
+    localStorage.removeItem('nitoBananaBank');
+    localStorage.removeItem('nitoBananaIds');
+  }catch(_){ }
+  permanentBananas=0;
+  if(foundBananaIds&&typeof foundBananaIds.clear==='function')foundBananaIds.clear();
+  const finalOverlay=document.getElementById('finalAdventureOverlay');
+  const startOverlay=document.getElementById('startOverlay');
+  const messageOverlay=document.getElementById('messageOverlay');
+  const levelsOverlay=document.getElementById('levelsOverlay');
+  if(finalOverlay){finalOverlay.style.display='none';finalOverlay.setAttribute('aria-hidden','true');}
+  if(startOverlay)startOverlay.style.display='flex';
+  if(messageOverlay)messageOverlay.style.display='none';
+  if(levelsOverlay)levelsOverlay.style.display='none';
+  collected=0;
+  updateBananaHud40();
+})();
+
 </script>
 
 </body>
