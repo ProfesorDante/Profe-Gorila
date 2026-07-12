@@ -2154,5 +2154,215 @@ updateHud=function(){
 
 </script>
 
+
+<script>
+'use strict';
+
+/* === AJUSTE 4.1: DESCUBRIMIENTO SIN CARTELES + EXPLORACIÓN + VUELO === */
+
+/* Las mecánicas se descubren jugando: no aparecen avisos explicativos. */
+showToast=function(){ };
+const updateMechanicHud41Base=updateMechanicHud;
+updateMechanicHud=function(){
+  updateMechanicHud41Base();
+  const pill=document.getElementById('mechanicPill');
+  if(pill)pill.style.display='none';
+  const eventPill=document.getElementById('eventPill');
+  if(eventPill)eventPill.style.display='none';
+};
+
+/* El botón del nivel 3 siempre queda fuera del camino directo a la escuela. */
+function placeLevel3ButtonOffMainPath41(){
+  if(level!==3)return;
+  level3GateOpen=false;
+  const mainPath=shortestPath(levelStart,exit);
+  const mainSet=new Set(mainPath.map(cellKey));
+  const occupied=occupiedForIntro39();
+  if(level3Button)occupied.delete(cellKey(level3Button));
+  const dist=distancesFrom(levelStart);
+
+  let candidates=allCells().filter(c=>
+    !mainSet.has(cellKey(c)) &&
+    !occupied.has(cellKey(c)) &&
+    neighborsOf(c.x,c.y).length===1 &&
+    (dist.get(cellKey(c))||0)>=3
+  );
+
+  if(!candidates.length){
+    candidates=allCells().filter(c=>
+      !mainSet.has(cellKey(c)) &&
+      !occupied.has(cellKey(c)) &&
+      (dist.get(cellKey(c))||0)>=3
+    );
+  }
+
+  candidates.sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+  if(candidates.length)level3Button={...candidates[0],pressed:false};
+}
+
+const buildLevel41Base=buildLevel;
+buildLevel=function(n){
+  buildLevel41Base(n);
+  placeLevel3ButtonOffMainPath41();
+  updateMechanicHud();
+  draw();
+};
+
+/* Vuelo animado del trampolín. */
+let trampolineFlight41=null;
+const drawNito41Base=drawNito;
+drawNito=function(x,y,size,ox,oy){
+  if(trampolineFlight41)return;
+  drawNito41Base(x,y,size,ox,oy);
+};
+
+function trampolineSound41(){
+  tone(190,.10,'sine',.055);
+  tone(290,.12,'triangle',.05,.07);
+  tone(520,.16,'triangle',.055,.15);
+  tone(760,.12,'sine',.035,.27);
+}
+
+function startTrampolineFlight41(){
+  if(!level4Trampoline||!level4Landing||trampolineBusy)return;
+  trampolineBusy=true;
+  moveLock=true;
+  steps++;
+  trampolineSound41();
+  trampolineFlight41={
+    from:{...level4Trampoline},
+    to:{...level4Landing},
+    start:performance.now(),
+    duration:820
+  };
+  updateHud();
+  setTimeout(()=>{
+    player={...level4Landing};
+    trampolineFlight41=null;
+    trampolineBusy=false;
+    moveLock=false;
+    checkCell41Base();
+    updateHud();
+    draw();
+    tone(250,.08,'square',.028);
+    tone(150,.12,'sine',.035,.05);
+  },820);
+}
+
+const checkCell41Base=checkCell;
+checkCell=function(){
+  if(level===4&&level4Trampoline&&level4Landing&&!trampolineBusy&&sameCell(player,level4Trampoline)){
+    startTrampolineFlight41();
+    return;
+  }
+  checkCell41Base();
+};
+
+/* Redibujo de las mecánicas introductorias. */
+drawIntroMechanics39=function(size,ox,oy){
+  if(level===3){
+    if(level3Button){
+      const cx=ox+(level3Button.x+.5)*size,cy=oy+(level3Button.y+.5)*size;
+      const press=level3Button.pressed?size*.045:0;
+      ctx.save();ctx.translate(cx,cy+press);
+      ctx.shadowColor=level3Button.pressed?'rgba(100,220,120,.75)':'rgba(255,225,70,.85)';
+      ctx.shadowBlur=size*.12;
+      ctx.fillStyle='#6a4a22';
+      ctx.beginPath();ctx.ellipse(0,size*.11,size*.25,size*.10,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=level3Button.pressed?'#4da65d':'#e8c438';
+      ctx.strokeStyle='#5c431e';ctx.lineWidth=Math.max(2,size*.04);
+      ctx.beginPath();ctx.ellipse(0,0,size*.20,size*.13,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='rgba(255,255,220,.75)';
+      ctx.beginPath();ctx.ellipse(-size*.055,-size*.035,size*.06,size*.032,-.35,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    if(!level3GateOpen){
+      const cx=ox+(exit.x+.5)*size,cy=oy+(exit.y+.5)*size;
+      ctx.save();ctx.translate(cx,cy);
+      ctx.fillStyle='#315f38';
+      for(let i=-3;i<=3;i++){
+        ctx.beginPath();ctx.arc(i*size*.09,Math.sin(i)*size*.025,size*.095,0,Math.PI*2);ctx.fill();
+      }
+      ctx.strokeStyle='#214a2b';ctx.lineWidth=Math.max(3,size*.045);
+      ctx.beginPath();ctx.moveTo(-size*.32,-size*.08);ctx.lineTo(size*.32,size*.08);ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  if(level===4&&level4Trampoline){
+    const cx=ox+(level4Trampoline.x+.5)*size,cy=oy+(level4Trampoline.y+.5)*size;
+    const active=trampolineFlight41!==null;
+    const squash=active?.55:(.92+.08*Math.sin(animTime*4));
+    ctx.save();ctx.translate(cx,cy);
+
+    /* Patas y resortes visibles. */
+    ctx.strokeStyle='#5a3b70';ctx.lineWidth=Math.max(3,size*.045);
+    for(const sx of [-.17,.17]){
+      ctx.beginPath();
+      ctx.moveTo(size*sx,size*.19);
+      ctx.lineTo(size*sx,size*.10);
+      ctx.lineTo(size*(sx-.055),size*.03);
+      ctx.lineTo(size*(sx+.055),-size*.04);
+      ctx.lineTo(size*sx,-size*.11);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle='#59356f';
+    ctx.beginPath();ctx.ellipse(0,size*.22,size*.31,size*.10,0,0,Math.PI*2);ctx.fill();
+    ctx.shadowColor='rgba(210,120,255,.85)';ctx.shadowBlur=size*.15;
+    ctx.scale(1,squash);
+    ctx.fillStyle='#b564e6';ctx.strokeStyle='#4d2768';ctx.lineWidth=Math.max(3,size*.05);
+    ctx.beginPath();ctx.ellipse(0,-size*.08,size*.31,size*.15,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#efd8ff';ctx.lineWidth=Math.max(2,size*.025);
+    ctx.beginPath();ctx.ellipse(0,-size*.08,size*.23,size*.09,0,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+  }
+};
+
+const draw41Base=draw;
+draw=function(){
+  draw41Base();
+  if(!maze||!trampolineFlight41)return;
+  const {size,ox,oy}=cellMetrics();
+  const now=performance.now();
+  const p=Math.min(1,(now-trampolineFlight41.start)/trampolineFlight41.duration);
+  const ease=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+  const x=trampolineFlight41.from.x+(trampolineFlight41.to.x-trampolineFlight41.from.x)*ease;
+  const baseY=trampolineFlight41.from.y+(trampolineFlight41.to.y-trampolineFlight41.from.y)*ease;
+  const arc=Math.sin(Math.PI*p)*Math.max(1.15,Math.min(2.8,(cols+rows)/9));
+  const y=baseY-arc;
+
+  ctx.save();
+  const shadowX=ox+(x+.5)*size;
+  const shadowY=oy+(baseY+.78)*size;
+  ctx.fillStyle=`rgba(40,45,35,${.24*(1-Math.sin(Math.PI*p)*.55)})`;
+  ctx.beginPath();ctx.ellipse(shadowX,shadowY,size*.22,size*.07,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  drawNito41Base(x,y,size,ox,oy);
+
+  /* Pequeñas líneas de velocidad para que el vuelo se entienda sin texto. */
+  ctx.save();
+  ctx.strokeStyle='rgba(255,255,235,.75)';
+  ctx.lineWidth=Math.max(2,size*.025);ctx.lineCap='round';
+  const cx=ox+(x+.5)*size,cy=oy+(y+.5)*size;
+  for(let i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.moveTo(cx-size*(.28+i*.07),cy+size*(.04+i*.05));
+    ctx.lineTo(cx-size*(.43+i*.08),cy+size*(.08+i*.05));
+    ctx.stroke();
+  }
+  ctx.restore();
+};
+
+/* Oculta cualquier cartel ya creado al cargar esta versión. */
+(function cleanMechanicLabels41(){
+  const pill=document.getElementById('mechanicPill');
+  if(pill)pill.style.display='none';
+  const eventPill=document.getElementById('eventPill');
+  if(eventPill)eventPill.style.display='none';
+})();
+</script>
+
 </body>
 </html>
