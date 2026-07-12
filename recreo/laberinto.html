@@ -109,6 +109,42 @@ body,.controls,.pad,.control{
 
 
 
+
+/* === CORRECCIÓN 3.8: INICIO ROTADO Y OBJETOS VISIBLES === */
+function nearestFreeCellFromStart38(forbidden){
+  const q=[{...levelStart}],seen=new Set([cellKey(levelStart)]);
+  while(q.length){
+    const cur=q.shift();
+    if(!forbidden.has(cellKey(cur)))return cur;
+    for(const n of neighborsOf(cur.x,cur.y)){
+      const k=cellKey(n);if(!seen.has(k)){seen.add(k);q.push(n)}
+    }
+  }
+  return null;
+}
+function preventStartOverlaps38(){
+  const occupied=new Set([cellKey(levelStart),cellKey(exit)]);
+  if(friend){
+    if(sameCell(friend,levelStart)||sameCell(friend,exit)){
+      const c=nearestFreeCellFromStart38(occupied);if(c){friend.x=c.x;friend.y=c.y}
+    }
+    occupied.add(cellKey(friend));
+  }
+  for(const b of bananas){
+    if(occupied.has(cellKey(b))){
+      const c=nearestFreeCellFromStart38(occupied);if(c){b.x=c.x;b.y=c.y}
+    }
+    occupied.add(cellKey(b));
+  }
+}
+const buildLevel38Base=buildLevel;
+buildLevel=function(n){
+  buildLevel38Base(n);
+  levelStart={...player};
+  preventStartOverlaps38();
+  draw();
+};
+
 /* === FINAL DE LA AVENTURA 3.7 === */
 #finalAdventureOverlay{position:fixed;inset:0;z-index:60;background:rgba(10,29,22,.92);display:none;align-items:center;justify-content:center;padding:14px}
 .final-adventure-card{width:min(1120px,96vw);max-height:96dvh;overflow:auto;background:#fff8df;border:4px solid #8b5a2b;border-radius:22px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);text-align:center}
@@ -172,7 +208,7 @@ const TOTAL_LEVELS=20,DIRS=[{dx:0,dy:-1,key:'up'},{dx:1,dy:0,key:'right'},{dx:0,
 const CLASSMATES=['Franchu','Martu','Lucy','Jose','Samy','Ori','Rousy','Vicky chiquita','Vicky grande','Anto','Vitti','Ramirito','Santi','Francis','Leandrus','Feli','Beltru','Lauti'];
 const SPECIAL_EVENTS={3:{type:'radio',label:'Radio de la Selva',icon:'📻'},6:{type:'glasses',label:'Anteojos Arcoíris',icon:'🌈'},9:{type:'trumpet',label:'Trompeta del Gran Árbol',icon:'🎺'},12:{type:'radio',label:'Radio Veloz',icon:'📻'},15:{type:'glasses',label:'Anteojos Nocturnos',icon:'🕶️'},18:{type:'trumpet',label:'Trompeta Dorada',icon:'🎺'}};
 const PALETTES={normal:{sky1:'#bfe9ef',sky2:'#8dcf74',cell1:'#c9e9a0',cell2:'#c3e397',wall:'#35643f',board:'#d8efb4',outline:'#527b45'},rainbow:{sky1:'#f6c7ef',sky2:'#a9d7ff',cell1:'#ffe5a7',cell2:'#c6f0d1',wall:'#6f5aa6',board:'#f8e8bd',outline:'#8a6ab1'},night:{sky1:'#27335f',sky2:'#476b72',cell1:'#9fc5a0',cell2:'#7aa989',wall:'#294c47',board:'#b9cfaa',outline:'#42645a'}};
-let level=1,maze=null,cols=9,rows=7,player={x:0,y:0},exit={x:0,y:0},bananas=[],friend=null,collected=0,steps=0,playing=false,moveLock=false,unlocked=Math.max(1,Number(localStorage.getItem('nitoUnlocked')||1)),audioCtx=null;
+let level=1,maze=null,cols=9,rows=7,player={x:0,y:0},levelStart={x:0,y:0},exit={x:0,y:0},bananas=[],friend=null,collected=0,steps=0,playing=false,moveLock=false,unlocked=Math.max(1,Number(localStorage.getItem('nitoUnlocked')||1)),audioCtx=null;
 let animTime=0,musicTimer=null,musicStep=0,musicOn=true;let levelsReturnTo='start';let foundClassmates=JSON.parse(localStorage.getItem('nitoFoundClassmates')||'[]');let specialItem=null,specialActive=false,currentPalette='normal',musicTempo=1;
 function seededRandom(seed){let s=seed>>>0;return()=>{s+=0x6D2B79F5;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
 function dimensionsForLevel(n){const band=Math.floor((n-1)/4);return{cols:7+band*2,rows:7+band*2}}
@@ -189,7 +225,7 @@ function drawButterfly(x,y,s){ctx.save();ctx.translate(x,y);const flap=.55+.45*M
 function drawHedgeDetails(c,px,py,size,x,y){if((x*13+y*7)%3!==0)return;ctx.fillStyle='#4e8a4e';const r=Math.max(2,size*.035);if(c.walls.up){ctx.beginPath();ctx.arc(px+size*.3,py,r,0,Math.PI*2);ctx.arc(px+size*.7,py,r,0,Math.PI*2);ctx.fill()}if(c.walls.left){ctx.beginPath();ctx.arc(px,py+size*.35,r,0,Math.PI*2);ctx.arc(px,py+size*.72,r,0,Math.PI*2);ctx.fill()}if((x+y)%7===0){ctx.fillStyle='#f5d36a';ctx.beginPath();ctx.arc(px+size*.18,py+size*.82,r*.65,0,Math.PI*2);ctx.fill()}}
 function drawTinyLeaves(px,py,size,x,y){if((x*7+y*11)%6!==0)return;ctx.save();ctx.translate(px+size*.72,py+size*.28);ctx.rotate((x+y)*.4);ctx.fillStyle='rgba(48,116,56,.18)';ctx.beginPath();ctx.ellipse(0,0,size*.10,size*.045,0,0,Math.PI*2);ctx.fill();ctx.restore()}
 function drawNito(x,y,size,ox,oy){const cx=ox+x*size+size/2,cy=oy+y*size+size/2+Math.sin(animTime*4)*size*.018,s=size*.34;ctx.save();ctx.translate(cx,cy);ctx.fillStyle='#7a4b2a';ctx.beginPath();ctx.arc(0,0,s*.55,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-s*.52,-s*.12,s*.23,0,Math.PI*2);ctx.arc(s*.52,-s*.12,s*.23,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d7a46b';ctx.beginPath();ctx.ellipse(0,s*.09,s*.40,s*.33,0,0,Math.PI*2);ctx.fill();const blink=Math.sin(animTime*.9)>0.985;ctx.strokeStyle='#17251f';ctx.fillStyle='#fff';ctx.lineWidth=2;if(blink){ctx.beginPath();ctx.moveTo(-s*.27,-s*.13);ctx.lineTo(-s*.08,-s*.13);ctx.moveTo(s*.08,-s*.13);ctx.lineTo(s*.27,-s*.13);ctx.stroke()}else{ctx.beginPath();ctx.arc(-s*.17,-s*.13,s*.10,0,Math.PI*2);ctx.arc(s*.17,-s*.13,s*.10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#17251f';ctx.beginPath();ctx.arc(-s*.17,-s*.13,s*.045,0,Math.PI*2);ctx.arc(s*.17,-s*.13,s*.045,0,Math.PI*2);ctx.fill()}ctx.strokeStyle='#5d3c25';ctx.lineWidth=Math.max(2,s*.05);ctx.beginPath();ctx.arc(0,s*.09,s*.20,.18,Math.PI-.18);ctx.stroke();ctx.restore()}
-function drawBanana(x,y,size,ox,oy,i=0){const cx=ox+x*size+size/2,cy=oy+y*size+size/2+Math.sin(animTime*3+i)*size*.06;ctx.save();ctx.translate(cx,cy);ctx.rotate(-.45);ctx.strokeStyle='#e2ad19';ctx.lineWidth=Math.max(5,size*.12);ctx.beginPath();ctx.arc(0,0,size*.18,.2,2.4);ctx.stroke();ctx.strokeStyle='#ffe36b';ctx.lineWidth=Math.max(2,size*.045);ctx.stroke();ctx.restore()}
+function drawBanana(x,y,size,ox,oy,i=0){const cx=ox+x*size+size/2,cy=oy+y*size+size/2+Math.sin(animTime*3+i)*size*.055;ctx.save();ctx.translate(cx,cy);ctx.rotate(-.48);ctx.shadowColor='rgba(255,224,70,.95)';ctx.shadowBlur=Math.max(7,size*.16);ctx.strokeStyle='#8f6810';ctx.lineWidth=Math.max(9,size*.19);ctx.beginPath();ctx.arc(0,0,size*.20,.18,2.42);ctx.stroke();ctx.strokeStyle='#ffd83d';ctx.lineWidth=Math.max(7,size*.145);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle='#fff29a';ctx.lineWidth=Math.max(2,size*.035);ctx.stroke();ctx.fillStyle='#5d4315';ctx.beginPath();ctx.arc(size*.19*Math.cos(.18),size*.19*Math.sin(.18),Math.max(2,size*.035),0,Math.PI*2);ctx.arc(size*.19*Math.cos(2.42),size*.19*Math.sin(2.42),Math.max(2,size*.035),0,Math.PI*2);ctx.fill();ctx.restore()}
 function drawFriend(x,y,size,ox,oy,name){const cx=ox+x*size+size/2,cy=oy+y*size+size/2+Math.sin(animTime*3.2)*size*.025,s=size*.28;ctx.save();ctx.translate(cx,cy);ctx.rotate(Math.sin(animTime*3)*.025);ctx.fillStyle='#8d5a34';ctx.beginPath();ctx.arc(0,0,s*.55,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-s*.48,-s*.1,s*.2,0,Math.PI*2);ctx.arc(s*.48,-s*.1,s*.2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#f2c17f';ctx.beginPath();ctx.ellipse(0,s*.08,s*.38,s*.29,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-s*.13,-s*.12,s*.08,0,Math.PI*2);ctx.arc(s*.13,-s*.12,s*.08,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#7a4b2a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(s*.35,s*.18);ctx.lineTo(s*.62,s*(.02+.1*Math.sin(animTime*6)));ctx.stroke();ctx.restore();ctx.font=`900 ${Math.max(11,size*.16)}px Arial`;ctx.textAlign='center';ctx.fillStyle='#225c35';ctx.fillText(name,cx,cy-size*.38)}
 function drawExit(x,y,size,ox,oy){const px=ox+x*size,py=oy+y*size;ctx.save();ctx.translate(px+size/2,py+size/2);ctx.fillStyle='#8b5a2b';ctx.fillRect(-size*.28,-size*.18,size*.56,size*.38);ctx.fillStyle='#f7e4b1';ctx.fillRect(-size*.18,-size*.08,size*.36,size*.26);ctx.fillStyle='#a43f3f';ctx.beginPath();ctx.moveTo(-size*.34,-size*.18);ctx.lineTo(0,-size*.45);ctx.lineTo(size*.34,-size*.18);ctx.closePath();ctx.fill();ctx.fillStyle='#4b79a8';ctx.fillRect(-size*.07,size*.02,size*.14,size*.16);ctx.restore()}
 
@@ -458,7 +494,7 @@ function allCells(){
 }
 function isOuter(c){return c.x===0||c.y===0||c.x===cols-1||c.y===rows-1}
 function occupiedKeys(){
-  const s=new Set(['0,0',cellKey(exit)]);
+  const s=new Set([cellKey(levelStart),cellKey(exit)]);
   bananas.forEach(b=>s.add(cellKey(b)));
   if(friend)s.add(cellKey(friend));
   if(specialItem)s.add(cellKey(specialItem));
@@ -469,9 +505,9 @@ function occupiedKeys(){
    en un callejón secundario que obliga a explorar. */
 function placeFriendInDetour(){
   if(!friend) return;
-  const main=shortestPath({x:0,y:0},exit);
+  const main=shortestPath(levelStart,exit);
   const mainSet=new Set(main.map(cellKey));
-  const dist=distancesFrom({x:0,y:0});
+  const dist=distancesFrom(levelStart);
   let candidates=allCells().filter(c=>{
     const degree=neighborsOf(c.x,c.y).length;
     return !mainSet.has(cellKey(c)) && degree===1 && (dist.get(cellKey(c))||0)>2;
@@ -491,7 +527,7 @@ function placeFriendInDetour(){
 function createSecretPassage(){
   secretLinks=[];
   if(!SECRET_LEVELS.has(level)||!friend)return;
-  const pathToFriend=shortestPath({x:0,y:0},friend);
+  const pathToFriend=shortestPath(levelStart,friend);
   const branchSet=new Set(pathToFriend.map(cellKey));
   const dirs=[
     {dx:1,dy:0,a:'right',b:'left'},
@@ -521,9 +557,9 @@ function createSecretPassage(){
 function placeWhirlpool(){
   whirlpool=null;controlsReversed=false;
   if(!WHIRLPOOL_LEVELS.has(level))return;
-  const main=shortestPath({x:0,y:0},exit);
+  const main=shortestPath(levelStart,exit);
   const forbidden=occupiedKeys();
-  const options=allCells().filter(c=>!forbidden.has(cellKey(c))&&!sameCell(c,exit)&&!sameCell(c,{x:0,y:0}));
+  const options=allCells().filter(c=>!forbidden.has(cellKey(c))&&!sameCell(c,exit)&&!sameCell(c,levelStart));
   options.sort((a,b)=>{
     const ai=main.findIndex(p=>sameCell(p,a)),bi=main.findIndex(p=>sameCell(p,b));
     return (bi<0?-1:bi)-(ai<0?-1:ai);
@@ -534,7 +570,7 @@ function placeWhirlpool(){
 function placeFalseHouse(){
   falseExit=null;
   if(!FALSE_HOUSE_LEVELS.has(level))return;
-  const mainSet=new Set(shortestPath({x:0,y:0},exit).map(cellKey));
+  const mainSet=new Set(shortestPath(levelStart,exit).map(cellKey));
   const forbidden=occupiedKeys();
   let options=allCells().filter(c=>!forbidden.has(cellKey(c))&&!mainSet.has(cellKey(c))&&neighborsOf(c.x,c.y).length===1);
   if(!options.length)options=allCells().filter(c=>!forbidden.has(cellKey(c))&&!mainSet.has(cellKey(c)));
@@ -543,9 +579,9 @@ function placeFalseHouse(){
 
 function guardianRoute(){
   const cells=allCells().filter(isOuter);
-  const usable=cells.filter(c=>neighborsOf(c.x,c.y).length>0&&!sameCell(c,{x:0,y:0})&&!sameCell(c,exit));
+  const usable=cells.filter(c=>neighborsOf(c.x,c.y).length>0&&!sameCell(c,levelStart)&&!sameCell(c,exit));
   if(!usable.length)return [];
-  const main=shortestPath({x:0,y:0},exit);
+  const main=shortestPath(levelStart,exit);
   let start=usable.find(c=>main.some(p=>sameCell(p,c)))||usable[0];
   const route=[start];
   let prev=null,cur=start;
@@ -565,7 +601,7 @@ function placeGuardian(){
   if(route.length>=2)guardian={...cfg,route,index:0,x:route[0].x,y:route[0].y};
 }
 function resetToStart(message){
-  player={x:0,y:0};steps++;moveLock=true;
+  player=levelStart;steps++;moveLock=true;
   setTimeout(()=>moveLock=false,240);
   bumpSound();showToast(message);updateHud();draw();
 }
@@ -644,7 +680,7 @@ checkCell=function(){
     showToast('🌪️ ¡Remolino travieso! Los controles quedaron invertidos.');
   }
   checkGuardianCollision();
-  if(player.x===0&&player.y===0&&guardian)return;
+  if(sameCell(player,levelStart)&&guardian)return;
   originalCheckCell();
 };
 
@@ -796,7 +832,7 @@ function directionBetween(a,b){
 
 function findChallengeItemCell(mainPath,forbidden){
   const mainSet=new Set(mainPath.map(cellKey));
-  const dist=distancesFrom({x:0,y:0});
+  const dist=distancesFrom(levelStart);
   let options=allCells().filter(c=>
     !forbidden.has(cellKey(c)) && !mainSet.has(cellKey(c)) &&
     neighborsOf(c.x,c.y).length===1 && (dist.get(cellKey(c))||0)>3
@@ -812,7 +848,7 @@ function setupLogicChallenge(){
   logicChallenge=null;carriedItem=null;
   const cfg=LOGIC_LEVELS[level];
   if(!cfg)return;
-  const path=shortestPath({x:0,y:0},exit);
+  const path=shortestPath(levelStart,exit);
   if(path.length<5)return;
   const edgeIndex=Math.max(2,path.length-3);
   const a=path[edgeIndex-1],b=path[edgeIndex];
@@ -829,8 +865,8 @@ function setupLogicChallenge(){
    nunca avanzan sobre Nito. Así desafían sin cerrar el único camino. */
 function safeGuardianRoute(){
   if(!friend)return[];
-  const mainSet=new Set(shortestPath({x:0,y:0},exit).map(cellKey));
-  const toFriend=shortestPath({x:0,y:0},friend);
+  const mainSet=new Set(shortestPath(levelStart,exit).map(cellKey));
+  const toFriend=shortestPath(levelStart,friend);
   const branch=toFriend.filter(c=>!mainSet.has(cellKey(c)));
   if(branch.length>=3)return branch.slice(Math.max(0,branch.length-3));
   const offMain=allCells().filter(c=>!mainSet.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
@@ -865,7 +901,7 @@ advanceGuardian=function(t){
 };
 
 resetToStart=function(){
-  player={x:0,y:0};moveLock=true;
+  player=levelStart;moveLock=true;
   setTimeout(()=>moveLock=false,260);
   bumpSound();showToast('↩️');updateHud();draw();
 };
@@ -1128,7 +1164,7 @@ function setupFalseWalls(){
       const a={x,y},b={x:nx,y:ny};
       if(friendShortcut&&edgeMatches(friendShortcut.a,friendShortcut.b,a.x,a.y,b.x,b.y))continue;
       if(logicChallenge&&edgeMatches(logicChallenge.a,logicChallenge.b,a.x,a.y,b.x,b.y))continue;
-      if(sameCell(a,exit)||sameCell(b,exit)||sameCell(a,{x:0,y:0})||sameCell(b,{x:0,y:0}))continue;
+      if(sameCell(a,exit)||sameCell(b,exit)||sameCell(a,levelStart)||sameCell(b,levelStart))continue;
       candidates.push({a,b,score:rand()});
     }
   }
@@ -1144,7 +1180,7 @@ function isFalseWallMove(x,y,nx,ny){return falseWallEdges.has(edgeId(x,y,nx,ny))
 safeGuardianRoute=function(){
   if(!friend)return[];
   const protectedCells=new Set([
-    ...shortestPath({x:0,y:0},friend).map(cellKey),
+    ...shortestPath(levelStart,friend).map(cellKey),
     ...shortestPath(friend,exit).map(cellKey)
   ]);
   const allowed=allCells().filter(c=>!protectedCells.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
@@ -1223,7 +1259,7 @@ function setupVisionGlasses(){
   visionGlasses=[];visionRadius=2.15;
   const amount=level===11?1:(level===17?3:0);
   if(!amount)return;
-  const dist=distancesFrom({x:0,y:0});
+  const dist=distancesFrom(levelStart);
   const forbidden=occupiedKeys();
   if(logicChallenge)forbidden.add(cellKey(logicChallenge.item));
   let cells=allCells().filter(c=>!forbidden.has(cellKey(c))&&!sameCell(c,exit)&&!sameCell(c,friend));
@@ -1241,17 +1277,17 @@ function setupBananaGate(){
   bananaGate=null;
   const required=BANANA_GATE_LEVELS[level];
   if(!required)return;
-  const normal=pathLength({x:0,y:0},exit);
+  const normal=pathLength(levelStart,exit);
   const candidates=[];
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
     for(const d of [{dx:1,dy:0,key:'right'},{dx:0,dy:1,key:'down'}]){
       const nx=x+d.dx,ny=y+d.dy;
       if(nx>=cols||ny>=rows||!maze[y][x].walls[d.key])continue;
       const a={x,y},b={x:nx,y:ny};
-      if(sameCell(a,{x:0,y:0})||sameCell(b,{x:0,y:0})||sameCell(a,exit)||sameCell(b,exit))continue;
+      if(sameCell(a,levelStart)||sameCell(b,levelStart)||sameCell(a,exit)||sameCell(b,exit))continue;
       if(friendShortcut&&edgeMatches(friendShortcut.a,friendShortcut.b,a.x,a.y,b.x,b.y))continue;
       if(logicChallenge&&edgeMatches(logicChallenge.a,logicChallenge.b,a.x,a.y,b.x,b.y))continue;
-      setEdgeOpen(a,b,true);const shorter=pathLength({x:0,y:0},exit);setEdgeOpen(a,b,false);
+      setEdgeOpen(a,b,true);const shorter=pathLength(levelStart,exit);setEdgeOpen(a,b,false);
       const gain=normal-shorter;
       if(Number.isFinite(shorter)&&gain>=3)candidates.push({a,b,gain});
     }
@@ -1266,7 +1302,7 @@ function gateEdgeMatches(x1,y1,x2,y2){
 /* Ruta larga del guardián: paseo de profundidad que visita cerca del 75 % del mapa.
    No se queda quieto en la entrada, la escuela ni sobre el compañero. */
 safeGuardianRoute=function(){
-  const forbidden=new Set(['0,0',cellKey(exit)]);if(friend)forbidden.add(cellKey(friend));
+  const forbidden=new Set([cellKey(levelStart),cellKey(exit)]);if(friend)forbidden.add(cellKey(friend));
   const candidates=allCells().filter(c=>!forbidden.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
   if(!candidates.length)return[];
   const start=candidates[Math.floor(candidates.length*.42)];
@@ -1419,13 +1455,13 @@ let levelSecretFound=false;
 
 function cumulativeBananasThrough(n){let total=0;for(let i=1;i<=n;i++)total+=Math.min(2+Math.floor(i/3),7);return total}
 function pickSafeCell(seedOffset=0,avoid=new Set()){
-  const dist=distancesFrom({x:0,y:0});
+  const dist=distancesFrom(levelStart);
   const list=allCells().filter(c=>!avoid.has(cellKey(c))&&!sameCell(c,exit)&&(!friend||!sameCell(c,friend)));
   list.sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
   return list[(seedOffset*7+level*3)%Math.max(1,list.length)]||null;
 }
 function guardianRouteFor(cfg,offset=0){
-  const forbidden=new Set(['0,0',cellKey(exit)]);if(friend)forbidden.add(cellKey(friend));
+  const forbidden=new Set([cellKey(levelStart),cellKey(exit)]);if(friend)forbidden.add(cellKey(friend));
   const cells=allCells().filter(c=>!forbidden.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
   if(!cells.length)return[];
   let start=cells[(Math.floor(cells.length*(.22+offset*.31))+level)%cells.length];
@@ -1490,10 +1526,10 @@ function setupVehicle(){
 function setupExplorerRoute(){
   explorerRoute=null;if(level<18)return;
   const required=cumulativeBananasThrough(level-1);
-  const normal=pathLength({x:0,y:0},exit),walls=[];
+  const normal=pathLength(levelStart,exit),walls=[];
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)for(const d of [{dx:1,dy:0,key:'right'},{dx:0,dy:1,key:'down'}]){
     const nx=x+d.dx,ny=y+d.dy;if(nx>=cols||ny>=rows||!maze[y][x].walls[d.key])continue;
-    const a={x,y},b={x:nx,y:ny};setEdgeOpen(a,b,true);const len=pathLength({x:0,y:0},exit);setEdgeOpen(a,b,false);
+    const a={x,y},b={x:nx,y:ny};setEdgeOpen(a,b,true);const len=pathLength(levelStart,exit);setEdgeOpen(a,b,false);
     if(Number.isFinite(len)&&normal-len>=2)walls.push({a,b,gain:normal-len});
   }
   walls.sort((a,b)=>b.gain-a.gain);explorerRoute={required,opened:false,walls:walls.slice(0,3)};
@@ -1521,7 +1557,7 @@ tryMove=function(dx,dy){
   const wasLocked=moveLock;tryMove33Base(dx,dy);
   if(!wasLocked&&currentVehicle&&moveLock)setTimeout(()=>{moveLock=false},Math.max(20,Math.round(70*currentVehicle.speed)));
   if((guardian&&sameCell(player,guardian))||(extraGuardian&&sameCell(player,extraGuardian))){resetToStart();return}
-  if(explorerRoute&&!explorerRoute.opened&&permanentBananas>=explorerRoute.required&&sameCell(player,{x:0,y:0}))openExplorerRoute();
+  if(explorerRoute&&!explorerRoute.opened&&permanentBananas>=explorerRoute.required&&sameCell(player,levelStart))openExplorerRoute();
 };
 
 function drawGuardian33(g,size,ox,oy){if(!g)return;const cx=ox+(g.x+.5)*size,cy=oy+(g.y+.5)*size;ctx.save();ctx.translate(cx,cy+Math.sin(animTime*3)*size*.025);ctx.font=`${Math.max(23,size*.48)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(g.icon,0,0);ctx.restore()}
@@ -1560,7 +1596,7 @@ function rotateWallsForRun(walls,turns){
 }
 function applyRunRotationToBaseLevel(){
   const turns=RUN_ROTATION_TURNS;
-  if(!turns||!maze||cols!==rows)return;
+  if(!turns||!maze||cols!==rows){levelStart={...player};return;}
   const size=cols;
   const rotated=Array.from({length:size},()=>Array(size));
   for(let y=0;y<size;y++)for(let x=0;x<size;x++){
@@ -1573,6 +1609,7 @@ function applyRunRotationToBaseLevel(){
   bananas=bananas.map(b=>rotatePointForRun(b,turns,size));
   if(friend)friend=rotatePointForRun(friend,turns,size);
   if(specialItem)specialItem=rotatePointForRun(specialItem,turns,size);
+  levelStart={...player};
 }
 
 /* Si una ruta compleja no llega a generarse, crea una patrulla válida
@@ -1582,7 +1619,7 @@ makeGuardian=function(kind,offset=0){
   let g=makeGuardian34Base(kind,offset);
   if(g)return g;
   const cfg=GUARDIAN_PERSONALITIES[kind];
-  const forbidden=new Set(['0,0',cellKey(exit)]);
+  const forbidden=new Set([cellKey(levelStart),cellKey(exit)]);
   if(friend)forbidden.add(cellKey(friend));
   const candidates=allCells().filter(c=>!forbidden.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
   let best=[];
@@ -1662,14 +1699,14 @@ function uniqueCells36(cells){
 function requiredRouteKeys36(){
   const route=[];
   if(friend){
-    route.push(...shortestPath({x:0,y:0},friend));
+    route.push(...shortestPath(levelStart,friend));
     route.push(...shortestPath(friend,exit));
-  }else route.push(...shortestPath({x:0,y:0},exit));
+  }else route.push(...shortestPath(levelStart,exit));
   return new Set(uniqueCells36(route).map(cellKey));
 }
 
 function staticForbiddenKeys36(){
-  const s=new Set(['0,0',cellKey(exit)]);
+  const s=new Set([cellKey(levelStart),cellKey(exit)]);
   if(friend)s.add(cellKey(friend));
   if(specialItem)s.add(cellKey(specialItem));
   if(falseExit)s.add(cellKey(falseExit));
@@ -1691,13 +1728,13 @@ function repositionBananas36(){
   candidates.sort((a,b)=>{
     const deadA=neighborsOf(a.x,a.y).length===1?1:0,deadB=neighborsOf(b.x,b.y).length===1?1:0;
     const da=branchDistance(a),db=branchDistance(b);
-    const startA=pathLength({x:0,y:0},a),startB=pathLength({x:0,y:0},b);
+    const startA=pathLength(levelStart,a),startB=pathLength(levelStart,b);
     return (deadB-deadA)||(db-da)||(startB-startA);
   });
   /* En mapas excepcionalmente lineales, se conserva fuera al menos del camino
      directo a la casa, pero nunca se impide construir el nivel. */
   if(candidates.length<bananas.length){
-    const direct=new Set(shortestPath({x:0,y:0},exit).map(cellKey));
+    const direct=new Set(shortestPath(levelStart,exit).map(cellKey));
     const extra=allCells().filter(c=>!direct.has(cellKey(c))&&!forbidden.has(cellKey(c))&&!candidates.some(q=>sameCell(q,c)));
     candidates.push(...extra);
   }
@@ -1720,9 +1757,9 @@ setupVisionGlasses=function(){
   visionGlasses=[];visionRadius=2.15;
   const amount=level===11?1:(level===17?3:0);
   if(!amount)return;
-  const fromStart=distancesFrom({x:0,y:0});
+  const fromStart=distancesFrom(levelStart);
   const fromExit=distancesFrom(exit);
-  const mainLength=Math.max(1,pathLength({x:0,y:0},exit));
+  const mainLength=Math.max(1,pathLength(levelStart,exit));
   const route=requiredRouteKeys36();
   const forbidden=staticForbiddenKeys36();
   bananas.forEach(b=>forbidden.add(cellKey(b)));
@@ -1764,7 +1801,7 @@ setupFriendShortcut=function(){
       const nx=x+d.dx,ny=y+d.dy;
       if(nx>=cols||ny>=rows||!maze[y][x].walls[d.key])continue;
       const a={x,y},b={x:nx,y:ny};
-      if(sameCell(a,{x:0,y:0})||sameCell(b,{x:0,y:0})||sameCell(a,exit)||sameCell(b,exit))continue;
+      if(sameCell(a,levelStart)||sameCell(b,levelStart)||sameCell(a,exit)||sameCell(b,exit))continue;
       setEdgeOpen(a,b,true);const after=pathLength(friend,exit);setEdgeOpen(a,b,false);
       if(!Number.isFinite(after))continue;
       const gain=before-after;
@@ -1795,6 +1832,42 @@ buildLevel=function(n){
   draw();
 };
 
+
+
+/* === CORRECCIÓN 3.8: INICIO ROTADO Y OBJETOS VISIBLES === */
+function nearestFreeCellFromStart38(forbidden){
+  const q=[{...levelStart}],seen=new Set([cellKey(levelStart)]);
+  while(q.length){
+    const cur=q.shift();
+    if(!forbidden.has(cellKey(cur)))return cur;
+    for(const n of neighborsOf(cur.x,cur.y)){
+      const k=cellKey(n);if(!seen.has(k)){seen.add(k);q.push(n)}
+    }
+  }
+  return null;
+}
+function preventStartOverlaps38(){
+  const occupied=new Set([cellKey(levelStart),cellKey(exit)]);
+  if(friend){
+    if(sameCell(friend,levelStart)||sameCell(friend,exit)){
+      const c=nearestFreeCellFromStart38(occupied);if(c){friend.x=c.x;friend.y=c.y}
+    }
+    occupied.add(cellKey(friend));
+  }
+  for(const b of bananas){
+    if(occupied.has(cellKey(b))){
+      const c=nearestFreeCellFromStart38(occupied);if(c){b.x=c.x;b.y=c.y}
+    }
+    occupied.add(cellKey(b));
+  }
+}
+const buildLevel38Base=buildLevel;
+buildLevel=function(n){
+  buildLevel38Base(n);
+  levelStart={...player};
+  preventStartOverlaps38();
+  draw();
+};
 
 /* === FINAL DE LA AVENTURA 3.7 ===
    La imagen se aloja fuera del HTML, en /img/laberintofinal.png.
