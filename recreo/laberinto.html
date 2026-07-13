@@ -2877,5 +2877,164 @@ const buildLevel221Base=buildLevel;
 buildLevel=function(n){tauntInputs221=[];buildLevel221Base(n)};
 </script>
 
+
+
+<script>
+'use strict';
+/* === VERSIÓN 2.2.2 — PEREZOSO SOÑADOR Y PÁJAROS TRAVIESOS ===
+   Todo se comunica con movimiento, Zzz, vuelo y remolinos. Sin carteles. */
+
+const SLOTH_SLEEP_MS_222=4000;
+const SLOTH_AWAKE_MS_222=4000;
+const BIRD_LEVELS_222=new Set([12,18]);
+const BIRD_FIRST_DELAY_MS_222=5500;
+const BIRD_REPEAT_MS_222=18000;
+const BIRD_FLIGHT_MS_222=4200;
+const BIRD_WHIRLPOOL_LIFE_MS_222=15000;
+
+let birdEvent222=null;
+let birdNextAt222=0;
+let birdWhirlpools222=[];
+
+function isSloth222(g){return Boolean(g&&(g.kind==='sloth'||g.icon==='🦥'))}
+function slothSleeping222(g,t=performance.now()){
+  if(!isSloth222(g))return false;
+  if(typeof g.slothCycleStart222!=='number')g.slothCycleStart222=t;
+  const phase=(t-g.slothCycleStart222)%(SLOTH_SLEEP_MS_222+SLOTH_AWAKE_MS_222);
+  return phase<SLOTH_SLEEP_MS_222;
+}
+
+/* El perezoso queda quieto cuatro segundos y camina cuatro segundos. */
+const moveOneGuardian222Base=moveOneGuardian;
+moveOneGuardian=function(g,t){
+  if(isSloth222(g)&&slothSleeping222(g,t)){
+    g.nextAt=Math.max(g.nextAt||0,t+120);
+    return;
+  }
+  moveOneGuardian222Base(g,t);
+};
+
+/* Dormido no atrapa a Nito y se lo puede atravesar. */
+function activeGuardianTouch222(g){
+  return Boolean(g&&sameCell(player,g)&&!(isSloth222(g)&&slothSleeping222(g)));
+}
+guardianTouchesNito21=function(){
+  if(nitoIsInvulnerable21())return false;
+  return activeGuardianTouch222(guardian)||activeGuardianTouch222(extraGuardian);
+};
+
+function drawSlothDream222(g,size,ox,oy){
+  if(!g||!isSloth222(g)||!slothSleeping222(g))return;
+  const cx=ox+(g.x+.5)*size,cy=oy+(g.y+.5)*size;
+  ctx.save();
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillStyle='#4d5f8a';ctx.font=`900 ${Math.max(10,size*.14)}px Arial`;
+  for(let i=0;i<3;i++){
+    const drift=(animTime*18+i*9)%26;
+    ctx.globalAlpha=.9-i*.18;
+    ctx.fillText('Z',cx+size*(.20+i*.10),cy-size*(.28+i*.12)-drift*.12);
+  }
+  ctx.restore();
+}
+
+function safeBirdDropCell222(seed){
+  const avoid=occupiedKeys();
+  avoid.add(cellKey(levelStart));avoid.add(cellKey(exit));
+  if(guardian)avoid.add(cellKey(guardian));
+  if(extraGuardian)avoid.add(cellKey(extraGuardian));
+  for(const w of birdWhirlpools222)avoid.add(cellKey(w));
+  const dist=distancesFrom(levelStart);
+  const cells=allCells().filter(c=>!avoid.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0&&(dist.get(cellKey(c))||0)>2);
+  if(!cells.length)return null;
+  cells.sort((a,b)=>((a.x*17+a.y*31+seed)%97)-((b.x*17+b.y*31+seed)%97));
+  return cells[Math.floor(cells.length*.55)]||cells[0];
+}
+
+function startBirdEvent222(t){
+  const fromLeft=((level+Math.floor(t/1000))%2===0);
+  const drop=safeBirdDropCell222(level*37+Math.floor(t/1000));
+  if(!drop){birdNextAt222=t+BIRD_REPEAT_MS_222;return}
+  birdEvent222={start:t,fromLeft,drop,dropped:false};
+  birdNextAt222=t+BIRD_REPEAT_MS_222;
+}
+
+function updateBirds222(t){
+  birdWhirlpools222=birdWhirlpools222.filter(w=>w.expiresAt>t);
+  if(!playing||!BIRD_LEVELS_222.has(level))return;
+  if(!birdEvent222&&t>=birdNextAt222)startBirdEvent222(t);
+  if(!birdEvent222)return;
+  const progress=(t-birdEvent222.start)/BIRD_FLIGHT_MS_222;
+  if(!birdEvent222.dropped&&progress>=.52){
+    birdEvent222.dropped=true;
+    birdWhirlpools222.push({...birdEvent222.drop,expiresAt:t+BIRD_WHIRLPOOL_LIFE_MS_222,used:false});
+    tone(740,.08,'triangle',.025);tone(520,.12,'triangle',.02,.07);
+  }
+  if(progress>=1)birdEvent222=null;
+}
+
+function drawBirdEvent222(size,ox,oy){
+  if(!birdEvent222)return;
+  const p=Math.max(0,Math.min(1,(performance.now()-birdEvent222.start)/BIRD_FLIGHT_MS_222));
+  const startX=birdEvent222.fromLeft?ox-size:ox+cols*size+size;
+  const endX=birdEvent222.fromLeft?ox+cols*size+size:ox-size;
+  const x=startX+(endX-startX)*p;
+  const y=oy+size*(.55+Math.sin(p*Math.PI)*.35);
+  ctx.save();ctx.translate(x,y);if(!birdEvent222.fromLeft)ctx.scale(-1,1);
+  ctx.rotate(Math.sin(animTime*8)*.05);
+  ctx.font=`${Math.max(25,size*.52)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('🐦',0,0);ctx.restore();
+}
+
+function drawBirdWhirlpools222(size,ox,oy){
+  const now=performance.now();
+  for(const w of birdWhirlpools222){
+    const cx=ox+(w.x+.5)*size,cy=oy+(w.y+.5)*size;
+    const life=Math.max(0,Math.min(1,(w.expiresAt-now)/BIRD_WHIRLPOOL_LIFE_MS_222));
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(animTime*3.2);
+    ctx.globalAlpha=Math.min(1,life*2.5);
+    ctx.strokeStyle='#7654c7';ctx.lineWidth=Math.max(3,size*.055);
+    for(let r=.09;r<.35;r+=.075){ctx.beginPath();ctx.arc(0,0,size*r,0,Math.PI*1.55);ctx.stroke();ctx.rotate(.78)}
+    ctx.restore();
+  }
+}
+
+/* Tocar un remolino dejado por un pájaro produce el mismo efecto de 15 s. */
+const checkCell222Base=checkCell;
+checkCell=function(){
+  const t=performance.now();
+  for(const w of birdWhirlpools222){
+    if(!w.used&&w.expiresAt>t&&sameCell(player,w)){
+      w.used=true;
+      activateWhirlpoolEffect21();
+      w.expiresAt=0;
+      break;
+    }
+  }
+  checkCell222Base();
+};
+
+const buildLevel222Base=buildLevel;
+buildLevel=function(n){
+  birdEvent222=null;birdWhirlpools222=[];
+  birdNextAt222=performance.now()+BIRD_FIRST_DELAY_MS_222;
+  buildLevel222Base(n);
+  for(const g of [guardian,extraGuardian])if(isSloth222(g))g.slothCycleStart222=performance.now();
+};
+
+/* Se integra al bucle existente sin crear un segundo requestAnimationFrame. */
+const advanceGuardian222Base=advanceGuardian;
+advanceGuardian=function(t){updateBirds222(t);advanceGuardian222Base(t)};
+
+const draw222Base=draw;
+draw=function(){
+  draw222Base();
+  if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  drawSlothDream222(guardian,size,ox,oy);
+  drawSlothDream222(extraGuardian,size,ox,oy);
+  drawBirdWhirlpools222(size,ox,oy);
+  drawBirdEvent222(size,ox,oy);
+};
+</script>
 </body>
 </html>
