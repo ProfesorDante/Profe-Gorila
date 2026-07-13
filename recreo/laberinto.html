@@ -1,0 +1,2766 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Nito y el Laberinto</title>
+<style>
+:root{--ink:#17352b;--paper:#fff8df;--leaf:#3f8f55;--deep:#214f3a;--gold:#f4c84b;--wood:#8b5a2b}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(#bfe9ef,#dff4dc);color:var(--ink)}
+body{display:flex;justify-content:center;align-items:center;padding:10px;overflow-x:hidden}.app{width:min(1000px,100%);background:#f7f1d5;border:4px solid #3f6e47;border-radius:24px;overflow:hidden;box-shadow:0 18px 48px rgba(30,70,45,.28)}
+header{padding:12px 16px;background:linear-gradient(180deg,#315f3c,#23492f);color:#fff8df;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.title{font-weight:900;font-size:22px;text-shadow:0 2px #173522}.hud{display:flex;gap:8px;flex-wrap:wrap;font-weight:800}.pill{background:#fff8df;color:#264c35;border:2px solid #d6b85c;border-radius:999px;padding:7px 11px;box-shadow:inset 0 2px #fff,0 2px rgba(0,0,0,.2);white-space:nowrap}
+.game-wrap{position:relative;background:#b9df96;padding:10px}canvas{display:block;width:100%;height:auto;max-height:66vh;object-fit:contain;background:#9fd179;border:4px solid #5d8a45;border-radius:18px;touch-action:none}.overlay{position:absolute;inset:10px;background:rgba(19,50,38,.58);display:flex;align-items:center;justify-content:center;padding:18px;border-radius:18px;z-index:3}.card{width:min(720px,94%);background:var(--paper);border:4px solid var(--wood);border-radius:22px;padding:22px;text-align:center;box-shadow:0 10px #5d3a1f}.card h1,.card h2{margin:0 0 12px;color:#285d3a}.card p{font-size:18px;line-height:1.4;margin:10px 0}.buttons{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}button{border:0;border-radius:16px;padding:13px 18px;font-size:17px;font-weight:900;color:white;background:#3e8e50;box-shadow:0 5px #245f34;cursor:pointer}button.secondary{background:#4f78a8;box-shadow:0 5px #2f4f76}button.soft{background:#8a6a43;box-shadow:0 5px #5e452d}button:active{transform:translateY(3px);box-shadow:0 2px #333}.controls{padding:12px 16px 16px;background:#294a35}.pad{display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr;gap:8px;max-width:280px;margin:auto}.control{min-height:58px;font-size:26px;border-radius:50%;background:radial-gradient(circle at 35% 28%,#6eb7ef,#477db7 68%,#2d5683);border:3px solid #b8dcff;box-shadow:0 6px #1d3959;touch-action:none}#up{grid-column:2}#left{grid-column:1}#down{grid-column:2}#right{grid-column:3}.foot{text-align:center;padding:8px 12px;background:#173522;color:#d8efd8;font-size:13px;font-weight:700}.level-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}.level-btn{padding:10px 6px;border-radius:12px;font-size:15px}.level-btn.locked{opacity:.38;filter:grayscale(1)}.legend{font-size:14px;color:#4e674d;margin-top:8px}
+@media(max-width:700px){body{padding:4px;align-items:flex-start}.app{border-radius:14px}.title{font-size:17px;width:100%;text-align:center}header{padding:8px;justify-content:center}.pill{font-size:12px;padding:5px 8px}.game-wrap{padding:5px}.overlay{inset:5px}.card{padding:16px}.card h1{font-size:26px}.card p{font-size:15px}canvas{max-height:58vh;border-radius:12px}.controls{padding:8px 10px 12px}.control{min-height:54px;font-size:24px}.foot{font-size:11px}}
+
+.event-pill{background:#fff3b0;color:#5b421d;border-color:#c99b2f}
+.roster{margin-top:12px;padding:10px;border-radius:14px;background:#eef6df;border:2px solid #a9bd7c;text-align:left}
+.found-names{color:#2f8a46;font-weight:900}.missing-names{color:#8a6a43;font-weight:800}
+
+html,body,.app,.game-wrap,canvas,.controls,.pad,.control,button{
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+  -webkit-tap-highlight-color:transparent;
+}
+body,.controls,.pad,.control{
+  touch-action:manipulation;
+  overscroll-behavior:none;
+}
+.control{
+  -webkit-user-drag:none;
+}
+.control.pressed{
+  transform:translateY(3px) scale(.98);
+  box-shadow:0 3px #1d3959;
+}
+
+
+/* Vista móvil optimizada: tablero vertical y controles compactos. */
+@media(max-width:700px){
+  html,body{height:100%;min-height:100%;overflow:hidden}
+  body{padding:0;align-items:stretch}
+  .app{
+    width:100%;height:100dvh;min-height:100dvh;border:0;border-radius:0;
+    display:flex;flex-direction:column;box-shadow:none
+  }
+  header{
+    flex:0 0 auto;display:grid;grid-template-columns:auto minmax(0,1fr);
+    align-items:center;gap:6px;padding:5px 6px;flex-wrap:nowrap
+  }
+  .title{width:auto;font-size:13px;line-height:1.05;text-align:left;white-space:nowrap}
+  .hud{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px}
+  .pill{
+    min-width:0;padding:3px 5px;font-size:10px;text-align:center;
+    overflow:hidden;text-overflow:ellipsis
+  }
+  .game-wrap{
+    flex:1 1 auto;min-height:0;padding:3px;
+    display:flex;align-items:center;justify-content:center
+  }
+  canvas{
+    width:auto;max-width:100%;height:auto;
+    max-height:calc(100dvh - 151px);
+    border-width:3px;border-radius:9px
+  }
+  .controls{flex:0 0 auto;padding:3px 6px 5px}
+  .pad{width:168px;max-width:168px;gap:3px}
+  .control{
+    min-height:38px;height:38px;padding:2px;font-size:19px;
+    border-width:2px;box-shadow:0 3px #1d3959
+  }
+  .control.pressed{box-shadow:0 1px #1d3959}
+  .foot{display:none}
+  .overlay{inset:3px;padding:7px;border-radius:9px}
+  .card{
+    width:min(96%,560px);max-height:calc(100dvh - 72px);
+    overflow:auto;padding:12px;border-width:3px;border-radius:15px;
+    box-shadow:0 5px #5d3a1f
+  }
+  .card h1{font-size:21px}.card h2{font-size:20px}
+  .card p{font-size:13px;line-height:1.28;margin:6px 0}
+  .buttons{gap:6px;margin-top:9px}
+  button{padding:9px 11px;font-size:13px;border-radius:11px;box-shadow:0 3px #245f34}
+  .level-grid{grid-template-columns:repeat(5,1fr);gap:5px;margin-top:8px}
+  .level-btn{padding:7px 3px;font-size:12px}
+  .roster{font-size:12px;padding:7px;margin-top:7px}
+  .legend{font-size:11px;margin-top:5px}
+}
+@media(max-width:370px){
+  .title{font-size:11px}
+  .pill{font-size:9px;padding:3px}
+  .pad{width:150px;max-width:150px}
+  .control{height:35px;min-height:35px}
+  canvas{max-height:calc(100dvh - 142px)}
+}
+@media(max-width:700px) and (orientation:landscape){
+  header{grid-template-columns:auto 1fr;padding:3px 6px}
+  .hud{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .game-wrap{padding:2px 76px 2px 2px}
+  canvas{max-height:calc(100dvh - 45px)}
+  .controls{
+    position:absolute;right:4px;top:50%;transform:translateY(-42%);
+    width:70px;padding:2px;background:rgba(41,74,53,.88);border-radius:12px;z-index:2
+  }
+  .pad{width:66px;max-width:66px;gap:2px}
+  .control{height:31px;min-height:31px;font-size:15px}
+  .title{font-size:12px}
+  .pill{font-size:9px;padding:2px 4px}
+}
+
+
+
+
+/* === FINAL DE LA AVENTURA 3.7 === */
+#finalAdventureOverlay{position:fixed;inset:0;z-index:60;background:rgba(10,29,22,.92);display:none;align-items:center;justify-content:center;padding:14px}
+.final-adventure-card{width:min(1120px,96vw);max-height:96dvh;overflow:auto;background:#fff8df;border:4px solid #8b5a2b;border-radius:22px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);text-align:center}
+.final-adventure-image{display:block;width:100%;height:auto;max-height:76dvh;object-fit:contain;border-radius:14px;border:3px solid #5d8a45;background:#dff4dc}
+.final-adventure-actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;padding:12px 4px 4px}
+.final-adventure-actions button{min-width:190px}
+@media(max-width:700px){
+  #finalAdventureOverlay{padding:4px}
+  .final-adventure-card{width:100%;max-height:100dvh;border-radius:12px;padding:6px;border-width:3px}
+  .final-adventure-image{max-height:calc(100dvh - 112px);border-radius:8px;border-width:2px}
+  .final-adventure-actions{gap:6px;padding:7px 2px 2px}
+  .final-adventure-actions button{min-width:0;flex:1 1 135px;padding:9px 8px;font-size:13px}
+}
+@media(max-width:700px) and (orientation:landscape){
+  .final-adventure-card{display:grid;grid-template-columns:minmax(0,1fr) 175px;gap:7px;align-items:center;overflow:hidden}
+  .final-adventure-image{max-height:calc(100dvh - 14px)}
+  .final-adventure-actions{flex-direction:column;padding:2px}
+  .final-adventure-actions button{width:100%;flex:0 0 auto}
+}
+
+</style>
+
+<style>
+/* Aventura 2.0 */
+#mechanicPill{background:#e8f7ff;color:#25556b;border-color:#78b8d0}
+.secret-mark{pointer-events:none}
+@media(max-width:700px){
+  #mechanicPill{grid-column:span 2}
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+<header><div class="title">🐒 NITO Y EL LABERINTO</div><div class="hud"><div class="pill">Nivel <span id="levelLabel">1</span>/20</div><div class="pill">🍌 <span id="bananaLabel">0</span>/<span id="bananaTotal">0</span></div><div class="pill">👣 <span id="stepsLabel">0</span></div><div id="eventPill" class="pill event-pill" style="display:none">✨ <span id="eventLabel"></span></div></div></header>
+<div class="game-wrap"><canvas id="game" width="900" height="620"></canvas>
+<div id="startOverlay" class="overlay"><div class="card"><h1>🌳 El primer día de Nito</h1><p>Nito es nuevo en la Selva del Gran Árbol y quiere llegar a la escuela.</p><p>Ayudalo a encontrar el camino. En algunos rincones hay bananas y compañeros de la Escuela del Gran Árbol esperándolo.</p><div class="buttons"><button onclick="beginBananaRun(1)">▶ Jugar</button><button class="secondary" onclick="showLevels()">🗺 Elegir nivel</button></div><div class="legend">Teclado: flechas o WASD · Celular/tablet: botones en pantalla</div></div></div>
+<div id="messageOverlay" class="overlay" style="display:none"><div class="card"><h2 id="messageTitle">¡Muy bien!</h2><p id="messageText"></p><div class="buttons" id="messageButtons"></div></div></div>
+<div id="levelsOverlay" class="overlay" style="display:none"><div class="card"><h2>Elegí un nivel</h2><div id="levelGrid" class="level-grid"></div><div class="buttons"><button class="soft" onclick="hideLevels()">Volver</button></div></div></div>
+</div>
+<div class="controls"><div class="pad"><button id="up" class="control">▲</button><button id="left" class="control">◀</button><button id="down" class="control">▼</button><button id="right" class="control">▶</button></div></div>
+<div class="foot">Encontrá la salida con calma. No hay reloj, no hay castigos y siempre podés volver a intentar.</div>
+</div>
+
+
+<div id="finalAdventureOverlay" aria-hidden="true">
+  <div class="final-adventure-card" role="dialog" aria-modal="true" aria-label="Aventura completada">
+    <img id="finalAdventureImage" class="final-adventure-image" src="../img/laberintofinal.png" alt="Nito y sus amigos celebran frente a la Escuela del Gran Árbol">
+    <div class="final-adventure-actions">
+      <button onclick="downloadFinalMemory()">📷 Guardar recuerdo</button>
+      <button class="secondary" onclick="replayAfterFinal()">↻ Volver a jugar</button>
+      <button class="soft" onclick="chooseLevelAfterFinal()">🗺 Elegir nivel</button>
+    </div>
+  </div>
+</div>
+<script>
+'use strict';
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const levelLabel=document.getElementById('levelLabel'),bananaLabel=document.getElementById('bananaLabel'),bananaTotal=document.getElementById('bananaTotal'),stepsLabel=document.getElementById('stepsLabel');
+const TOTAL_LEVELS=20,DIRS=[{dx:0,dy:-1,key:'up'},{dx:1,dy:0,key:'right'},{dx:0,dy:1,key:'down'},{dx:-1,dy:0,key:'left'}];
+const CLASSMATES=['Franchu','Martu','Lucy','Jose','Samy','Ori','Rousy','Vicky chiquita','Vicky grande','Anto','Vitti','Ramirito','Santi','Francis','Leandrus','Feli','Beltru','Lauti'];
+const SPECIAL_EVENTS={3:{type:'radio',label:'Radio de la Selva',icon:'📻'},6:{type:'glasses',label:'Anteojos Arcoíris',icon:'🌈'},9:{type:'trumpet',label:'Trompeta del Gran Árbol',icon:'🎺'},12:{type:'radio',label:'Radio Veloz',icon:'📻'},15:{type:'glasses',label:'Anteojos Nocturnos',icon:'🕶️'},18:{type:'trumpet',label:'Trompeta Dorada',icon:'🎺'}};
+const PALETTES={normal:{sky1:'#bfe9ef',sky2:'#8dcf74',cell1:'#c9e9a0',cell2:'#c3e397',wall:'#35643f',board:'#d8efb4',outline:'#527b45'},rainbow:{sky1:'#f6c7ef',sky2:'#a9d7ff',cell1:'#ffe5a7',cell2:'#c6f0d1',wall:'#6f5aa6',board:'#f8e8bd',outline:'#8a6ab1'},night:{sky1:'#27335f',sky2:'#476b72',cell1:'#9fc5a0',cell2:'#7aa989',wall:'#294c47',board:'#b9cfaa',outline:'#42645a'}};
+let level=1,maze=null,cols=9,rows=7,player={x:0,y:0},levelStart={x:0,y:0},exit={x:0,y:0},bananas=[],friend=null,collected=0,steps=0,playing=false,moveLock=false,unlocked=Math.max(1,Number(localStorage.getItem('nitoUnlocked')||1)),audioCtx=null;
+let animTime=0,musicTimer=null,musicStep=0,musicOn=true;let levelsReturnTo='start';let foundClassmates=JSON.parse(localStorage.getItem('nitoFoundClassmates')||'[]');let specialItem=null,specialActive=false,currentPalette='normal',musicTempo=1;
+function seededRandom(seed){let s=seed>>>0;return()=>{s+=0x6D2B79F5;let t=s;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+function dimensionsForLevel(n){const band=Math.floor((n-1)/4);return{cols:7+band*2,rows:7+band*2}}
+function generateMaze(c,r,seed){const rand=seededRandom(seed),grid=Array.from({length:r},()=>Array.from({length:c},()=>({visited:false,walls:{up:true,right:true,down:true,left:true}})));const stack=[{x:0,y:0}];grid[0][0].visited=true;while(stack.length){const cur=stack[stack.length-1],opts=[];DIRS.forEach(d=>{const nx=cur.x+d.dx,ny=cur.y+d.dy;if(nx>=0&&ny>=0&&nx<c&&ny<r&&!grid[ny][nx].visited)opts.push({...d,nx,ny})});if(!opts.length){stack.pop();continue}const p=opts[Math.floor(rand()*opts.length)],opp={up:'down',down:'up',left:'right',right:'left'};grid[cur.y][cur.x].walls[p.key]=false;grid[p.ny][p.nx].walls[opp[p.key]]=false;grid[p.ny][p.nx].visited=true;stack.push({x:p.nx,y:p.ny})}return grid}
+function farthestCell(sx,sy){const q=[{x:sx,y:sy,d:0}],seen=new Set([sx+','+sy]);let best=q[0];while(q.length){const cur=q.shift();if(cur.d>best.d)best=cur;for(const d of DIRS){if(!maze[cur.y][cur.x].walls[d.key]){const nx=cur.x+d.dx,ny=cur.y+d.dy,k=nx+','+ny;if(!seen.has(k)){seen.add(k);q.push({x:nx,y:ny,d:cur.d+1})}}}}return best}
+function randomOpenCells(count,seed,forbidden){const rand=seededRandom(seed),cells=[];for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const k=x+','+y;if(!forbidden.has(k))cells.push({x,y})}for(let i=cells.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[cells[i],cells[j]]=[cells[j],cells[i]]}return cells.slice(0,count)}
+function buildLevel(n){level=n;const d=dimensionsForLevel(n);cols=d.cols;rows=d.rows;maze=generateMaze(cols,rows,8241+n*9973);player={x:0,y:0};exit=farthestCell(0,0);const forbidden=new Set(['0,0',exit.x+','+exit.y]),bananaCount=Math.min(2+Math.floor(n/3),7),hasClassmate=n<=18,hasSpecial=Boolean(SPECIAL_EVENTS[n]),cells=randomOpenCells(bananaCount+(hasClassmate?1:0)+(hasSpecial?1:0),441+n*331,forbidden);bananas=cells.slice(0,bananaCount).map(c=>({...c,got:false}));let idx=bananaCount;friend=hasClassmate?{...cells[idx++],found:false,name:CLASSMATES[n-1]}:null;specialItem=hasSpecial?{...cells[idx++],got:false,...SPECIAL_EVENTS[n]}:null;specialActive=false;currentPalette='normal';musicTempo=1;applyRunRotationToBaseLevel();updateEventHud();collected=0;steps=0;playing=true;updateHud();draw()}
+function updateHud(){levelLabel.textContent=level;bananaLabel.textContent=collected;bananaTotal.textContent=bananas.length;stepsLabel.textContent=steps}
+function cellMetrics(){const margin=30,cw=(canvas.width-margin*2)/cols,ch=(canvas.height-margin*2)/rows,size=Math.min(cw,ch),boardW=size*cols,boardH=size*rows;return{size,ox:(canvas.width-boardW)/2,oy:(canvas.height-boardH)/2}}
+function roundRect(x,y,w,h,r,fill,stroke){ctx.beginPath();ctx.roundRect(x,y,w,h,r);if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.strokeStyle=stroke;ctx.stroke()}}
+function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);drawBackground();if(!maze)return;const{size,ox,oy}=cellMetrics(),pal=PALETTES[currentPalette];roundRect(ox-10,oy-10,size*cols+20,size*rows+20,18,pal.board,pal.outline);for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const px=ox+x*size,py=oy+y*size;ctx.fillStyle=((x+y)%2===0)?pal.cell1:pal.cell2;ctx.fillRect(px,py,size,size);drawTinyLeaves(px,py,size,x,y)}ctx.lineWidth=Math.max(5,size*.11);ctx.lineCap='round';ctx.strokeStyle=pal.wall;for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){const c=maze[y][x],px=ox+x*size,py=oy+y*size;ctx.beginPath();if(c.walls.up){ctx.moveTo(px,py);ctx.lineTo(px+size,py)}if(c.walls.right){ctx.moveTo(px+size,py);ctx.lineTo(px+size,py+size)}if(c.walls.down){ctx.moveTo(px,py+size);ctx.lineTo(px+size,py+size)}if(c.walls.left){ctx.moveTo(px,py);ctx.lineTo(px,py+size)}ctx.stroke();drawHedgeDetails(c,px,py,size,x,y)}drawExit(exit.x,exit.y,size,ox,oy);bananas.forEach((b,i)=>{if(!b.got)drawBanana(b.x,b.y,size,ox,oy,i)});if(friend&&!friend.found)drawFriend(friend.x,friend.y,size,ox,oy,friend.name);if(specialItem&&!specialItem.got)drawSpecialItem(specialItem,size,ox,oy);drawNito(player.x,player.y,size,ox,oy)}
+function drawBackground(){const pal=PALETTES[currentPalette],g=ctx.createLinearGradient(0,0,0,canvas.height);g.addColorStop(0,pal.sky1);g.addColorStop(1,pal.sky2);ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle=currentPalette==='night'?'rgba(215,245,255,.10)':'rgba(39,103,55,.15)';for(let i=0;i<22;i++){const x=(i*83+37)%canvas.width,y=40+(i*59)%canvas.height;ctx.beginPath();ctx.arc(x,y,18+(i%3)*8,0,Math.PI*2);ctx.fill()}for(let i=0;i<8;i++){const x=(i*137+animTime*8*(i%2?1:-1)+1200)%1100-100,y=45+(i*67)%500+Math.sin(animTime*1.4+i)*10;drawButterfly(x,y,5+(i%3))}for(let i=0;i<10;i++){const x=(i*91+40)%canvas.width,y=70+(i*53)%canvas.height;ctx.fillStyle=currentPalette==='night'?`rgba(180,225,255,${.25+.2*Math.sin(animTime*2+i)})`:`rgba(255,245,140,${.25+.2*Math.sin(animTime*2+i)})`;ctx.beginPath();ctx.arc(x,y,2.2,0,Math.PI*2);ctx.fill()}}
+function drawButterfly(x,y,s){ctx.save();ctx.translate(x,y);const flap=.55+.45*Math.sin(animTime*7+x);ctx.fillStyle='rgba(255,190,76,.75)';ctx.beginPath();ctx.ellipse(-s*.45,0,s*.55*flap,s*.34,-.4,0,Math.PI*2);ctx.ellipse(s*.45,0,s*.55*flap,s*.34,.4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#5f4730';ctx.fillRect(-1,-s*.25,2,s*.5);ctx.restore()}
+function drawHedgeDetails(c,px,py,size,x,y){if((x*13+y*7)%3!==0)return;ctx.fillStyle='#4e8a4e';const r=Math.max(2,size*.035);if(c.walls.up){ctx.beginPath();ctx.arc(px+size*.3,py,r,0,Math.PI*2);ctx.arc(px+size*.7,py,r,0,Math.PI*2);ctx.fill()}if(c.walls.left){ctx.beginPath();ctx.arc(px,py+size*.35,r,0,Math.PI*2);ctx.arc(px,py+size*.72,r,0,Math.PI*2);ctx.fill()}if((x+y)%7===0){ctx.fillStyle='#f5d36a';ctx.beginPath();ctx.arc(px+size*.18,py+size*.82,r*.65,0,Math.PI*2);ctx.fill()}}
+function drawTinyLeaves(px,py,size,x,y){if((x*7+y*11)%6!==0)return;ctx.save();ctx.translate(px+size*.72,py+size*.28);ctx.rotate((x+y)*.4);ctx.fillStyle='rgba(48,116,56,.18)';ctx.beginPath();ctx.ellipse(0,0,size*.10,size*.045,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+function drawNito(x,y,size,ox,oy){const cx=ox+x*size+size/2,cy=oy+y*size+size/2+Math.sin(animTime*4)*size*.018,s=size*.34;ctx.save();ctx.translate(cx,cy);ctx.fillStyle='#7a4b2a';ctx.beginPath();ctx.arc(0,0,s*.55,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-s*.52,-s*.12,s*.23,0,Math.PI*2);ctx.arc(s*.52,-s*.12,s*.23,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d7a46b';ctx.beginPath();ctx.ellipse(0,s*.09,s*.40,s*.33,0,0,Math.PI*2);ctx.fill();const blink=Math.sin(animTime*.9)>0.985;ctx.strokeStyle='#17251f';ctx.fillStyle='#fff';ctx.lineWidth=2;if(blink){ctx.beginPath();ctx.moveTo(-s*.27,-s*.13);ctx.lineTo(-s*.08,-s*.13);ctx.moveTo(s*.08,-s*.13);ctx.lineTo(s*.27,-s*.13);ctx.stroke()}else{ctx.beginPath();ctx.arc(-s*.17,-s*.13,s*.10,0,Math.PI*2);ctx.arc(s*.17,-s*.13,s*.10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#17251f';ctx.beginPath();ctx.arc(-s*.17,-s*.13,s*.045,0,Math.PI*2);ctx.arc(s*.17,-s*.13,s*.045,0,Math.PI*2);ctx.fill()}ctx.strokeStyle='#5d3c25';ctx.lineWidth=Math.max(2,s*.05);ctx.beginPath();ctx.arc(0,s*.09,s*.20,.18,Math.PI-.18);ctx.stroke();ctx.restore()}
+function drawBanana(x,y,size,ox,oy,i=0){const cx=ox+x*size+size/2,cy=oy+y*size+size/2+Math.sin(animTime*3+i)*size*.055;ctx.save();ctx.translate(cx,cy);ctx.rotate(-.48);ctx.shadowColor='rgba(255,224,70,.95)';ctx.shadowBlur=Math.max(7,size*.16);ctx.strokeStyle='#8f6810';ctx.lineWidth=Math.max(9,size*.19);ctx.beginPath();ctx.arc(0,0,size*.20,.18,2.42);ctx.stroke();ctx.strokeStyle='#ffd83d';ctx.lineWidth=Math.max(7,size*.145);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle='#fff29a';ctx.lineWidth=Math.max(2,size*.035);ctx.stroke();ctx.fillStyle='#5d4315';ctx.beginPath();ctx.arc(size*.19*Math.cos(.18),size*.19*Math.sin(.18),Math.max(2,size*.035),0,Math.PI*2);ctx.arc(size*.19*Math.cos(2.42),size*.19*Math.sin(2.42),Math.max(2,size*.035),0,Math.PI*2);ctx.fill();ctx.restore()}
+function drawFriend(x,y,size,ox,oy,name){const cx=ox+x*size+size/2,cy=oy+y*size+size/2+Math.sin(animTime*3.2)*size*.025,s=size*.28;ctx.save();ctx.translate(cx,cy);ctx.rotate(Math.sin(animTime*3)*.025);ctx.fillStyle='#8d5a34';ctx.beginPath();ctx.arc(0,0,s*.55,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-s*.48,-s*.1,s*.2,0,Math.PI*2);ctx.arc(s*.48,-s*.1,s*.2,0,Math.PI*2);ctx.fill();ctx.fillStyle='#f2c17f';ctx.beginPath();ctx.ellipse(0,s*.08,s*.38,s*.29,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(-s*.13,-s*.12,s*.08,0,Math.PI*2);ctx.arc(s*.13,-s*.12,s*.08,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#7a4b2a';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(s*.35,s*.18);ctx.lineTo(s*.62,s*(.02+.1*Math.sin(animTime*6)));ctx.stroke();ctx.restore();ctx.font=`900 ${Math.max(11,size*.16)}px Arial`;ctx.textAlign='center';ctx.fillStyle='#225c35';ctx.fillText(name,cx,cy-size*.38)}
+function drawExit(x,y,size,ox,oy){const px=ox+x*size,py=oy+y*size;ctx.save();ctx.translate(px+size/2,py+size/2);ctx.fillStyle='#8b5a2b';ctx.fillRect(-size*.28,-size*.18,size*.56,size*.38);ctx.fillStyle='#f7e4b1';ctx.fillRect(-size*.18,-size*.08,size*.36,size*.26);ctx.fillStyle='#a43f3f';ctx.beginPath();ctx.moveTo(-size*.34,-size*.18);ctx.lineTo(0,-size*.45);ctx.lineTo(size*.34,-size*.18);ctx.closePath();ctx.fill();ctx.fillStyle='#4b79a8';ctx.fillRect(-size*.07,size*.02,size*.14,size*.16);ctx.restore()}
+
+function drawSpecialItem(item,size,ox,oy){const cx=ox+item.x*size+size/2,cy=oy+item.y*size+size/2+Math.sin(animTime*3)*size*.045;ctx.save();ctx.translate(cx,cy);ctx.font=`${Math.max(24,size*.45)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.icon,0,0);ctx.font=`900 ${Math.max(10,size*.14)}px Arial`;ctx.fillStyle='#5b421d';ctx.fillText(item.label,0,-size*.32);ctx.restore()}
+function updateEventHud(){const p=document.getElementById('eventPill'),l=document.getElementById('eventLabel');if(specialActive&&specialItem){p.style.display='block';l.textContent=specialItem.icon+' '+specialItem.label}else{p.style.display='none';l.textContent=''}}
+function activateSpecial(){if(!specialItem||specialItem.got)return;specialItem.got=true;specialActive=true;if(specialItem.type==='radio'){musicTempo=1.25;restartMusic();radioSound();showToast('📻 ¡La música se puso más alegre!')}else if(specialItem.type==='trumpet'){trumpetFanfare();showToast('🎺 ¡La trompeta acompaña a Nito!')}else{currentPalette=level===15?'night':'rainbow';glassesSound();showToast('🌈 ¡El laberinto cambió de colores!')}updateEventHud()}
+function restartMusic(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}startMusic()}
+function radioSound(){tone(523,.12,'square',.035);tone(659,.12,'square',.035,.10);tone(784,.22,'square',.04,.20)}
+function trumpetFanfare(){tone(392,.18,'sawtooth',.035);tone(523,.18,'sawtooth',.04,.16);tone(659,.30,'sawtooth',.045,.32)}
+function glassesSound(){tone(440,.12,'sine',.03);tone(554,.12,'sine',.03,.10);tone(659,.18,'sine',.035,.20)}
+
+function tryMove(dx,dy){if(!playing||moveLock)return;const key=dx===1?'right':dx===-1?'left':dy===1?'down':'up',cell=maze[player.y][player.x];if(cell.walls[key]){bumpSound();return}player.x+=dx;player.y+=dy;steps++;moveLock=true;setTimeout(()=>moveLock=false,70);checkCell();updateHud();draw()}
+function checkCell(){for(const b of bananas){if(!b.got&&b.x===player.x&&b.y===player.y){b.got=true;collected++;pluckSound()}}if(friend&&!friend.found&&friend.x===player.x&&friend.y===player.y){friend.found=true;friendSound();if(!foundClassmates.includes(friend.name)){foundClassmates.push(friend.name);localStorage.setItem('nitoFoundClassmates',JSON.stringify(foundClassmates))}showToast(`¡Encontraste a ${friend.name}!`)}if(specialItem&&!specialItem.got&&specialItem.x===player.x&&specialItem.y===player.y)activateSpecial();if(player.x===exit.x&&player.y===exit.y)finishLevel()}
+function finishLevel(){playing=false;winSound();if(level<TOTAL_LEVELS){unlocked=Math.max(unlocked,level+1);localStorage.setItem('nitoUnlocked',unlocked)}const all=collected===bananas.length,thisFriend=friend?(friend.found?`Encontraste a <strong>${friend.name}</strong>.`:`<strong>${friend.name}</strong> todavía espera en este laberinto.`):'En este nivel no había un compañero nuevo.',foundNow=CLASSMATES.filter(n=>foundClassmates.includes(n)),missingNow=CLASSMATES.filter(n=>!foundClassmates.includes(n)),eventText=specialItem?(specialItem.got?`<br>Evento: <strong>${specialItem.icon} ${specialItem.label}</strong>.`:`<br>Quedó un objeto especial por descubrir.`):'';document.getElementById('messageTitle').textContent=level===TOTAL_LEVELS?'🏫 ¡Nito llegó a la escuela!':'🌿 ¡Camino encontrado!';document.getElementById('messageText').innerHTML=`Bananas: <strong>${collected}/${bananas.length}</strong> · Pasos: <strong>${steps}</strong>.<br>${all?'¡Encontraste todas las bananas!':'Podés volver para buscar las que faltan.'}<br>${thisFriend}${eventText}<div class="roster"><strong>Compañeros encontrados:</strong><br><span class="found-names">${foundNow.length?foundNow.join(', '):'Todavía ninguno'}</span><br><br><strong>Compañeros que faltan:</strong><br><span class="missing-names">${missingNow.length?missingNow.join(', '):'¡Ya están todos!'}</span></div>`;const box=document.getElementById('messageButtons');box.innerHTML='';if(level<TOTAL_LEVELS)box.appendChild(makeButton('Siguiente nivel',()=>{hideMessage();startGame(level+1)}));else box.appendChild(makeButton('Jugar otra vez',()=>{hideMessage();startGame(1)}));box.appendChild(makeButton('Elegir nivel',()=>{hideMessage();showLevels('message')},'secondary'));document.getElementById('messageOverlay').style.display='flex'}
+function makeButton(text,fn,cls=''){const b=document.createElement('button');b.textContent=text;b.onclick=fn;if(cls)b.className=cls;return b}
+function showToast(text){const el=document.createElement('div');el.textContent=text;Object.assign(el.style,{position:'absolute',left:'50%',top:'18px',transform:'translateX(-50%)',background:'#fff8df',color:'#285d3a',padding:'10px 16px',borderRadius:'999px',fontWeight:'900',border:'3px solid #8b5a2b',zIndex:5,boxShadow:'0 5px #5d3a1f'});document.querySelector('.game-wrap').appendChild(el);setTimeout(()=>el.remove(),1500)}
+function startGame(n){document.getElementById('startOverlay').style.display='none';document.getElementById('levelsOverlay').style.display='none';document.getElementById('messageOverlay').style.display='none';initAudio();startMusic();buildLevel(n)}
+function hideMessage(){document.getElementById('messageOverlay').style.display='none'}
+function showLevels(returnTo='start'){
+  levelsReturnTo=returnTo;
+  const grid=document.getElementById('levelGrid');
+  grid.innerHTML='';
+  for(let i=1;i<=TOTAL_LEVELS;i++){
+    const b=document.createElement('button');
+    b.className='level-btn'+(i>unlocked?' locked':'');
+    b.textContent=i;
+    b.disabled=i>unlocked;
+    b.onclick=()=>beginBananaRun(i);
+    grid.appendChild(b);
+  }
+  document.getElementById('levelsOverlay').style.display='flex';
+}
+function hideLevels(){
+  document.getElementById('levelsOverlay').style.display='none';
+  if(levelsReturnTo==='message'){
+    document.getElementById('messageOverlay').style.display='flex';
+  }else{
+    document.getElementById('startOverlay').style.display='flex';
+  }
+}
+function initAudio(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume()}
+function tone(freq,dur,type='sine',vol=.05,delay=0){initAudio();const t=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g).connect(audioCtx.destination);o.start(t);o.stop(t+dur+.05)}
+function pluckSound(){tone(660,.12,'triangle',.05);tone(880,.15,'triangle',.04,.08)}function friendSound(){tone(392,.15,'sine',.04);tone(523,.2,'sine',.05,.12)}function bumpSound(){tone(110,.08,'square',.025)}function winSound(){tone(523,.16,'triangle',.06);tone(659,.16,'triangle',.06,.14);tone(784,.28,'triangle',.06,.28)}
+function midi(n){return 440*Math.pow(2,(n-69)/12)}
+
+/* Piano sintetizado suave: cada nota combina dos armónicos y una caída lenta. */
+function pianoNote(note,dur=.8,vol=.018,delay=0){
+  if(!musicOn)return;
+  initAudio();
+  const t=audioCtx.currentTime+delay;
+  const master=audioCtx.createGain();
+  const filter=audioCtx.createBiquadFilter();
+  filter.type='lowpass';
+  filter.frequency.setValueAtTime(2300,t);
+  master.gain.setValueAtTime(.0001,t);
+  master.gain.exponentialRampToValueAtTime(vol,t+.025);
+  master.gain.exponentialRampToValueAtTime(.0001,t+dur);
+
+  const fundamental=audioCtx.createOscillator();
+  const harmonic=audioCtx.createOscillator();
+  const harmonicGain=audioCtx.createGain();
+  fundamental.type='triangle';
+  harmonic.type='sine';
+  fundamental.frequency.setValueAtTime(midi(note),t);
+  harmonic.frequency.setValueAtTime(midi(note)*2,t);
+  harmonic.detune.setValueAtTime(3,t);
+  harmonicGain.gain.value=.16;
+
+  fundamental.connect(filter);
+  harmonic.connect(harmonicGain).connect(filter);
+  filter.connect(master).connect(audioCtx.destination);
+  fundamental.start(t); harmonic.start(t);
+  fundamental.stop(t+dur+.08); harmonic.stop(t+dur+.08);
+}
+
+/*
+  Adaptación breve inspirada en el Nocturno Op. 9 n.º 2 de Chopin.
+  No reproduce una grabación: toda la música se genera en tiempo real.
+  Tonalidad: Mi bemol mayor. Pulso tranquilo, sin percusión.
+*/
+const nocturneMeasures=[
+  {bass:[39,46,51,55,58,63], melody:[[67,1.0],[70,.5],[67,.5],[75,1.0],[74,1.0]]},
+  {bass:[41,48,53,56,60,65], melody:[[72,1.0],[70,.5],[68,.5],[67,1.0],[65,1.0]]},
+  {bass:[43,50,55,58,62,67], melody:[[67,.75],[68,.25],[70,1.0],[74,1.0],[72,1.0]]},
+  {bass:[44,51,56,60,63,68], melody:[[70,1.0],[68,.5],[67,.5],[65,1.0],[63,1.0]]},
+  {bass:[39,46,51,55,58,63], melody:[[67,.5],[70,.5],[75,1.0],[77,.5],[75,.5],[74,1.0]]},
+  {bass:[41,48,53,56,60,65], melody:[[72,.75],[74,.25],[72,.5],[70,.5],[68,1.0],[67,1.0]]},
+  {bass:[43,50,55,58,62,67], melody:[[70,.5],[74,.5],[79,1.0],[77,.5],[75,.5],[74,1.0]]},
+  {bass:[39,46,51,55,58,63], melody:[[72,.75],[70,.25],[68,.5],[67,.5],[65,1.0],[63,1.0]]}
+];
+
+const NOCTURNE_BEAT=.52;
+const NOCTURNE_MEASURE_SECONDS=NOCTURNE_BEAT*6;
+
+function playNocturneMeasure(){
+  if(!audioCtx||!musicOn)return;
+  const measure=nocturneMeasures[musicStep%nocturneMeasures.length];
+
+  /* Mano izquierda: bajo y arpegio de seis notas. */
+  measure.bass.forEach((note,i)=>{
+    const emphasis=i===0?1.35:1;
+    pianoNote(note,NOCTURNE_BEAT*2.7,.009*emphasis,i*NOCTURNE_BEAT);
+  });
+
+  /* Mano derecha: melodía cantabile, levemente desplazada del arpegio. */
+  let cursor=.08;
+  measure.melody.forEach(([note,beats])=>{
+    pianoNote(note,Math.max(.48,beats*NOCTURNE_BEAT*1.75),.020,cursor);
+    cursor+=beats*NOCTURNE_BEAT;
+  });
+
+  if(specialActive&&specialItem&&specialItem.type==='trumpet'){
+    tone(523,.18,'sawtooth',.014,.10);
+    tone(659,.18,'sawtooth',.013,.38);
+    tone(784,.24,'sawtooth',.015,.66);
+  }
+  musicStep=(musicStep+1)%nocturneMeasures.length;
+}
+
+function startMusic(){
+  if(musicTimer)return;
+  initAudio();
+  musicStep=0;
+  playNocturneMeasure();
+  musicTimer=setInterval(playNocturneMeasure,Math.round((NOCTURNE_MEASURE_SECONDS*1000)/musicTempo));
+}
+function animate(t){animTime=t/1000;draw();requestAnimationFrame(animate)}
+window.addEventListener('keydown',e=>{const map={ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowDown:[0,1],s:[0,1],S:[0,1],ArrowLeft:[-1,0],a:[-1,0],A:[-1,0],ArrowRight:[1,0],d:[1,0],D:[1,0]};if(map[e.key]){e.preventDefault();tryMove(...map[e.key])}});
+
+let holdTimer=null;
+let holdDelayTimer=null;
+let heldButton=null;
+
+function stopHeldMove(){
+  if(holdTimer){clearInterval(holdTimer);holdTimer=null}
+  if(holdDelayTimer){clearTimeout(holdDelayTimer);holdDelayTimer=null}
+  if(heldButton){heldButton.classList.remove('pressed');heldButton=null}
+}
+
+function startHeldMove(button,dx,dy,e){
+  e.preventDefault();
+  stopHeldMove();
+  heldButton=button;
+  button.classList.add('pressed');
+
+  // Primer movimiento inmediato.
+  tryMove(dx,dy);
+
+  // Después de una pausa corta, continúa mientras se mantiene apretado.
+  holdDelayTimer=setTimeout(()=>{
+    holdTimer=setInterval(()=>tryMove(dx,dy),115);
+  },260);
+
+  try{
+    button.setPointerCapture(e.pointerId);
+  }catch(_){}
+}
+
+[['up',0,-1],['down',0,1],['left',-1,0],['right',1,0]].forEach(([id,dx,dy])=>{
+  const button=document.getElementById(id);
+  button.addEventListener('pointerdown',e=>startHeldMove(button,dx,dy,e));
+  button.addEventListener('pointerup',stopHeldMove);
+  button.addEventListener('pointercancel',stopHeldMove);
+  button.addEventListener('lostpointercapture',stopHeldMove);
+  button.addEventListener('contextmenu',e=>e.preventDefault());
+});
+
+window.addEventListener('pointerup',stopHeldMove);
+window.addEventListener('pointercancel',stopHeldMove);
+window.addEventListener('blur',stopHeldMove);
+document.addEventListener('selectstart',e=>{
+  if(e.target.closest('.controls,.control,canvas'))e.preventDefault();
+});
+document.addEventListener('dragstart',e=>{
+  if(e.target.closest('.controls,.control,canvas'))e.preventDefault();
+});
+
+function resizeCanvasForViewport(){
+  const mobile=window.innerWidth<=700;
+  const portrait=window.innerHeight>=window.innerWidth;
+  const targetW=mobile&&portrait?620:900;
+  const targetH=mobile&&portrait?820:620;
+  if(canvas.width!==targetW||canvas.height!==targetH){
+    canvas.width=targetW;
+    canvas.height=targetH;
+  }
+  draw();
+}
+window.addEventListener('resize',resizeCanvasForViewport);
+window.addEventListener('orientationchange',()=>setTimeout(resizeCanvasForViewport,80));
+resizeCanvasForViewport();
+requestAnimationFrame(animate);
+</script>
+
+<script>
+'use strict';
+
+/* =========================================================
+   NITO Y EL LABERINTO — AVENTURA 2.0
+   Nuevas mecánicas progresivas, sin assets externos.
+   ========================================================= */
+
+const ADVENTURE_CLASSMATES=[
+  'Franchu','Martu','Lucy','Jose','Samy','Ori','Rousy','Vicky chiquita',
+  'Vicky grande','Anto','Vitti','Ramirito','Santi','Francis','Leandrus',
+  'Feli','Beltru','Lauti','Profe Mona','Seño Lila'
+];
+
+const BOSS_LEVELS={
+  7:{icon:'🦍',name:'Gorila Dormilón',message:'El Gorila Dormilón te llevó con cuidado al comienzo.'},
+  13:{icon:'🐘',name:'Elefante Paseandero',message:'El Elefante Paseandero te acompañó de vuelta al inicio.'},
+  19:{icon:'🐢',name:'Tortuga Gigante',message:'La Tortuga Gigante cerró el paso. ¡Probemos otra ruta!'}
+};
+
+const WHIRLPOOL_LEVELS=new Set([8,16,20]);
+const DARK_LEVELS=new Set([11,17]);
+const FALSE_HOUSE_LEVELS=new Set([14,18,20]);
+const SECRET_LEVELS=new Set([4,5,6,9,10,12,15,18,20]);
+
+let secretLinks=[];
+let whirlpool=null;
+let controlsReversed=false;
+let falseExit=null;
+let guardian=null;
+let guardianStepAt=0;
+let guardianDir=1;
+let adventureNoticeShown=false;
+
+function cellKey(c){return c.x+','+c.y}
+function sameCell(a,b){return a&&b&&a.x===b.x&&a.y===b.y}
+function neighborsOf(x,y){
+  const out=[];
+  for(const d of DIRS){
+    if(!maze[y][x].walls[d.key]) out.push({x:x+d.dx,y:y+d.dy,key:d.key});
+  }
+  return out;
+}
+function shortestPath(start,target){
+  const q=[start],parent=new Map([[cellKey(start),null]]);
+  while(q.length){
+    const cur=q.shift();
+    if(sameCell(cur,target)) break;
+    for(const n of neighborsOf(cur.x,cur.y)){
+      const k=cellKey(n);
+      if(!parent.has(k)){parent.set(k,cur);q.push(n)}
+    }
+  }
+  const path=[];let cur=target;
+  if(!parent.has(cellKey(target))) return path;
+  while(cur){path.push(cur);cur=parent.get(cellKey(cur))}
+  return path.reverse();
+}
+function distancesFrom(start){
+  const q=[start],dist=new Map([[cellKey(start),0]]);
+  while(q.length){
+    const cur=q.shift(),d0=dist.get(cellKey(cur));
+    for(const n of neighborsOf(cur.x,cur.y)){
+      const k=cellKey(n);
+      if(!dist.has(k)){dist.set(k,d0+1);q.push(n)}
+    }
+  }
+  return dist;
+}
+function allCells(){
+  const a=[];for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)a.push({x,y});return a;
+}
+function isOuter(c){return c.x===0||c.y===0||c.x===cols-1||c.y===rows-1}
+function occupiedKeys(){
+  const s=new Set([cellKey(levelStart),cellKey(exit)]);
+  bananas.forEach(b=>s.add(cellKey(b)));
+  if(friend)s.add(cellKey(friend));
+  if(specialItem)s.add(cellKey(specialItem));
+  return s;
+}
+
+/* Coloca al compañero fuera del camino principal, preferentemente
+   en un callejón secundario que obliga a explorar. */
+function placeFriendInDetour(){
+  if(!friend) return;
+  const main=shortestPath(levelStart,exit);
+  const mainSet=new Set(main.map(cellKey));
+  const dist=distancesFrom(levelStart);
+  let candidates=allCells().filter(c=>{
+    const degree=neighborsOf(c.x,c.y).length;
+    return !mainSet.has(cellKey(c)) && degree===1 && (dist.get(cellKey(c))||0)>2;
+  });
+  if(!candidates.length){
+    candidates=allCells().filter(c=>!mainSet.has(cellKey(c))&&(dist.get(cellKey(c))||0)>2);
+  }
+  candidates.sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+  if(candidates.length){
+    friend.x=candidates[0].x;friend.y=candidates[0].y;
+    friend.name=ADVENTURE_CLASSMATES[level-1]||friend.name;
+  }
+}
+
+/* Abre una segunda entrada cerca del ramal del compañero.
+   El laberinto deja de ser un árbol perfecto y aparece un pequeño circuito. */
+function createSecretPassage(){
+  secretLinks=[];
+  if(!SECRET_LEVELS.has(level)||!friend)return;
+  const pathToFriend=shortestPath(levelStart,friend);
+  const branchSet=new Set(pathToFriend.map(cellKey));
+  const dirs=[
+    {dx:1,dy:0,a:'right',b:'left'},
+    {dx:-1,dy:0,a:'left',b:'right'},
+    {dx:0,dy:1,a:'down',b:'up'},
+    {dx:0,dy:-1,a:'up',b:'down'}
+  ];
+  const nearby=pathToFriend.slice(Math.max(1,pathToFriend.length-5));
+  for(const c of nearby.reverse()){
+    for(const d of dirs){
+      const nx=c.x+d.dx,ny=c.y+d.dy;
+      if(nx<0||ny<0||nx>=cols||ny>=rows)continue;
+      if(!maze[c.y][c.x].walls[d.a])continue;
+      const n={x:nx,y:ny};
+      if(branchSet.has(cellKey(n)))continue;
+      const alt=shortestPath(n,friend);
+      if(alt.length>=2){
+        maze[c.y][c.x].walls[d.a]=false;
+        maze[ny][nx].walls[d.b]=false;
+        secretLinks=[{x:c.x,y:c.y},{x:nx,y:ny}];
+        return;
+      }
+    }
+  }
+}
+
+function placeWhirlpool(){
+  whirlpool=null;controlsReversed=false;
+  if(!WHIRLPOOL_LEVELS.has(level))return;
+  const main=shortestPath(levelStart,exit);
+  const forbidden=occupiedKeys();
+  const options=allCells().filter(c=>!forbidden.has(cellKey(c))&&!sameCell(c,exit)&&!sameCell(c,levelStart));
+  options.sort((a,b)=>{
+    const ai=main.findIndex(p=>sameCell(p,a)),bi=main.findIndex(p=>sameCell(p,b));
+    return (bi<0?-1:bi)-(ai<0?-1:ai);
+  });
+  if(options.length)whirlpool={...options[Math.floor(options.length*.42)],used:false};
+}
+
+function placeFalseHouse(){
+  falseExit=null;
+  if(!FALSE_HOUSE_LEVELS.has(level))return;
+  const mainSet=new Set(shortestPath(levelStart,exit).map(cellKey));
+  const forbidden=occupiedKeys();
+  let options=allCells().filter(c=>!forbidden.has(cellKey(c))&&!mainSet.has(cellKey(c))&&neighborsOf(c.x,c.y).length===1);
+  if(!options.length)options=allCells().filter(c=>!forbidden.has(cellKey(c))&&!mainSet.has(cellKey(c)));
+  if(options.length)falseExit={...options[options.length-1]};
+}
+
+function guardianRoute(){
+  const cells=allCells().filter(isOuter);
+  const usable=cells.filter(c=>neighborsOf(c.x,c.y).length>0&&!sameCell(c,levelStart)&&!sameCell(c,exit));
+  if(!usable.length)return [];
+  const main=shortestPath(levelStart,exit);
+  let start=usable.find(c=>main.some(p=>sameCell(p,c)))||usable[0];
+  const route=[start];
+  let prev=null,cur=start;
+  for(let i=0;i<5;i++){
+    const opts=neighborsOf(cur.x,cur.y).filter(n=>!prev||!sameCell(n,prev));
+    const next=opts.find(isOuter)||opts[0];
+    if(!next)break;
+    route.push(next);prev=cur;cur=next;
+  }
+  return route;
+}
+function placeGuardian(){
+  guardian=null;guardianDir=1;guardianStepAt=performance.now()+900;
+  const cfg=BOSS_LEVELS[level];
+  if(!cfg)return;
+  const route=guardianRoute();
+  if(route.length>=2)guardian={...cfg,route,index:0,x:route[0].x,y:route[0].y};
+}
+function resetToStart(message){
+  player=levelStart;steps++;moveLock=true;
+  setTimeout(()=>moveLock=false,240);
+  bumpSound();showToast(message);updateHud();draw();
+}
+function checkGuardianCollision(){
+  if(guardian&&player.x===guardian.x&&player.y===guardian.y){
+    resetToStart(guardian.message);
+  }
+}
+function advanceGuardian(t){
+  if(!guardian||!playing||t<guardianStepAt)return;
+  guardianStepAt=t+760;
+  let next=guardian.index+guardianDir;
+  if(next>=guardian.route.length||next<0){guardianDir*=-1;next=guardian.index+guardianDir}
+  guardian.index=next;
+  guardian.x=guardian.route[next].x;guardian.y=guardian.route[next].y;
+  checkGuardianCollision();
+}
+function mechanicLabel(){
+  if(level<=3)return '🌿 Paseo tranquilo';
+  const parts=[];
+  if(SECRET_LEVELS.has(level))parts.push('✨ pasaje');
+  if(WHIRLPOOL_LEVELS.has(level))parts.push('🌪️ remolino');
+  if(DARK_LEVELS.has(level))parts.push('🔦 oscuridad');
+  if(FALSE_HOUSE_LEVELS.has(level))parts.push('🏠 dos casas');
+  if(BOSS_LEVELS[level])parts.push(BOSS_LEVELS[level].icon+' guardián');
+  return parts.join(' · ')||'🧭 exploración';
+}
+function updateMechanicHud(){
+  let pill=document.getElementById('mechanicPill');
+  if(!pill){
+    pill=document.createElement('div');pill.id='mechanicPill';pill.className='pill';
+    document.querySelector('.hud').appendChild(pill);
+  }
+  pill.textContent=mechanicLabel();
+}
+
+const originalBuildLevel=buildLevel;
+buildLevel=function(n){
+  originalBuildLevel(n);
+  if(!friend){
+    friend={x:0,y:0,found:false,name:ADVENTURE_CLASSMATES[n-1]||('Compañero '+n)};
+  }else{
+    friend.name=ADVENTURE_CLASSMATES[n-1]||friend.name;
+  }
+  placeFriendInDetour();
+  createSecretPassage();
+  placeWhirlpool();
+  placeFalseHouse();
+  placeGuardian();
+  updateMechanicHud();
+  adventureNoticeShown=false;
+  updateHud();draw();
+};
+
+/* La salida solo se habilita después de encontrar al compañero. */
+const originalFinishLevel=finishLevel;
+finishLevel=function(){
+  if(friend&&!friend.found){
+    showToast(`🐒 ${friend.name} todavía está esperando en un desvío.`);
+    bumpSound();
+    return;
+  }
+  originalFinishLevel();
+};
+
+/* Eventos de celda adicionales. */
+const originalCheckCell=checkCell;
+checkCell=function(){
+  if(falseExit&&sameCell(player,falseExit)){
+    resetToStart('🏠 ¡Esta era la casita equivocada! La escuela está en otro camino.');
+    return;
+  }
+  if(whirlpool&&!whirlpool.used&&sameCell(player,whirlpool)){
+    whirlpool.used=true;controlsReversed=!controlsReversed;
+    glassesSound();
+    showToast('🌪️ ¡Remolino travieso! Los controles quedaron invertidos.');
+  }
+  checkGuardianCollision();
+  if(sameCell(player,levelStart)&&guardian)return;
+  originalCheckCell();
+};
+
+/* Invierte el sentido cuando el remolino fue activado. */
+const originalTryMove=tryMove;
+tryMove=function(dx,dy){
+  if(controlsReversed){dx*=-1;dy*=-1}
+  originalTryMove(dx,dy);
+};
+
+/* Dibujo de las nuevas mecánicas sobre el tablero original. */
+const originalDraw=draw;
+draw=function(){
+  originalDraw();
+  if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+
+  if(secretLinks.length===2){
+    ctx.save();
+    ctx.strokeStyle=`rgba(255,244,133,${.55+.25*Math.sin(animTime*5)})`;
+    ctx.lineWidth=Math.max(3,size*.07);
+    ctx.setLineDash([size*.12,size*.08]);
+    ctx.beginPath();
+    ctx.moveTo(ox+(secretLinks[0].x+.5)*size,oy+(secretLinks[0].y+.5)*size);
+    ctx.lineTo(ox+(secretLinks[1].x+.5)*size,oy+(secretLinks[1].y+.5)*size);
+    ctx.stroke();ctx.restore();
+  }
+
+  if(whirlpool&&!whirlpool.used){
+    const cx=ox+(whirlpool.x+.5)*size,cy=oy+(whirlpool.y+.5)*size;
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(animTime*2.8);
+    ctx.strokeStyle='#7d5ac7';ctx.lineWidth=Math.max(3,size*.055);
+    for(let r=.08;r<.34;r+=.08){ctx.beginPath();ctx.arc(0,0,size*r,0,Math.PI*1.55);ctx.stroke();ctx.rotate(.8)}
+    ctx.restore();
+  }
+
+  if(falseExit)drawFalseHouse(falseExit.x,falseExit.y,size,ox,oy);
+
+  if(guardian){
+    const cx=ox+(guardian.x+.5)*size,cy=oy+(guardian.y+.5)*size;
+    ctx.save();ctx.translate(cx,cy+Math.sin(animTime*4)*size*.04);
+    ctx.font=`${Math.max(24,size*.58)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(guardian.icon,0,0);
+    ctx.font=`900 ${Math.max(9,size*.13)}px Arial`;ctx.fillStyle='#5a3e25';
+    ctx.fillText(guardian.name,0,-size*.35);ctx.restore();
+  }
+
+  if(DARK_LEVELS.has(level)){
+    const cx=ox+(player.x+.5)*size,cy=oy+(player.y+.5)*size;
+    ctx.save();
+    const radius=size*(typeof visionRadius==='number'?visionRadius:2.15);
+    const grad=ctx.createRadialGradient(cx,cy,size*.45,cx,cy,radius);
+    grad.addColorStop(0,'rgba(3,10,18,0)');
+    grad.addColorStop(.55,'rgba(3,10,18,.20)');
+    grad.addColorStop(1,'rgba(3,10,18,.93)');
+    ctx.fillStyle=grad;ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.restore();
+  }
+};
+
+function drawFalseHouse(x,y,size,ox,oy){
+  /* La casa falsa es visualmente creíble: no tiene signo, brillo ni pista. */
+  const px=ox+x*size,py=oy+y*size;
+  ctx.save();ctx.translate(px+size/2,py+size/2);
+  ctx.fillStyle='#8b5a2b';ctx.fillRect(-size*.28,-size*.18,size*.56,size*.38);
+  ctx.fillStyle='#f7e4b1';ctx.fillRect(-size*.18,-size*.08,size*.36,size*.26);
+  ctx.fillStyle='#a43f3f';ctx.beginPath();ctx.moveTo(-size*.34,-size*.18);ctx.lineTo(0,-size*.45);ctx.lineTo(size*.34,-size*.18);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#4b79a8';ctx.fillRect(-size*.07,size*.02,size*.14,size*.16);
+  ctx.restore();
+}
+
+/* Reemplaza el bucle de animación para mover guardianes. */
+animate=function(t){
+  animTime=t/1000;
+  advanceGuardian(t);
+  draw();
+  requestAnimationFrame(animate);
+};
+</script>
+
+
+<script>
+'use strict';
+
+/* =========================================================
+   NITO Y EL LABERINTO — LÓGICA 3.0
+   Menos carteles, más deducción visual.
+   ========================================================= */
+
+const LOGIC_LEVELS={
+  6:{kind:'water',itemIcon:'🚣',itemName:'Bote',obstacleIcon:'💧'},
+  9:{kind:'lock',itemIcon:'🗝️',itemName:'Llave',obstacleIcon:'🔒'},
+  10:{kind:'bridge',itemIcon:'🪵',itemName:'Tabla',obstacleIcon:'🕳️'},
+  12:{kind:'water',itemIcon:'🚣',itemName:'Bote',obstacleIcon:'💧'},
+  16:{kind:'lock',itemIcon:'🗝️',itemName:'Llave',obstacleIcon:'🔒'},
+  18:{kind:'water',itemIcon:'🚣',itemName:'Bote',obstacleIcon:'💧'},
+  19:{kind:'bridge',itemIcon:'🪵',itemName:'Tabla',obstacleIcon:'🕳️'},
+  20:{kind:'lock',itemIcon:'🗝️',itemName:'Llave',obstacleIcon:'🔒'}
+};
+
+let logicChallenge=null;
+let carriedItem=null;
+let schoolGlowAt=0;
+let guardianPauseUntil=0;
+
+/* El contador de pasos deja de formar parte de la experiencia. */
+(function simplifyHud(){
+  const stepsPill=stepsLabel&&stepsLabel.closest('.pill');
+  if(stepsPill)stepsPill.remove();
+  let friendPill=document.getElementById('friendPill');
+  if(!friendPill){
+    friendPill=document.createElement('div');
+    friendPill.id='friendPill';friendPill.className='pill';
+    document.querySelector('.hud').appendChild(friendPill);
+  }
+  let itemPill=document.getElementById('itemPill');
+  if(!itemPill){
+    itemPill=document.createElement('div');
+    itemPill.id='itemPill';itemPill.className='pill';
+    document.querySelector('.hud').appendChild(itemPill);
+  }
+  const mechanic=document.getElementById('mechanicPill');
+  if(mechanic)mechanic.remove();
+})();
+
+function updateLogicHud(){
+  const fp=document.getElementById('friendPill');
+  const ip=document.getElementById('itemPill');
+  if(fp)fp.textContent=friend&&friend.found?'🐒 ✓':'🐒 ?';
+  if(ip){
+    if(logicChallenge)ip.textContent=carriedItem?carriedItem.itemIcon:'🎒 —';
+    else ip.textContent='🎒 —';
+  }
+}
+
+const updateHudBeforeLogic=updateHud;
+updateHud=function(){
+  updateHudBeforeLogic();
+  updateLogicHud();
+};
+
+function directionBetween(a,b){
+  const dx=b.x-a.x,dy=b.y-a.y;
+  if(dx===1)return{from:'right',to:'left'};
+  if(dx===-1)return{from:'left',to:'right'};
+  if(dy===1)return{from:'down',to:'up'};
+  return{from:'up',to:'down'};
+}
+
+function findChallengeItemCell(mainPath,forbidden){
+  const mainSet=new Set(mainPath.map(cellKey));
+  const dist=distancesFrom(levelStart);
+  let options=allCells().filter(c=>
+    !forbidden.has(cellKey(c)) && !mainSet.has(cellKey(c)) &&
+    neighborsOf(c.x,c.y).length===1 && (dist.get(cellKey(c))||0)>3
+  );
+  if(!options.length){
+    options=allCells().filter(c=>!forbidden.has(cellKey(c))&&!mainSet.has(cellKey(c)));
+  }
+  options.sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+  return options[0]||null;
+}
+
+function setupLogicChallenge(){
+  logicChallenge=null;carriedItem=null;
+  const cfg=LOGIC_LEVELS[level];
+  if(!cfg)return;
+  const path=shortestPath(levelStart,exit);
+  if(path.length<5)return;
+  const edgeIndex=Math.max(2,path.length-3);
+  const a=path[edgeIndex-1],b=path[edgeIndex];
+  const forbidden=occupiedKeys();
+  forbidden.add(cellKey(a));forbidden.add(cellKey(b));
+  if(falseExit)forbidden.add(cellKey(falseExit));
+  if(whirlpool)forbidden.add(cellKey(whirlpool));
+  const itemCell=findChallengeItemCell(path,forbidden);
+  if(!itemCell)return;
+  logicChallenge={...cfg,a:{...a},b:{...b},item:{...itemCell},collected:false,solved:false};
+}
+
+/* Guardianes: patrullan un ramal secundario, se mueven más despacio y
+   nunca avanzan sobre Nito. Así desafían sin cerrar el único camino. */
+function safeGuardianRoute(){
+  if(!friend)return[];
+  const mainSet=new Set(shortestPath(levelStart,exit).map(cellKey));
+  const toFriend=shortestPath(levelStart,friend);
+  const branch=toFriend.filter(c=>!mainSet.has(cellKey(c)));
+  if(branch.length>=3)return branch.slice(Math.max(0,branch.length-3));
+  const offMain=allCells().filter(c=>!mainSet.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
+  if(offMain.length<2)return[];
+  const start=offMain[0];
+  const n=neighborsOf(start.x,start.y).find(c=>!mainSet.has(cellKey(c)));
+  return n?[start,n]:[];
+}
+
+placeGuardian=function(){
+  guardian=null;guardianDir=1;guardianPauseUntil=0;
+  const cfg=BOSS_LEVELS[level];
+  if(!cfg)return;
+  const route=safeGuardianRoute();
+  if(route.length>=2){
+    guardian={...cfg,route,index:0,x:route[0].x,y:route[0].y};
+    guardianStepAt=performance.now()+1800;
+  }
+};
+
+advanceGuardian=function(t){
+  if(!guardian||!playing||t<guardianStepAt||t<guardianPauseUntil)return;
+  guardianStepAt=t+1450;
+  let next=guardian.index+guardianDir;
+  if(next>=guardian.route.length||next<0){
+    guardianDir*=-1;next=guardian.index+guardianDir;
+    guardianPauseUntil=t+650;
+  }
+  const target=guardian.route[next];
+  if(target&&sameCell(target,player))return; // jamás cae encima del jugador.
+  guardian.index=next;guardian.x=target.x;guardian.y=target.y;
+};
+
+resetToStart=function(){
+  player=levelStart;moveLock=true;
+  setTimeout(()=>moveLock=false,260);
+  bumpSound();showToast('↩️');updateHud();draw();
+};
+
+/* Menos texto: los primeros niveles no muestran anuncios y los demás
+   tampoco revelan la mecánica antes de que el niño la descubra. */
+updateMechanicHud=function(){
+  const p=document.getElementById('mechanicPill');
+  if(p)p.remove();
+};
+
+/* Los objetos-evento conservan su efecto, pero ya no interrumpen con carteles. */
+activateSpecial=function(){
+  if(!specialItem||specialItem.got)return;
+  specialItem.got=true;specialActive=true;
+  if(specialItem.type==='radio'){musicTempo=1.25;restartMusic();radioSound()}
+  else if(specialItem.type==='trumpet'){trumpetFanfare()}
+  else{currentPalette=level===15?'night':'rainbow';glassesSound()}
+  updateEventHud();
+};
+
+const buildLevelLogicBase=buildLevel;
+buildLevel=function(n){
+  buildLevelLogicBase(n);
+  setupLogicChallenge();
+  updateLogicHud();
+  draw();
+};
+
+/* El compañero ya no genera un cartel. La escuela se ilumina y el sonido
+   confirma el descubrimiento. */
+function collectQuietly(){
+  for(const b of bananas){
+    if(!b.got&&sameCell(player,b)){b.got=true;collected++;pluckSound()}
+  }
+  if(friend&&!friend.found&&sameCell(player,friend)){
+    friend.found=true;friendSound();schoolGlowAt=performance.now();
+    if(!foundClassmates.includes(friend.name)){
+      foundClassmates.push(friend.name);
+      localStorage.setItem('nitoFoundClassmates',JSON.stringify(foundClassmates));
+    }
+  }
+  if(specialItem&&!specialItem.got&&sameCell(player,specialItem))activateSpecial();
+  if(logicChallenge&&!logicChallenge.collected&&sameCell(player,logicChallenge.item)){
+    logicChallenge.collected=true;
+    carriedItem=logicChallenge;
+    pluckSound();
+  }
+}
+
+function edgeMatches(a,b,x1,y1,x2,y2){
+  return (a.x===x1&&a.y===y1&&b.x===x2&&b.y===y2)||
+         (b.x===x1&&b.y===y1&&a.x===x2&&a.y===y2);
+}
+
+const rawMove=originalTryMove;
+tryMove=function(dx,dy){
+  if(!playing||moveLock)return;
+  if(controlsReversed){dx*=-1;dy*=-1}
+  const nx=player.x+dx,ny=player.y+dy;
+  if(logicChallenge&&!logicChallenge.solved&&
+     edgeMatches(logicChallenge.a,logicChallenge.b,player.x,player.y,nx,ny)){
+    if(carriedItem===logicChallenge){
+      logicChallenge.solved=true;carriedItem=null;
+      glassesSound();updateLogicHud();draw();
+    }else{
+      bumpSound();
+      return;
+    }
+  }
+  rawMove(dx,dy);
+};
+
+checkCell=function(){
+  if(falseExit&&sameCell(player,falseExit)){resetToStart();return}
+  if(whirlpool&&!whirlpool.used&&sameCell(player,whirlpool)){
+    whirlpool.used=true;controlsReversed=!controlsReversed;glassesSound();
+  }
+  if(guardian&&sameCell(player,guardian)){resetToStart();return}
+  collectQuietly();
+  updateHud();
+  if(sameCell(player,exit)){
+    if(friend&&!friend.found){bumpSound();return}
+    finishLevel();
+  }
+};
+
+/* Resultado breve: sin lista extensa ni contador de pasos. */
+finishLevel=function(){
+  if(friend&&!friend.found){bumpSound();return}
+  playing=false;winSound();
+  if(level<TOTAL_LEVELS){
+    unlocked=Math.max(unlocked,level+1);
+    localStorage.setItem('nitoUnlocked',unlocked);
+  }
+  document.getElementById('messageTitle').textContent=level===TOTAL_LEVELS?'🏫 ¡Llegamos!':'🌿 ¡Nivel superado!';
+  document.getElementById('messageText').innerHTML=`🍌 <strong>${collected}/${bananas.length}</strong>`;
+  const box=document.getElementById('messageButtons');box.innerHTML='';
+  if(level<TOTAL_LEVELS)box.appendChild(makeButton('Siguiente nivel',()=>{hideMessage();startGame(level+1)}));
+  else box.appendChild(makeButton('Jugar otra vez',()=>{hideMessage();startGame(1)}));
+  box.appendChild(makeButton('Elegir nivel',()=>{hideMessage();showLevels('message')},'secondary'));
+  document.getElementById('messageOverlay').style.display='flex';
+};
+
+/* Escuela apagada hasta encontrar al compañero; después se enciende. */
+drawExit=function(x,y,size,ox,oy){
+  const unlockedSchool=!friend||friend.found;
+  const px=ox+x*size,py=oy+y*size;
+  ctx.save();ctx.translate(px+size/2,py+size/2);
+  if(unlockedSchool){
+    const pulse=.5+.5*Math.sin(animTime*5);
+    ctx.shadowColor='rgba(255,226,83,.95)';ctx.shadowBlur=size*(.12+.10*pulse);
+  }
+  ctx.fillStyle=unlockedSchool?'#8b5a2b':'#6f746f';ctx.fillRect(-size*.28,-size*.18,size*.56,size*.38);
+  ctx.fillStyle=unlockedSchool?'#f7e4b1':'#aeb4ae';ctx.fillRect(-size*.18,-size*.08,size*.36,size*.26);
+  ctx.fillStyle=unlockedSchool?'#a43f3f':'#555d5a';ctx.beginPath();ctx.moveTo(-size*.34,-size*.18);ctx.lineTo(0,-size*.45);ctx.lineTo(size*.34,-size*.18);ctx.closePath();ctx.fill();
+  ctx.fillStyle=unlockedSchool?'#4b79a8':'#444b49';ctx.fillRect(-size*.07,size*.02,size*.14,size*.16);
+  if(!unlockedSchool){
+    ctx.shadowColor='transparent';ctx.font=`${Math.max(16,size*.30)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🔒',0,size*.02);
+  }
+  ctx.restore();
+};
+
+function drawLogicChallenge(size,ox,oy){
+  if(!logicChallenge)return;
+  if(!logicChallenge.collected){
+    const cx=ox+(logicChallenge.item.x+.5)*size,cy=oy+(logicChallenge.item.y+.5)*size;
+    ctx.save();ctx.translate(cx,cy+Math.sin(animTime*3)*size*.04);
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    if(logicChallenge.kind==='bridge'){
+      ctx.rotate(-.12);
+      ctx.fillStyle='#9a622f';ctx.strokeStyle='#5f3a1f';ctx.lineWidth=Math.max(2,size*.035);
+      for(const off of [-.10,.10]){
+        ctx.beginPath();ctx.roundRect(-size*.30,off*size-size*.065,size*.60,size*.13,size*.035);ctx.fill();ctx.stroke();
+        ctx.strokeStyle='#d4a05f';ctx.lineWidth=Math.max(1,size*.018);
+        ctx.beginPath();ctx.moveTo(-size*.22,off*size);ctx.lineTo(size*.22,off*size);ctx.stroke();ctx.strokeStyle='#5f3a1f';
+      }
+    }else{
+      ctx.font=`${Math.max(24,size*.48)}px Arial`;ctx.fillText(logicChallenge.itemIcon,0,0);
+    }
+    ctx.restore();
+  }
+  if(!logicChallenge.solved){
+    const ax=ox+(logicChallenge.a.x+.5)*size,ay=oy+(logicChallenge.a.y+.5)*size;
+    const bx=ox+(logicChallenge.b.x+.5)*size,by=oy+(logicChallenge.b.y+.5)*size;
+    const cx=(ax+bx)/2,cy=(ay+by)/2;
+    ctx.save();ctx.translate(cx,cy);
+    const vertical=Math.abs(ax-bx)<1;
+    if(logicChallenge.kind==='water'){
+      ctx.strokeStyle='#4d9bd1';ctx.lineWidth=Math.max(5,size*.16);ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(vertical?-size*.34:0,vertical?0:-size*.34);ctx.lineTo(vertical?size*.34:0,vertical?0:size*.34);ctx.stroke();
+      ctx.font=`${Math.max(15,size*.25)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('💧',0,0);
+    }else if(logicChallenge.kind==='bridge'){
+      ctx.fillStyle='#342d2a';
+      if(vertical)ctx.fillRect(-size*.38,-size*.12,size*.76,size*.24);else ctx.fillRect(-size*.12,-size*.38,size*.24,size*.76);
+      ctx.font=`${Math.max(15,size*.24)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('⚠️',0,0);
+    }else{
+      ctx.font=`${Math.max(22,size*.38)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🔒',0,0);
+    }
+    ctx.restore();
+  }
+}
+
+const drawLogicBase=draw;
+draw=function(){
+  drawLogicBase();
+  if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  drawLogicChallenge(size,ox,oy);
+  /* Los objetos también quedan dentro del cono de luz. */
+  if(DARK_LEVELS.has(level)){
+    const cx=ox+(player.x+.5)*size,cy=oy+(player.y+.5)*size;
+    ctx.save();
+    const radius=size*(typeof visionRadius==='number'?visionRadius:2.15);
+    const grad=ctx.createRadialGradient(cx,cy,size*.45,cx,cy,radius);
+    grad.addColorStop(0,'rgba(3,10,18,0)');
+    grad.addColorStop(.55,'rgba(3,10,18,.20)');
+    grad.addColorStop(1,'rgba(3,10,18,.93)');
+    ctx.fillStyle=grad;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();
+  }
+};
+
+/* Corrige también el texto inicial para no explicar de más. */
+const startCard=document.querySelector('#startOverlay .card');
+if(startCard){
+  startCard.querySelector('h1').textContent='🌳 Nito y el Laberinto';
+  const ps=startCard.querySelectorAll('p');
+  if(ps[0])ps[0].textContent='Explorá la selva y encontrá el camino a la escuela.';
+  if(ps[1])ps[1].remove();
+}
+
+updateLogicHud();
+
+
+/* === ACTUALIZACIÓN 3.1: ATAJOS DE AMISTAD Y PAREDES FALSAS === */
+let friendShortcut=null;
+let falseWallEdges=new Set();
+const OPPOSITE={up:'down',down:'up',left:'right',right:'left'};
+
+function edgeId(x1,y1,x2,y2){
+  return x1< x2 || (x1===x2&&y1<y2)
+    ? `${x1},${y1}|${x2},${y2}`
+    : `${x2},${y2}|${x1},${y1}`;
+}
+function directionBetween(a,b){
+  if(b.x===a.x+1&&b.y===a.y)return 'right';
+  if(b.x===a.x-1&&b.y===a.y)return 'left';
+  if(b.y===a.y+1&&b.x===a.x)return 'down';
+  if(b.y===a.y-1&&b.x===a.x)return 'up';
+  return null;
+}
+function setEdgeOpen(a,b,open){
+  const dir=directionBetween(a,b); if(!dir)return;
+  maze[a.y][a.x].walls[dir]=!open;
+  maze[b.y][b.x].walls[OPPOSITE[dir]]=!open;
+}
+function pathLength(a,b){const p=shortestPath(a,b);return p.length?p.length-1:Infinity}
+
+function setupFriendShortcut(){
+  friendShortcut=null;
+  if(level<4||!friend)return;
+  const before=pathLength(friend,exit);
+  const candidates=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    for(const d of [{dx:1,dy:0,key:'right'},{dx:0,dy:1,key:'down'}]){
+      const nx=x+d.dx,ny=y+d.dy;
+      if(nx>=cols||ny>=rows||!maze[y][x].walls[d.key])continue;
+      const a={x,y},b={x:nx,y:ny};
+      if((a.x===0&&a.y===0)||(b.x===0&&b.y===0))continue;
+      if(sameCell(a,exit)||sameCell(b,exit))continue;
+      setEdgeOpen(a,b,true);
+      const after=pathLength(friend,exit);
+      setEdgeOpen(a,b,false);
+      const near=Math.min(Math.abs(a.x-friend.x)+Math.abs(a.y-friend.y),Math.abs(b.x-friend.x)+Math.abs(b.y-friend.y));
+      const gain=before-after;
+      if(Number.isFinite(after)&&gain>=2)candidates.push({a,b,gain,near});
+    }
+  }
+  candidates.sort((u,v)=>(v.gain-u.gain)||(u.near-v.near));
+  const chosen=candidates[0];
+  if(chosen)friendShortcut={a:chosen.a,b:chosen.b,opened:false};
+}
+
+function openFriendShortcut(){
+  if(!friendShortcut||friendShortcut.opened)return;
+  setEdgeOpen(friendShortcut.a,friendShortcut.b,true);
+  friendShortcut.opened=true;
+  glassesSound();
+}
+
+function setupFalseWalls(){
+  falseWallEdges=new Set();
+  if(level<10)return;
+  const rand=seededRandom(91873+level*1777);
+  const candidates=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    for(const d of [{dx:1,dy:0,key:'right'},{dx:0,dy:1,key:'down'}]){
+      const nx=x+d.dx,ny=y+d.dy;
+      if(nx>=cols||ny>=rows||!maze[y][x].walls[d.key])continue;
+      const a={x,y},b={x:nx,y:ny};
+      if(friendShortcut&&edgeMatches(friendShortcut.a,friendShortcut.b,a.x,a.y,b.x,b.y))continue;
+      if(logicChallenge&&edgeMatches(logicChallenge.a,logicChallenge.b,a.x,a.y,b.x,b.y))continue;
+      if(sameCell(a,exit)||sameCell(b,exit)||sameCell(a,levelStart)||sameCell(b,levelStart))continue;
+      candidates.push({a,b,score:rand()});
+    }
+  }
+  candidates.sort((a,b)=>b.score-a.score);
+  const amount=level>=17?3:(level>=14?2:1);
+  for(const c of candidates.slice(0,amount))falseWallEdges.add(edgeId(c.a.x,c.a.y,c.b.x,c.b.y));
+}
+
+function isFalseWallMove(x,y,nx,ny){return falseWallEdges.has(edgeId(x,y,nx,ny))}
+
+/* El guardián nunca patrulla el camino obligatorio al compañero ni el regreso
+   principal hacia la escuela. Si no existe un ramal seguro, ese nivel queda sin guardián. */
+safeGuardianRoute=function(){
+  if(!friend)return[];
+  const protectedCells=new Set([
+    ...shortestPath(levelStart,friend).map(cellKey),
+    ...shortestPath(friend,exit).map(cellKey)
+  ]);
+  const allowed=allCells().filter(c=>!protectedCells.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
+  for(const start of allowed){
+    const route=[start];
+    let cur=start;
+    for(let i=0;i<3;i++){
+      const next=neighborsOf(cur.x,cur.y).find(n=>!protectedCells.has(cellKey(n))&&!route.some(r=>sameCell(r,n)));
+      if(!next)break;
+      route.push(next);cur=next;
+    }
+    if(route.length>=2)return route;
+  }
+  return[];
+};
+
+const buildLevel31Base=buildLevel;
+buildLevel=function(n){
+  buildLevel31Base(n);
+  setupFriendShortcut();
+  setupFalseWalls();
+  placeGuardian();
+  draw();
+};
+
+const collectQuietly31Base=collectQuietly;
+collectQuietly=function(){
+  const wasMissing=friend&&!friend.found;
+  collectQuietly31Base();
+  if(wasMissing&&friend&&friend.found)openFriendShortcut();
+};
+
+const tryMove31Base=tryMove;
+tryMove=function(dx,dy){
+  if(!playing||moveLock)return;
+  const effectiveDx=controlsReversed?-dx:dx;
+  const effectiveDy=controlsReversed?-dy:dy;
+  const nx=player.x+effectiveDx,ny=player.y+effectiveDy;
+  if(nx<0||ny<0||nx>=cols||ny>=rows){bumpSound();return}
+  if(!isFalseWallMove(player.x,player.y,nx,ny)){
+    tryMove31Base(dx,dy);return;
+  }
+  const a={x:player.x,y:player.y},b={x:nx,y:ny};
+  setEdgeOpen(a,b,true);
+  tryMove31Base(dx,dy);
+  setEdgeOpen(a,b,false);
+  draw();
+};
+
+
+
+/* === ACTUALIZACIÓN 3.2: EXPLORACIÓN, BANANAS Y MÚSICA VIVA === */
+let visionRadius=2.15;
+let visionGlasses=[];
+let bananaGate=null;
+let permanentBananas=0;
+let foundBananaIds=new Set();
+let musicDiscoveries=new Set(JSON.parse(localStorage.getItem('nitoMusicDiscoveries')||'[]'));
+
+const BANANA_GATE_LEVELS={8:5,12:8,16:12,19:16};
+const MUSIC_LAYER_BY_EVENT={radio:'bass',trumpet:'clarinet',glasses:'strings'};
+
+function saveBananas(){
+  /* Las bananas pertenecen a la partida actual y no se guardan en el navegador. */
+}
+function updateBananaHud32(){
+  if(bananaLabel)bananaLabel.textContent=permanentBananas;
+  if(bananaTotal)bananaTotal.textContent='';
+  const slash=bananaTotal&&bananaTotal.previousSibling;
+  if(slash&&slash.nodeType===Node.TEXT_NODE)slash.textContent='';
+}
+
+/* Anteojos de exploración: uno en el nivel 11 y tres en el 17. */
+function setupVisionGlasses(){
+  visionGlasses=[];visionRadius=2.15;
+  const amount=level===11?1:(level===17?3:0);
+  if(!amount)return;
+  const dist=distancesFrom(levelStart);
+  const forbidden=occupiedKeys();
+  if(logicChallenge)forbidden.add(cellKey(logicChallenge.item));
+  let cells=allCells().filter(c=>!forbidden.has(cellKey(c))&&!sameCell(c,exit)&&!sameCell(c,friend));
+  cells.sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+  const chosen=[];
+  for(const c of cells){
+    if(chosen.every(q=>Math.abs(q.x-c.x)+Math.abs(q.y-c.y)>=Math.max(3,Math.floor((cols+rows)/7))))chosen.push(c);
+    if(chosen.length===amount)break;
+  }
+  visionGlasses=chosen.map(c=>({...c,got:false}));
+}
+
+/* Acceso opcional: abre un atajo, nunca el único camino. */
+function setupBananaGate(){
+  bananaGate=null;
+  const required=BANANA_GATE_LEVELS[level];
+  if(!required)return;
+  const normal=pathLength(levelStart,exit);
+  const candidates=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    for(const d of [{dx:1,dy:0,key:'right'},{dx:0,dy:1,key:'down'}]){
+      const nx=x+d.dx,ny=y+d.dy;
+      if(nx>=cols||ny>=rows||!maze[y][x].walls[d.key])continue;
+      const a={x,y},b={x:nx,y:ny};
+      if(sameCell(a,levelStart)||sameCell(b,levelStart)||sameCell(a,exit)||sameCell(b,exit))continue;
+      if(friendShortcut&&edgeMatches(friendShortcut.a,friendShortcut.b,a.x,a.y,b.x,b.y))continue;
+      if(logicChallenge&&edgeMatches(logicChallenge.a,logicChallenge.b,a.x,a.y,b.x,b.y))continue;
+      setEdgeOpen(a,b,true);const shorter=pathLength(levelStart,exit);setEdgeOpen(a,b,false);
+      const gain=normal-shorter;
+      if(Number.isFinite(shorter)&&gain>=3)candidates.push({a,b,gain});
+    }
+  }
+  candidates.sort((u,v)=>v.gain-u.gain);
+  if(candidates[0])bananaGate={...candidates[0],required,opened:false};
+}
+function gateEdgeMatches(x1,y1,x2,y2){
+  return bananaGate&&edgeMatches(bananaGate.a,bananaGate.b,x1,y1,x2,y2);
+}
+
+/* Ruta larga del guardián: paseo de profundidad que visita cerca del 75 % del mapa.
+   No se queda quieto en la entrada, la escuela ni sobre el compañero. */
+safeGuardianRoute=function(){
+  const forbidden=new Set([cellKey(levelStart),cellKey(exit)]);if(friend)forbidden.add(cellKey(friend));
+  const candidates=allCells().filter(c=>!forbidden.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
+  if(!candidates.length)return[];
+  const start=candidates[Math.floor(candidates.length*.42)];
+  const target=Math.max(8,Math.floor(cols*rows*.75));
+  const route=[start],visited=new Set([cellKey(start)]);
+  function walk(cur){
+    if(visited.size>=target)return true;
+    const ns=neighborsOf(cur.x,cur.y).filter(n=>!forbidden.has(cellKey(n))).sort((a,b)=>{
+      const av=visited.has(cellKey(a))?1:0,bv=visited.has(cellKey(b))?1:0;return av-bv;
+    });
+    for(const n of ns){
+      if(!visited.has(cellKey(n))){
+        visited.add(cellKey(n));route.push(n);
+        if(walk(n))return true;
+        route.push(cur);
+      }
+    }
+    return false;
+  }
+  walk(start);
+  return route.length>=6?route:[];
+};
+placeGuardian=function(){
+  guardian=null;guardianDir=1;guardianPauseUntil=0;
+  const cfg=BOSS_LEVELS[level];if(!cfg)return;
+  const route=safeGuardianRoute();
+  if(route.length>=6){guardian={...cfg,route,index:0,x:route[0].x,y:route[0].y};guardianStepAt=performance.now()+1800}
+};
+advanceGuardian=function(t){
+  if(!guardian||!playing||t<guardianStepAt||t<guardianPauseUntil)return;
+  guardianStepAt=t+1100;
+  let next=guardian.index+1;if(next>=guardian.route.length){next=0;guardianPauseUntil=t+550}
+  const target=guardian.route[next];
+  if(target&&sameCell(target,player)){guardianStepAt=t+400;return}
+  guardian.index=next;guardian.x=target.x;guardian.y=target.y;
+};
+
+/* Construcción final de cada nivel. */
+const buildLevel32Base=buildLevel;
+buildLevel=function(n){
+  buildLevel32Base(n);
+  bananas.forEach((b,i)=>{b.persistId=`L${n}B${i}`;b.got=false});
+  collected=0;
+  setupVisionGlasses();setupBananaGate();placeGuardian();updateBananaHud32();draw();
+};
+
+/* Recolección persistente, anteojos y eventos musicales permanentes. */
+const activateSpecial32Base=activateSpecial;
+activateSpecial=function(){
+  if(!specialItem||specialItem.got)return;
+  const layer=MUSIC_LAYER_BY_EVENT[specialItem.type];
+  if(layer){musicDiscoveries.add(layer);localStorage.setItem('nitoMusicDiscoveries',JSON.stringify([...musicDiscoveries]))}
+  activateSpecial32Base();restartMusic();
+};
+const collectQuietly32Base=collectQuietly;
+collectQuietly=function(){
+  const before=new Set(bananas.filter(b=>b.got).map(b=>b.persistId));
+  collectQuietly32Base();
+  for(const b of bananas){
+    if(b.got&&b.persistId&&!before.has(b.persistId)){
+      permanentBananas++;
+    }
+  }
+  for(const g of visionGlasses){
+    if(!g.got&&sameCell(player,g)){
+      g.got=true;visionRadius*=1.30;glassesSound();
+    }
+  }
+  updateBananaHud32();
+};
+
+/* El mono guardián de bananas solo abre un atajo si se demuestra la cantidad.
+   Si no alcanza, el recorrido normal continúa disponible. */
+const tryMove32Base=tryMove;
+tryMove=function(dx,dy){
+  if(!playing||moveLock)return;
+  const ex=controlsReversed?-dx:dx,ey=controlsReversed?-dy:dy;
+  const nx=player.x+ex,ny=player.y+ey;
+  if(gateEdgeMatches(player.x,player.y,nx,ny)&&bananaGate&&!bananaGate.opened){
+    if(permanentBananas>=bananaGate.required){
+      bananaGate.opened=true;setEdgeOpen(bananaGate.a,bananaGate.b,true);friendSound();draw();
+    }else{bumpSound();return}
+  }
+  tryMove32Base(dx,dy);
+};
+
+function drawVisionGlasses(size,ox,oy){
+  for(const g of visionGlasses){if(g.got)continue;
+    const cx=ox+(g.x+.5)*size,cy=oy+(g.y+.5)*size;
+    ctx.save();ctx.translate(cx,cy+Math.sin(animTime*3)*size*.035);
+    ctx.font=`${Math.max(23,size*.46)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('👓',0,0);ctx.restore();
+  }
+}
+function drawBananaGate(size,ox,oy){
+  if(!bananaGate||bananaGate.opened)return;
+  const ax=ox+(bananaGate.a.x+.5)*size,ay=oy+(bananaGate.a.y+.5)*size;
+  const bx=ox+(bananaGate.b.x+.5)*size,by=oy+(bananaGate.b.y+.5)*size;
+  const cx=(ax+bx)/2,cy=(ay+by)/2;
+  ctx.save();ctx.translate(cx,cy);
+  ctx.font=`${Math.max(20,size*.38)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('👮🐒',0,-size*.10);
+  ctx.font=`900 ${Math.max(10,size*.15)}px Arial`;ctx.fillStyle='#5b421d';ctx.fillText(`🍌 ${bananaGate.required}`,0,size*.22);ctx.restore();
+}
+const draw32Base=draw;
+draw=function(){
+  draw32Base();if(!maze)return;
+  const {size,ox,oy}=cellMetrics();drawVisionGlasses(size,ox,oy);drawBananaGate(size,ox,oy);
+  /* El cono de luz base ya usa visionRadius; los anteojos amplían ese valor. */
+};
+
+/* La música crece cada cuatro niveles. Los objetos hallados adelantan y conservan capas. */
+function musicTier(){return Math.min(4,Math.floor((level-1)/4))}
+function layerActive(name,tier){
+  const order={bass:1,clarinet:2,strings:3,flute:4};
+  return tier>=order[name]||musicDiscoveries.has(name);
+}
+const playNocturneMeasure32Base=playNocturneMeasure;
+playNocturneMeasure=function(){
+  playNocturneMeasure32Base();
+  if(!audioCtx||!musicOn)return;
+  const tier=musicTier(),m=musicStep%nocturneMeasures.length;
+  if(layerActive('bass',tier))pianoNote(27+(m%4)*2,NOCTURNE_BEAT*3.4,.006,0);
+  if(layerActive('clarinet',tier))tone(midi(55+[0,3,5,7][m%4]),NOCTURNE_BEAT*1.7,'sine',.006,.18);
+  if(layerActive('strings',tier)){
+    const chord=[[51,55,58],[53,56,60],[55,58,62],[48,55,60]][m%4];
+    chord.forEach((n,i)=>tone(midi(n),NOCTURNE_BEAT*2.8,'sine',.0038,.05+i*.03));
+  }
+  if(layerActive('flute',tier))tone(midi(79-[0,2,4,7][m%4]),NOCTURNE_BEAT*1.25,'triangle',.0048,.34);
+};
+
+const updateHud32Base=updateHud;
+updateHud=function(){updateHud32Base();updateBananaHud32();};
+updateBananaHud32();
+/* === ACTUALIZACIÓN 3.3: HABITANTES, VEHÍCULOS Y RUTA DEL GRAN EXPLORADOR === */
+const GUARDIAN_PERSONALITIES={
+  gorilla1:{icon:'🦍',name:'Gorila curioso',step:1450,pause:700,canUseSecrets:false,mode:'patrol'},
+  parrot:{icon:'🦜',name:'Loro explorador',step:760,pause:160,canUseSecrets:false,mode:'fly'},
+  elephant:{icon:'🐘',name:'Elefante paseandero',step:1700,pause:900,canUseSecrets:false,mode:'patrol'},
+  sloth:{icon:'🦥',name:'Perezoso soñador',step:2100,pause:2300,canUseSecrets:false,mode:'patrol'},
+  gorilla2:{icon:'🦍',name:'Gorila ágil',step:900,pause:250,canUseSecrets:true,mode:'chase'},
+  turtle:{icon:'🐢',name:'Tortuga gigante',step:1850,pause:350,canUseSecrets:false,mode:'chase'}
+};
+const GUARDIAN_PLAN={7:['gorilla1'],12:['parrot'],13:['elephant'],15:['sloth'],16:['gorilla1'],17:['gorilla2'],18:['parrot'],19:['turtle'],20:['gorilla2','turtle']};
+const VEHICLE_PLAN={7:{type:'skates',icon:'🛼',name:'Patines',speed:.74},13:{type:'bike',icon:'🚲',name:'Bicicleta',speed:.55},19:{type:'skateboard',icon:'🛹',name:'Patineta',speed:.62},20:{type:'skates',icon:'🛼',name:'Patines',speed:.72}};
+let extraGuardian=null;
+let vehicleItem=null;
+let currentVehicle=null;
+let turtleDash=null;
+let explorerRoute=null;
+let levelSecretFound=false;
+
+function cumulativeBananasThrough(n){let total=0;for(let i=1;i<=n;i++)total+=Math.min(2+Math.floor(i/3),7);return total}
+function pickSafeCell(seedOffset=0,avoid=new Set()){
+  const dist=distancesFrom(levelStart);
+  const list=allCells().filter(c=>!avoid.has(cellKey(c))&&!sameCell(c,exit)&&(!friend||!sameCell(c,friend)));
+  list.sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+  return list[(seedOffset*7+level*3)%Math.max(1,list.length)]||null;
+}
+function guardianRouteFor(cfg,offset=0){
+  const forbidden=new Set([cellKey(levelStart),cellKey(exit)]);if(friend)forbidden.add(cellKey(friend));
+  const cells=allCells().filter(c=>!forbidden.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
+  if(!cells.length)return[];
+  let start=cells[(Math.floor(cells.length*(.22+offset*.31))+level)%cells.length];
+  const target=Math.max(9,Math.floor(cols*rows*(cfg.mode==='fly'?.65:.75)));
+  const route=[start],visited=new Set([cellKey(start)]),stack=[start];
+  while(stack.length&&visited.size<target){
+    const cur=stack[stack.length-1];
+    let ns;
+    if(cfg.mode==='fly'){
+      ns=DIRS.map(d=>({x:cur.x+d.dx,y:cur.y+d.dy})).filter(n=>n.x>=0&&n.y>=0&&n.x<cols&&n.y<rows&&!forbidden.has(cellKey(n)));
+    }else ns=neighborsOf(cur.x,cur.y).filter(n=>!forbidden.has(cellKey(n)));
+    ns.sort((a,b)=>(visited.has(cellKey(a))?1:0)-(visited.has(cellKey(b))?1:0));
+    const next=ns.find(n=>!visited.has(cellKey(n)));
+    if(next){visited.add(cellKey(next));route.push(next);stack.push(next)}else{stack.pop();if(stack.length)route.push(stack[stack.length-1])}
+  }
+  return route.length>=6?route:[];
+}
+function makeGuardian(kind,offset=0){
+  const cfg=GUARDIAN_PERSONALITIES[kind],route=guardianRouteFor(cfg,offset);if(!route.length)return null;
+  return {...cfg,kind,route,index:0,x:route[0].x,y:route[0].y,nextAt:performance.now()+1500+offset*450,pauseUntil:0};
+}
+placeGuardian=function(){
+  guardian=null;extraGuardian=null;turtleDash=null;
+  const plan=GUARDIAN_PLAN[level]||[];
+  guardian=plan[0]?makeGuardian(plan[0],0):null;
+  extraGuardian=plan[1]?makeGuardian(plan[1],1):null;
+};
+function chooseGuardianNext(g){
+  if(!g)return null;
+  if(g.mode==='chase'){
+    const path=shortestPath({x:g.x,y:g.y},player);
+    if(path.length>1)return path[1];
+  }
+  g.index=(g.index+1)%g.route.length;return g.route[g.index];
+}
+function moveOneGuardian(g,t){
+  if(!g||!playing||t<g.nextAt||t<g.pauseUntil)return;
+  if(g.kind==='turtle'&&turtleDash){
+    const d=turtleDash.dir,nx=g.x+d.dx,ny=g.y+d.dy;
+    const key=d.key;
+    if(nx<0||ny<0||nx>=cols||ny>=rows||maze[g.y][g.x].walls[key]){
+      vehicleItem={x:g.x,y:g.y,...VEHICLE_PLAN[19],got:false};turtleDash=null;g.nextAt=t+650;return;
+    }
+    g.x=nx;g.y=ny;g.nextAt=t+115;return;
+  }
+  const next=chooseGuardianNext(g);if(!next)return;
+  if(sameCell(next,player)){g.nextAt=t+350;return}
+  g.x=next.x;g.y=next.y;g.nextAt=t+g.step;g.pauseUntil=t+g.pause;
+  if(g.kind==='turtle'&&vehicleItem&&!vehicleItem.got&&vehicleItem.type==='skateboard'&&sameCell(g,vehicleItem)){
+    const d=DIRS.find(d=>!maze[g.y][g.x].walls[d.key])||DIRS[1];
+    vehicleItem.got=true;turtleDash={dir:d};friendSound();
+  }
+}
+advanceGuardian=function(t){moveOneGuardian(guardian,t);moveOneGuardian(extraGuardian,t)};
+
+function setupVehicle(){
+  currentVehicle=null;vehicleItem=null;
+  const cfg=VEHICLE_PLAN[level];if(!cfg)return;
+  const avoid=occupiedKeys();if(logicChallenge)avoid.add(cellKey(logicChallenge.item));
+  const cell=pickSafeCell(2,avoid);if(cell)vehicleItem={...cell,...cfg,got:false};
+}
+function setupExplorerRoute(){
+  explorerRoute=null;if(level<18)return;
+  const required=cumulativeBananasThrough(level-1);
+  const normal=pathLength(levelStart,exit),walls=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++)for(const d of [{dx:1,dy:0,key:'right'},{dx:0,dy:1,key:'down'}]){
+    const nx=x+d.dx,ny=y+d.dy;if(nx>=cols||ny>=rows||!maze[y][x].walls[d.key])continue;
+    const a={x,y},b={x:nx,y:ny};setEdgeOpen(a,b,true);const len=pathLength(levelStart,exit);setEdgeOpen(a,b,false);
+    if(Number.isFinite(len)&&normal-len>=2)walls.push({a,b,gain:normal-len});
+  }
+  walls.sort((a,b)=>b.gain-a.gain);explorerRoute={required,opened:false,walls:walls.slice(0,3)};
+}
+function openExplorerRoute(){
+  if(!explorerRoute||explorerRoute.opened||permanentBananas<explorerRoute.required)return false;
+  explorerRoute.opened=true;explorerRoute.walls.forEach(w=>setEdgeOpen(w.a,w.b,true));
+  if(guardian)guardian.step*=1.35;if(extraGuardian)extraGuardian.step*=1.35;
+  friendSound();draw();return true;
+}
+
+const buildLevel33Base=buildLevel;
+buildLevel=function(n){buildLevel33Base(n);levelSecretFound=false;setupVehicle();setupExplorerRoute();placeGuardian();draw()};
+
+const collectQuietly33Base=collectQuietly;
+collectQuietly=function(){
+  collectQuietly33Base();
+  if(vehicleItem&&!vehicleItem.got&&sameCell(player,vehicleItem)){
+    vehicleItem.got=true;currentVehicle=vehicleItem;pluckSound();
+  }
+};
+
+const tryMove33Base=tryMove;
+tryMove=function(dx,dy){
+  const wasLocked=moveLock;tryMove33Base(dx,dy);
+  if(!wasLocked&&currentVehicle&&moveLock)setTimeout(()=>{moveLock=false},Math.max(20,Math.round(70*currentVehicle.speed)));
+  if((guardian&&sameCell(player,guardian))||(extraGuardian&&sameCell(player,extraGuardian))){resetToStart();return}
+  if(explorerRoute&&!explorerRoute.opened&&permanentBananas>=explorerRoute.required&&sameCell(player,levelStart))openExplorerRoute();
+};
+
+function drawGuardian33(g,size,ox,oy){if(!g)return;const cx=ox+(g.x+.5)*size,cy=oy+(g.y+.5)*size;ctx.save();ctx.translate(cx,cy+Math.sin(animTime*3)*size*.025);ctx.font=`${Math.max(23,size*.48)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(g.icon,0,0);ctx.restore()}
+function drawVehicle33(size,ox,oy){if(!vehicleItem||vehicleItem.got)return;const cx=ox+(vehicleItem.x+.5)*size,cy=oy+(vehicleItem.y+.5)*size;ctx.save();ctx.translate(cx,cy+Math.sin(animTime*4)*size*.03);ctx.font=`${Math.max(24,size*.46)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(vehicleItem.icon,0,0);ctx.restore()}
+function drawExplorerRoute33(size,ox,oy){if(!explorerRoute||explorerRoute.opened)return;const cx=ox+size*.68,cy=oy+size*.68;ctx.save();ctx.translate(cx,cy);ctx.fillStyle='#f7df72';ctx.strokeStyle='#7a5426';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,size*.32,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.font=`900 ${Math.max(10,size*.14)}px Arial`;ctx.fillStyle='#4f381d';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(`🍌 ${explorerRoute.required}`,0,0);ctx.restore()}
+const draw33Base=draw;
+draw=function(){draw33Base();if(!maze)return;const {size,ox,oy}=cellMetrics();drawGuardian33(extraGuardian,size,ox,oy);drawVehicle33(size,ox,oy);drawExplorerRoute33(size,ox,oy)};
+
+/* Revelación discreta al final: confirma que atravesar una pared no fue un error. */
+const isFalseWallMove33Base=isFalseWallMove;
+isFalseWallMove=function(x1,y1,x2,y2){const yes=isFalseWallMove33Base(x1,y1,x2,y2);if(yes)levelSecretFound=true;return yes};
+const finishLevel33Base=finishLevel;
+finishLevel=function(){
+  finishLevel33Base();
+  if(levelSecretFound){const p=document.getElementById('messageText');if(p)p.innerHTML+=`<div style="margin-top:8px;font-weight:900;color:#397448">🌿 Descubriste un pasadizo secreto.</div>`}
+};
+
+
+/* === ACTUALIZACIÓN 3.4: PROGRESIÓN Y VARIANTE DE AVENTURA ===
+   La orientación se elige una sola vez al cargar el juego:
+   2 de cada 3 partidas conservan el mapa original; la restante usa
+   una rotación segura de 90, 180 o 270 grados. Se mantiene durante
+   los 20 niveles y no cambia al volver al inicio de una pantalla. */
+const RUN_ROTATION_TURNS=0; // Rotación eliminada: todos los niveles conservan su orientación original.
+
+function rotatePointForRun(c,turns,size){
+  if(!c)return c;
+  let x=c.x,y=c.y;
+  for(let i=0;i<turns;i++) [x,y]=[size-1-y,x];
+  return {...c,x,y};
+}
+function rotateWallsForRun(walls,turns){
+  let w={...walls};
+  for(let i=0;i<turns;i++)w={up:w.left,right:w.up,down:w.right,left:w.down};
+  return w;
+}
+function applyRunRotationToBaseLevel(){
+  const turns=RUN_ROTATION_TURNS;
+  if(!turns||!maze||cols!==rows||level>6){levelStart={...player};return;}
+  const size=cols;
+  const rotated=Array.from({length:size},()=>Array(size));
+  for(let y=0;y<size;y++)for(let x=0;x<size;x++){
+    const np=rotatePointForRun({x,y},turns,size);
+    rotated[np.y][np.x]={...maze[y][x],walls:rotateWallsForRun(maze[y][x].walls,turns)};
+  }
+  maze=rotated;
+  player=rotatePointForRun(player,turns,size);
+  exit=rotatePointForRun(exit,turns,size);
+  bananas=bananas.map(b=>rotatePointForRun(b,turns,size));
+  if(friend)friend=rotatePointForRun(friend,turns,size);
+  if(specialItem)specialItem=rotatePointForRun(specialItem,turns,size);
+  levelStart={...player};
+}
+
+/* Si una ruta compleja no llega a generarse, crea una patrulla válida
+   sobre un camino real. Esto garantiza la presencia del guardián del 17. */
+const makeGuardian34Base=makeGuardian;
+makeGuardian=function(kind,offset=0){
+  let g=makeGuardian34Base(kind,offset);
+  if(g)return g;
+  const cfg=GUARDIAN_PERSONALITIES[kind];
+  const forbidden=new Set([cellKey(levelStart),cellKey(exit)]);
+  if(friend)forbidden.add(cellKey(friend));
+  const candidates=allCells().filter(c=>!forbidden.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
+  let best=[];
+  for(let i=0;i<candidates.length;i+=Math.max(1,Math.floor(candidates.length/12))){
+    for(let j=i+1;j<candidates.length;j+=Math.max(1,Math.floor(candidates.length/12))){
+      const path=shortestPath(candidates[i],candidates[j]).filter(c=>!forbidden.has(cellKey(c)));
+      if(path.length>best.length)best=path;
+    }
+  }
+  if(best.length<2)return null;
+  return {...cfg,kind,route:best,index:0,x:best[0].x,y:best[0].y,nextAt:performance.now()+1500+offset*450,pauseUntil:0};
+};
+
+/* ACTUALIZACIÓN 3.5 — DOS CASAS INDISTINGUIBLES
+   Mientras falta el compañero, ambas casas están grises y cerradas.
+   Al encontrarlo, las dos se iluminan y se desbloquean al mismo tiempo. */
+drawFalseHouse=function(x,y,size,ox,oy){
+  const unlockedSchool=!friend||friend.found;
+  const px=ox+x*size,py=oy+y*size;
+  ctx.save();ctx.translate(px+size/2,py+size/2);
+  if(unlockedSchool){
+    const pulse=.5+.5*Math.sin(animTime*5);
+    ctx.shadowColor='rgba(255,226,83,.95)';
+    ctx.shadowBlur=size*(.12+.10*pulse);
+  }
+  ctx.fillStyle=unlockedSchool?'#8b5a2b':'#6f746f';
+  ctx.fillRect(-size*.28,-size*.18,size*.56,size*.38);
+  ctx.fillStyle=unlockedSchool?'#f7e4b1':'#aeb4ae';
+  ctx.fillRect(-size*.18,-size*.08,size*.36,size*.26);
+  ctx.fillStyle=unlockedSchool?'#a43f3f':'#555d5a';
+  ctx.beginPath();
+  ctx.moveTo(-size*.34,-size*.18);
+  ctx.lineTo(0,-size*.45);
+  ctx.lineTo(size*.34,-size*.18);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=unlockedSchool?'#4b79a8':'#444b49';
+  ctx.fillRect(-size*.07,size*.02,size*.14,size*.16);
+  if(!unlockedSchool){
+    ctx.shadowColor='transparent';
+    ctx.font=`${Math.max(16,size*.30)}px Arial`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('🔒',0,size*.02);
+  }
+  ctx.restore();
+};
+
+/* Antes de encontrar al compañero, ambas casas se comportan igual:
+   simplemente están cerradas. Solo después se revela cuál era la falsa. */
+const checkCell34Base=checkCell;
+checkCell=function(){
+  if(falseExit&&sameCell(player,falseExit)){
+    if(friend&&!friend.found){bumpSound();return}
+    resetToStart();return;
+  }
+  checkCell34Base();
+};
+
+
+
+/* === ACTUALIZACIÓN 3.6: EXPLORACIÓN INTENCIONAL ===
+   - Los anteojos aparecen con tiempo suficiente para aprovecharlos.
+   - Las bananas quedan fuera del recorrido obligatorio.
+   - El nivel 5 presenta un guardián lento y predecible.
+   - Los atajos de amistad solo se aceptan si reducen claramente el regreso. */
+
+GUARDIAN_PERSONALITIES.gorilla0={
+  icon:'🦍',name:'Gorila tranquilo',step:1850,pause:1050,
+  canUseSecrets:false,mode:'patrol'
+};
+GUARDIAN_PLAN[5]=['gorilla0'];
+
+function uniqueCells36(cells){
+  const seen=new Set();
+  return cells.filter(c=>{const k=cellKey(c);if(seen.has(k))return false;seen.add(k);return true});
+}
+
+function requiredRouteKeys36(){
+  const route=[];
+  if(friend){
+    route.push(...shortestPath(levelStart,friend));
+    route.push(...shortestPath(friend,exit));
+  }else route.push(...shortestPath(levelStart,exit));
+  return new Set(uniqueCells36(route).map(cellKey));
+}
+
+function staticForbiddenKeys36(){
+  const s=new Set([cellKey(levelStart),cellKey(exit)]);
+  if(friend)s.add(cellKey(friend));
+  if(specialItem)s.add(cellKey(specialItem));
+  if(falseExit)s.add(cellKey(falseExit));
+  if(logicChallenge&&logicChallenge.item)s.add(cellKey(logicChallenge.item));
+  if(vehicleItem)s.add(cellKey(vehicleItem));
+  for(const g of visionGlasses||[])s.add(cellKey(g));
+  return s;
+}
+
+/* Las bananas enseñan a desviarse: ninguna queda en la ruta obligatoria.
+   Se priorizan callejones y celdas alejadas del recorrido principal. */
+function repositionBananas36(){
+  if(!bananas.length)return;
+  const route=requiredRouteKeys36();
+  const forbidden=staticForbiddenKeys36();
+  const routeCells=[...route].map(k=>{const [x,y]=k.split(',').map(Number);return{x,y}});
+  const branchDistance=c=>routeCells.length?Math.min(...routeCells.map(r=>Math.abs(r.x-c.x)+Math.abs(r.y-c.y))):0;
+  let candidates=allCells().filter(c=>!route.has(cellKey(c))&&!forbidden.has(cellKey(c)));
+  candidates.sort((a,b)=>{
+    const deadA=neighborsOf(a.x,a.y).length===1?1:0,deadB=neighborsOf(b.x,b.y).length===1?1:0;
+    const da=branchDistance(a),db=branchDistance(b);
+    const startA=pathLength(levelStart,a),startB=pathLength(levelStart,b);
+    return (deadB-deadA)||(db-da)||(startB-startA);
+  });
+  /* En mapas excepcionalmente lineales, se conserva fuera al menos del camino
+     directo a la casa, pero nunca se impide construir el nivel. */
+  if(candidates.length<bananas.length){
+    const direct=new Set(shortestPath(levelStart,exit).map(cellKey));
+    const extra=allCells().filter(c=>!direct.has(cellKey(c))&&!forbidden.has(cellKey(c))&&!candidates.some(q=>sameCell(q,c)));
+    candidates.push(...extra);
+  }
+  const chosen=[];
+  for(const c of candidates){
+    const spacing=chosen.every(q=>Math.abs(q.x-c.x)+Math.abs(q.y-c.y)>=2);
+    if(spacing)chosen.push(c);
+    if(chosen.length===bananas.length)break;
+  }
+  for(const c of candidates){
+    if(chosen.length===bananas.length)break;
+    if(!chosen.some(q=>sameCell(q,c)))chosen.push(c);
+  }
+  bananas.forEach((b,i)=>{if(chosen[i]){b.x=chosen[i].x;b.y=chosen[i].y}});
+}
+
+/* Anteojos útiles: nunca junto a la casa y preferentemente en un ramal
+   alcanzable durante la primera mitad o zona media de la exploración. */
+setupVisionGlasses=function(){
+  visionGlasses=[];visionRadius=2.15;
+  const amount=level===11?1:(level===17?3:0);
+  if(!amount)return;
+  const fromStart=distancesFrom(levelStart);
+  const fromExit=distancesFrom(exit);
+  const mainLength=Math.max(1,pathLength(levelStart,exit));
+  const route=requiredRouteKeys36();
+  const forbidden=staticForbiddenKeys36();
+  bananas.forEach(b=>forbidden.add(cellKey(b)));
+  let candidates=allCells().filter(c=>{
+    const ds=fromStart.get(cellKey(c))??Infinity;
+    const de=fromExit.get(cellKey(c))??Infinity;
+    return !forbidden.has(cellKey(c)) && de>=Math.max(4,Math.floor(mainLength*.32)) && ds>=3;
+  });
+  candidates.sort((a,b)=>{
+    const branchA=route.has(cellKey(a))?0:1,branchB=route.has(cellKey(b))?0:1;
+    const da=fromStart.get(cellKey(a))||0,db=fromStart.get(cellKey(b))||0;
+    const target=mainLength*.48;
+    return (branchB-branchA)||(Math.abs(da-target)-Math.abs(db-target));
+  });
+  const chosen=[];
+  for(const c of candidates){
+    if(chosen.every(q=>pathLength(q,c)>=Math.max(4,Math.floor((cols+rows)/6))))chosen.push(c);
+    if(chosen.length===amount)break;
+  }
+  for(const c of candidates){
+    if(chosen.length===amount)break;
+    if(!chosen.some(q=>sameCell(q,c)))chosen.push(c);
+  }
+  visionGlasses=chosen.map(c=>({...c,got:false}));
+};
+
+/* Atajo de amistad: debe sentirse como una recompensa verdadera.
+   Se exige una reducción importante y se favorece una abertura cerca del
+   compañero que conecte con una zona claramente más próxima a la escuela. */
+setupFriendShortcut=function(){
+  friendShortcut=null;
+  if(level<4||!friend)return;
+  const before=pathLength(friend,exit);
+  if(!Number.isFinite(before)||before<4)return;
+  const distFriend=distancesFrom(friend),distExit=distancesFrom(exit);
+  const candidates=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    for(const d of [{dx:1,dy:0,key:'right'},{dx:0,dy:1,key:'down'}]){
+      const nx=x+d.dx,ny=y+d.dy;
+      if(nx>=cols||ny>=rows||!maze[y][x].walls[d.key])continue;
+      const a={x,y},b={x:nx,y:ny};
+      if(sameCell(a,levelStart)||sameCell(b,levelStart)||sameCell(a,exit)||sameCell(b,exit))continue;
+      setEdgeOpen(a,b,true);const after=pathLength(friend,exit);setEdgeOpen(a,b,false);
+      if(!Number.isFinite(after))continue;
+      const gain=before-after;
+      const near=Math.min(distFriend.get(cellKey(a))??999,distFriend.get(cellKey(b))??999);
+      const exitDelta=Math.abs((distExit.get(cellKey(a))??999)-(distExit.get(cellKey(b))??999));
+      const ratio=gain/before;
+      if(gain>=Math.max(3,Math.ceil(before*.22))&&near<=Math.max(5,Math.floor(before*.38))){
+        candidates.push({a,b,gain,ratio,near,exitDelta,score:gain*12+ratio*25+exitDelta*2-near});
+      }
+    }
+  }
+  candidates.sort((u,v)=>v.score-u.score);
+  if(candidates[0])friendShortcut={a:candidates[0].a,b:candidates[0].b,opened:false,gain:candidates[0].gain};
+};
+
+/* Última pasada de construcción: conserva identificadores persistentes,
+   pero reubica visualmente bananas y anteojos con las nuevas reglas. */
+const buildLevel36Base=buildLevel;
+buildLevel=function(n){
+  buildLevel36Base(n);
+  repositionBananas36();
+  setupVisionGlasses();
+  setupFriendShortcut();
+  setupBananaGate();
+  setupVehicle();
+  placeGuardian();
+  updateBananaHud32();
+  draw();
+};
+
+
+
+/* === CORRECCIÓN 3.8: INICIO ROTADO Y OBJETOS VISIBLES === */
+function nearestFreeCellFromStart38(forbidden){
+  const q=[{...levelStart}],seen=new Set([cellKey(levelStart)]);
+  while(q.length){
+    const cur=q.shift();
+    if(!forbidden.has(cellKey(cur)))return cur;
+    for(const n of neighborsOf(cur.x,cur.y)){
+      const k=cellKey(n);if(!seen.has(k)){seen.add(k);q.push(n)}
+    }
+  }
+  return null;
+}
+function preventStartOverlaps38(){
+  const occupied=new Set([cellKey(levelStart),cellKey(exit)]);
+  if(friend){
+    if(sameCell(friend,levelStart)||sameCell(friend,exit)){
+      const c=nearestFreeCellFromStart38(occupied);if(c){friend.x=c.x;friend.y=c.y}
+    }
+    occupied.add(cellKey(friend));
+  }
+  for(const b of bananas){
+    if(occupied.has(cellKey(b))){
+      const c=nearestFreeCellFromStart38(occupied);if(c){b.x=c.x;b.y=c.y}
+    }
+    occupied.add(cellKey(b));
+  }
+}
+const buildLevel38Base=buildLevel;
+buildLevel=function(n){
+  buildLevel38Base(n);
+  levelStart={...player};
+  preventStartOverlaps38();
+  draw();
+};
+
+/* === FINAL DE LA AVENTURA 3.7 ===
+   La imagen se aloja fuera del HTML, en /img/laberintofinal.png.
+   Como el juego está dentro de una carpeta del sitio, se carga con ../img/. */
+const FINAL_MEMORY_URL='../img/laberintofinal.png';
+
+function showFinalAdventure(){
+  const overlay=document.getElementById('finalAdventureOverlay');
+  const img=document.getElementById('finalAdventureImage');
+  if(img&&img.getAttribute('src')!==FINAL_MEMORY_URL)img.src=FINAL_MEMORY_URL;
+  document.getElementById('messageOverlay').style.display='none';
+  overlay.style.display='flex';
+  overlay.setAttribute('aria-hidden','false');
+}
+
+function hideFinalAdventure(){
+  const overlay=document.getElementById('finalAdventureOverlay');
+  overlay.style.display='none';
+  overlay.setAttribute('aria-hidden','true');
+}
+
+async function downloadFinalMemory(){
+  try{
+    const response=await fetch(FINAL_MEMORY_URL,{cache:'no-store'});
+    if(!response.ok)throw new Error('No se pudo cargar la imagen');
+    const blob=await response.blob();
+    const objectUrl=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=objectUrl;a.download='laberintofinal.png';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(objectUrl),1500);
+  }catch(error){
+    const a=document.createElement('a');
+    a.href=FINAL_MEMORY_URL;a.download='laberintofinal.png';a.target='_blank';
+    document.body.appendChild(a);a.click();a.remove();
+  }
+}
+
+function replayAfterFinal(){
+  hideFinalAdventure();
+  hideMessage();
+  beginBananaRun(1);
+}
+
+function chooseLevelAfterFinal(){
+  hideFinalAdventure();
+  hideMessage();
+  showLevels('start');
+}
+
+const finishLevelFinal37Base=finishLevel;
+finishLevel=function(){
+  finishLevelFinal37Base();
+  if(level===TOTAL_LEVELS){
+    setTimeout(showFinalAdventure,420);
+  }
+};
+
+
+
+/* === ACTUALIZACIÓN 4.0: SIN ROTACIÓN + MECÁNICAS DE INTRODUCCIÓN ===
+   Todos los niveles conservan su orientación original. Esto evita que
+   guardianes, llaves, compañeros y demás objetos se superpongan al inicio. */
+let level3Button=null;
+let level3GateOpen=false;
+let level4Trampoline=null;
+let level4Landing=null;
+let trampolineBusy=false;
+
+function occupiedForIntro39(){
+  const s=new Set([cellKey(levelStart),cellKey(exit)]);
+  bananas.forEach(b=>s.add(cellKey(b)));
+  if(friend)s.add(cellKey(friend));
+  if(specialItem)s.add(cellKey(specialItem));
+  if(vehicleItem)s.add(cellKey(vehicleItem));
+  for(const g of visionGlasses||[])s.add(cellKey(g));
+  return s;
+}
+
+function setupLevel3Button39(){
+  level3Button=null;level3GateOpen=false;
+  if(level!==3)return;
+  const occupied=occupiedForIntro39();
+  const path=shortestPath(levelStart,exit);
+  let candidates=allCells().filter(c=>!occupied.has(cellKey(c))&&neighborsOf(c.x,c.y).length===1);
+  const dist=distancesFrom(levelStart);
+  candidates.sort((a,b)=>{
+    const target=Math.max(3,Math.floor(path.length*.42));
+    return Math.abs((dist.get(cellKey(a))||0)-target)-Math.abs((dist.get(cellKey(b))||0)-target);
+  });
+  let chosen=candidates[0];
+  if(!chosen&&path.length>4){
+    const idx=Math.max(2,Math.min(path.length-2,Math.floor(path.length*.42)));
+    if(!occupied.has(cellKey(path[idx])))chosen=path[idx];
+  }
+  if(!chosen){
+    chosen=allCells().find(c=>!occupied.has(cellKey(c))&&!sameCell(c,exit));
+  }
+  if(chosen)level3Button={...chosen,pressed:false};
+}
+
+function setupLevel4Trampoline39(){
+  level4Trampoline=null;level4Landing=null;trampolineBusy=false;
+  if(level!==4)return;
+  const occupied=occupiedForIntro39();
+  const path=shortestPath(levelStart,exit);
+  if(path.length<6)return;
+  const sourceOptions=path.slice(2,Math.max(3,Math.floor(path.length*.45))).filter(c=>!occupied.has(cellKey(c)));
+  let source=sourceOptions[Math.floor(sourceOptions.length*.55)]||sourceOptions[0];
+  if(!source)source=allCells().find(c=>!occupied.has(cellKey(c))&&pathLength(levelStart,c)>=3);
+  if(!source)return;
+  occupied.add(cellKey(source));
+  const distFromSource=distancesFrom(source);
+  const distFromExit=distancesFrom(exit);
+  let landings=allCells().filter(c=>{
+    const ds=distFromSource.get(cellKey(c))??0;
+    const de=distFromExit.get(cellKey(c))??0;
+    return !occupied.has(cellKey(c))&&ds>=Math.max(5,Math.floor((cols+rows)/3))&&de>=2;
+  });
+  landings.sort((a,b)=>(distFromSource.get(cellKey(b))||0)-(distFromSource.get(cellKey(a))||0));
+  let landing=landings[0];
+  if(!landing){
+    landing=path.slice(Math.floor(path.length*.62),-1).find(c=>!occupied.has(cellKey(c)));
+  }
+  if(landing){level4Trampoline={...source};level4Landing={...landing};}
+}
+
+function moveHazardAwayFromStart39(g){
+  if(!g||!sameCell(g,levelStart))return;
+  if(Array.isArray(g.route)){
+    const safeIndex=g.route.findIndex(c=>!sameCell(c,levelStart)&&!sameCell(c,exit)&&(!friend||!sameCell(c,friend)));
+    if(safeIndex>=0){g.index=safeIndex;g.x=g.route[safeIndex].x;g.y=g.route[safeIndex].y;return;}
+  }
+  const forbidden=occupiedForIntro39();
+  const c=allCells().find(c=>!forbidden.has(cellKey(c))&&pathLength(levelStart,c)>=3);
+  if(c){g.x=c.x;g.y=c.y;}
+}
+
+function sanitizeDynamicStarts39(){
+  moveHazardAwayFromStart39(guardian);
+  moveHazardAwayFromStart39(extraGuardian);
+  const occupied=new Set([cellKey(levelStart),cellKey(exit)]);
+  if(friend)occupied.add(cellKey(friend));
+  bananas.forEach(b=>occupied.add(cellKey(b)));
+  const movable=[specialItem,vehicleItem];
+  for(const item of movable){
+    if(item&&sameCell(item,levelStart)){
+      const c=allCells().find(c=>!occupied.has(cellKey(c))&&pathLength(levelStart,c)>=2);
+      if(c){item.x=c.x;item.y=c.y;occupied.add(cellKey(c));}
+    }
+  }
+}
+
+const buildLevel39Base=buildLevel;
+buildLevel=function(n){
+  buildLevel39Base(n);
+  levelStart={...player};
+  sanitizeDynamicStarts39();
+  setupLevel3Button39();
+  setupLevel4Trampoline39();
+  updateMechanicHud();
+  draw();
+};
+
+const mechanicLabel39Base=mechanicLabel;
+mechanicLabel=function(){
+  if(level===3)return '🔘 botón de entrada';
+  if(level===4)return '🟣 trampolín selvático';
+  return mechanicLabel39Base();
+};
+
+const checkCell39Base=checkCell;
+checkCell=function(){
+  if(level===3&&level3Button&&!level3Button.pressed&&sameCell(player,level3Button)){
+    level3Button.pressed=true;level3GateOpen=true;
+    friendSound();showToast('🔘 ¡Botón activado! La entrada de la escuela se abrió.');
+  }
+  if(level===4&&level4Trampoline&&level4Landing&&!trampolineBusy&&sameCell(player,level4Trampoline)){
+    trampolineBusy=true;
+    player={...level4Landing};
+    steps++;
+    tone(330,.10,'sine',.035);tone(523,.18,'triangle',.045,.08);
+    showToast('🟣 ¡Boing! El trampolín llevó a Nito a otro rincón del mapa.');
+    setTimeout(()=>trampolineBusy=false,320);
+  }
+  checkCell39Base();
+};
+
+const finishLevel39Base=finishLevel;
+finishLevel=function(){
+  if(level===3&&!level3GateOpen){
+    bumpSound();showToast('🔒 La entrada está cerrada. Buscá el botón de la selva.');
+    return;
+  }
+  finishLevel39Base();
+};
+
+function drawIntroMechanics39(size,ox,oy){
+  if(level===3){
+    if(level3Button){
+      const cx=ox+(level3Button.x+.5)*size,cy=oy+(level3Button.y+.5)*size;
+      ctx.save();ctx.translate(cx,cy);
+      ctx.shadowColor=level3Button.pressed?'rgba(120,255,140,.9)':'rgba(255,229,92,.95)';
+      ctx.shadowBlur=size*.16;
+      ctx.fillStyle=level3Button.pressed?'#55b967':'#e9c63b';
+      ctx.strokeStyle='#654b1f';ctx.lineWidth=Math.max(2,size*.04);
+      ctx.beginPath();ctx.arc(0,0,size*.19,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#fff8cf';ctx.beginPath();ctx.arc(-size*.045,-size*.055,size*.055,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    if(!level3GateOpen){
+      const cx=ox+(exit.x+.5)*size,cy=oy+(exit.y+.5)*size;
+      ctx.save();ctx.translate(cx,cy);
+      ctx.fillStyle='rgba(39,83,43,.92)';ctx.fillRect(-size*.34,-size*.08,size*.68,size*.16);
+      ctx.fillStyle='#305f37';
+      for(let i=-2;i<=2;i++){ctx.beginPath();ctx.arc(i*size*.12,0,size*.10,0,Math.PI*2);ctx.fill();}
+      ctx.font=`${Math.max(17,size*.30)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('🔒',0,-size*.22);
+      ctx.restore();
+    }
+  }
+  if(level===4&&level4Trampoline){
+    const cx=ox+(level4Trampoline.x+.5)*size,cy=oy+(level4Trampoline.y+.5)*size;
+    ctx.save();ctx.translate(cx,cy+Math.sin(animTime*5)*size*.025);
+    ctx.shadowColor='rgba(186,102,255,.9)';ctx.shadowBlur=size*.16;
+    ctx.fillStyle='#9551cf';ctx.strokeStyle='#4f2d72';ctx.lineWidth=Math.max(3,size*.05);
+    ctx.beginPath();ctx.ellipse(0,size*.08,size*.28,size*.13,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#d9b6ff';ctx.lineWidth=Math.max(2,size*.035);
+    for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(i*size*.10,-size*.13);ctx.lineTo(i*size*.10,size*.02);ctx.stroke();}
+    ctx.fillStyle='#f1ddff';ctx.fillRect(-size*.30,-size*.17,size*.60,size*.10);
+    ctx.restore();
+  }
+}
+
+const draw39Base=draw;
+draw=function(){
+  draw39Base();
+  if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  drawIntroMechanics39(size,ox,oy);
+};
+
+
+/* === ESTABILIZACIÓN 4.0: INICIO LIMPIO Y BANANAS VISIBLES === */
+function updateBananaHud40(){
+  /* Muestra el total acumulado únicamente durante la partida actual. */
+  if(bananaLabel)bananaLabel.textContent=String(permanentBananas||0);
+  if(bananaTotal)bananaTotal.textContent='';
+  const slash=bananaTotal&&bananaTotal.previousSibling;
+  if(slash&&slash.nodeType===Node.TEXT_NODE)slash.textContent='';
+}
+
+/* Un único modelo de banana, grande, relleno y con contorno oscuro. */
+drawBanana=function(x,y,size,ox,oy,i=0){
+  const cx=ox+(x+.5)*size;
+  const cy=oy+(y+.5)*size+Math.sin(animTime*3+i)*size*.035;
+  const r=Math.max(10,size*.23);
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(-.48);
+  ctx.shadowColor='rgba(77,53,6,.38)';
+  ctx.shadowBlur=Math.max(3,size*.07);
+  ctx.shadowOffsetY=Math.max(2,size*.03);
+  ctx.strokeStyle='#6f5008';
+  ctx.lineWidth=Math.max(8,size*.17);
+  ctx.beginPath();ctx.arc(0,0,r,.18,2.45);ctx.stroke();
+  ctx.shadowColor='rgba(255,226,50,.85)';
+  ctx.shadowBlur=Math.max(4,size*.10);
+  ctx.strokeStyle='#ffd52f';
+  ctx.lineWidth=Math.max(6,size*.125);
+  ctx.stroke();
+  ctx.shadowBlur=0;
+  ctx.strokeStyle='#fff3a0';
+  ctx.lineWidth=Math.max(2,size*.028);
+  ctx.stroke();
+  ctx.fillStyle='#5d4315';
+  ctx.beginPath();
+  ctx.arc(r*Math.cos(.18),r*Math.sin(.18),Math.max(2,size*.032),0,Math.PI*2);
+  ctx.arc(r*Math.cos(2.45),r*Math.sin(2.45),Math.max(2,size*.032),0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+};
+
+/* Refuerzo final de construcción: ninguna banana queda marcada al iniciar. */
+const buildLevel40Base=buildLevel;
+buildLevel=function(n){
+  buildLevel40Base(n);
+  /* Cada nivel estrena sus bananas, pero conserva el total de esta partida. */
+  for(const b of bananas)b.got=false;
+  collected=0;
+  updateBananaHud40();
+  draw();
+};
+
+/* Comienza una partida nueva. Solo aquí se borra el acumulado de bananas. */
+function beginBananaRun(firstLevel=1){
+  permanentBananas=0;
+  collected=0;
+  if(foundBananaIds&&typeof foundBananaIds.clear==='function')foundBananaIds.clear();
+  updateBananaHud40();
+  startGame(firstLevel);
+}
+
+/* El HUD se actualiza siempre con las bananas de la pantalla actual. */
+const updateHud40Base=updateHud;
+updateHud=function(){
+  updateHud40Base();
+  updateBananaHud40();
+};
+
+/* Estado inicial inequívoco: nunca mostrar la victoria al cargar la página. */
+(function initializeCleanScreen40(){
+  try{
+    localStorage.removeItem('nitoBananaBank');
+    localStorage.removeItem('nitoBananaIds');
+  }catch(_){ }
+  permanentBananas=0;
+  if(foundBananaIds&&typeof foundBananaIds.clear==='function')foundBananaIds.clear();
+  const finalOverlay=document.getElementById('finalAdventureOverlay');
+  const startOverlay=document.getElementById('startOverlay');
+  const messageOverlay=document.getElementById('messageOverlay');
+  const levelsOverlay=document.getElementById('levelsOverlay');
+  if(finalOverlay){finalOverlay.style.display='none';finalOverlay.setAttribute('aria-hidden','true');}
+  if(startOverlay)startOverlay.style.display='flex';
+  if(messageOverlay)messageOverlay.style.display='none';
+  if(levelsOverlay)levelsOverlay.style.display='none';
+  collected=0;
+  updateBananaHud40();
+})();
+
+</script>
+
+
+<script>
+'use strict';
+
+/* === AJUSTE 4.1: DESCUBRIMIENTO SIN CARTELES + EXPLORACIÓN + VUELO === */
+
+/* Las mecánicas se descubren jugando: no aparecen avisos explicativos. */
+showToast=function(){ };
+const updateMechanicHud41Base=updateMechanicHud;
+updateMechanicHud=function(){
+  updateMechanicHud41Base();
+  const pill=document.getElementById('mechanicPill');
+  if(pill)pill.style.display='none';
+  const eventPill=document.getElementById('eventPill');
+  if(eventPill)eventPill.style.display='none';
+};
+
+/* El botón del nivel 3 siempre queda fuera del camino directo a la escuela. */
+function placeLevel3ButtonOffMainPath41(){
+  if(level!==3)return;
+  level3GateOpen=false;
+  const mainPath=shortestPath(levelStart,exit);
+  const mainSet=new Set(mainPath.map(cellKey));
+  const occupied=occupiedForIntro39();
+  if(level3Button)occupied.delete(cellKey(level3Button));
+  const dist=distancesFrom(levelStart);
+
+  let candidates=allCells().filter(c=>
+    !mainSet.has(cellKey(c)) &&
+    !occupied.has(cellKey(c)) &&
+    neighborsOf(c.x,c.y).length===1 &&
+    (dist.get(cellKey(c))||0)>=3
+  );
+
+  if(!candidates.length){
+    candidates=allCells().filter(c=>
+      !mainSet.has(cellKey(c)) &&
+      !occupied.has(cellKey(c)) &&
+      (dist.get(cellKey(c))||0)>=3
+    );
+  }
+
+  candidates.sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+  if(candidates.length)level3Button={...candidates[0],pressed:false};
+}
+
+const buildLevel41Base=buildLevel;
+buildLevel=function(n){
+  buildLevel41Base(n);
+  placeLevel3ButtonOffMainPath41();
+  updateMechanicHud();
+  draw();
+};
+
+/* Vuelo animado del trampolín. */
+let trampolineFlight41=null;
+const drawNito41Base=drawNito;
+drawNito=function(x,y,size,ox,oy){
+  if(trampolineFlight41)return;
+  drawNito41Base(x,y,size,ox,oy);
+};
+
+function trampolineSound41(){
+  tone(190,.10,'sine',.055);
+  tone(290,.12,'triangle',.05,.07);
+  tone(520,.16,'triangle',.055,.15);
+  tone(760,.12,'sine',.035,.27);
+}
+
+function startTrampolineFlight41(){
+  if(!level4Trampoline||!level4Landing||trampolineBusy)return;
+  trampolineBusy=true;
+  moveLock=true;
+  steps++;
+  trampolineSound41();
+  trampolineFlight41={
+    from:{...level4Trampoline},
+    to:{...level4Landing},
+    start:performance.now(),
+    duration:820
+  };
+  updateHud();
+  setTimeout(()=>{
+    player={...level4Landing};
+    trampolineFlight41=null;
+    trampolineBusy=false;
+    moveLock=false;
+    checkCell41Base();
+    updateHud();
+    draw();
+    tone(250,.08,'square',.028);
+    tone(150,.12,'sine',.035,.05);
+  },820);
+}
+
+const checkCell41Base=checkCell;
+checkCell=function(){
+  if(level===4&&level4Trampoline&&level4Landing&&!trampolineBusy&&sameCell(player,level4Trampoline)){
+    startTrampolineFlight41();
+    return;
+  }
+  checkCell41Base();
+};
+
+/* Redibujo de las mecánicas introductorias. */
+drawIntroMechanics39=function(size,ox,oy){
+  if(level===3){
+    if(level3Button){
+      const cx=ox+(level3Button.x+.5)*size,cy=oy+(level3Button.y+.5)*size;
+      const press=level3Button.pressed?size*.045:0;
+      ctx.save();ctx.translate(cx,cy+press);
+      ctx.shadowColor=level3Button.pressed?'rgba(100,220,120,.75)':'rgba(255,225,70,.85)';
+      ctx.shadowBlur=size*.12;
+      ctx.fillStyle='#6a4a22';
+      ctx.beginPath();ctx.ellipse(0,size*.11,size*.25,size*.10,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=level3Button.pressed?'#4da65d':'#e8c438';
+      ctx.strokeStyle='#5c431e';ctx.lineWidth=Math.max(2,size*.04);
+      ctx.beginPath();ctx.ellipse(0,0,size*.20,size*.13,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='rgba(255,255,220,.75)';
+      ctx.beginPath();ctx.ellipse(-size*.055,-size*.035,size*.06,size*.032,-.35,0,Math.PI*2);ctx.fill();
+      ctx.restore();
+    }
+    if(!level3GateOpen){
+      const cx=ox+(exit.x+.5)*size,cy=oy+(exit.y+.5)*size;
+      ctx.save();ctx.translate(cx,cy);
+      ctx.fillStyle='#315f38';
+      for(let i=-3;i<=3;i++){
+        ctx.beginPath();ctx.arc(i*size*.09,Math.sin(i)*size*.025,size*.095,0,Math.PI*2);ctx.fill();
+      }
+      ctx.strokeStyle='#214a2b';ctx.lineWidth=Math.max(3,size*.045);
+      ctx.beginPath();ctx.moveTo(-size*.32,-size*.08);ctx.lineTo(size*.32,size*.08);ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  if(level===4&&level4Trampoline){
+    const cx=ox+(level4Trampoline.x+.5)*size,cy=oy+(level4Trampoline.y+.5)*size;
+    const active=trampolineFlight41!==null;
+    const squash=active?.55:(.92+.08*Math.sin(animTime*4));
+    ctx.save();ctx.translate(cx,cy);
+
+    /* Patas y resortes visibles. */
+    ctx.strokeStyle='#5a3b70';ctx.lineWidth=Math.max(3,size*.045);
+    for(const sx of [-.17,.17]){
+      ctx.beginPath();
+      ctx.moveTo(size*sx,size*.19);
+      ctx.lineTo(size*sx,size*.10);
+      ctx.lineTo(size*(sx-.055),size*.03);
+      ctx.lineTo(size*(sx+.055),-size*.04);
+      ctx.lineTo(size*sx,-size*.11);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle='#59356f';
+    ctx.beginPath();ctx.ellipse(0,size*.22,size*.31,size*.10,0,0,Math.PI*2);ctx.fill();
+    ctx.shadowColor='rgba(210,120,255,.85)';ctx.shadowBlur=size*.15;
+    ctx.scale(1,squash);
+    ctx.fillStyle='#b564e6';ctx.strokeStyle='#4d2768';ctx.lineWidth=Math.max(3,size*.05);
+    ctx.beginPath();ctx.ellipse(0,-size*.08,size*.31,size*.15,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.strokeStyle='#efd8ff';ctx.lineWidth=Math.max(2,size*.025);
+    ctx.beginPath();ctx.ellipse(0,-size*.08,size*.23,size*.09,0,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+  }
+};
+
+const draw41Base=draw;
+draw=function(){
+  draw41Base();
+  if(!maze||!trampolineFlight41)return;
+  const {size,ox,oy}=cellMetrics();
+  const now=performance.now();
+  const p=Math.min(1,(now-trampolineFlight41.start)/trampolineFlight41.duration);
+  const ease=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+  const x=trampolineFlight41.from.x+(trampolineFlight41.to.x-trampolineFlight41.from.x)*ease;
+  const baseY=trampolineFlight41.from.y+(trampolineFlight41.to.y-trampolineFlight41.from.y)*ease;
+  const arc=Math.sin(Math.PI*p)*Math.max(1.15,Math.min(2.8,(cols+rows)/9));
+  const y=baseY-arc;
+
+  ctx.save();
+  const shadowX=ox+(x+.5)*size;
+  const shadowY=oy+(baseY+.78)*size;
+  ctx.fillStyle=`rgba(40,45,35,${.24*(1-Math.sin(Math.PI*p)*.55)})`;
+  ctx.beginPath();ctx.ellipse(shadowX,shadowY,size*.22,size*.07,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+
+  drawNito41Base(x,y,size,ox,oy);
+
+  /* Pequeñas líneas de velocidad para que el vuelo se entienda sin texto. */
+  ctx.save();
+  ctx.strokeStyle='rgba(255,255,235,.75)';
+  ctx.lineWidth=Math.max(2,size*.025);ctx.lineCap='round';
+  const cx=ox+(x+.5)*size,cy=oy+(y+.5)*size;
+  for(let i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.moveTo(cx-size*(.28+i*.07),cy+size*(.04+i*.05));
+    ctx.lineTo(cx-size*(.43+i*.08),cy+size*(.08+i*.05));
+    ctx.stroke();
+  }
+  ctx.restore();
+};
+
+/* Oculta cualquier cartel ya creado al cargar esta versión. */
+(function cleanMechanicLabels41(){
+  const pill=document.getElementById('mechanicPill');
+  if(pill)pill.style.display='none';
+  const eventPill=document.getElementById('eventPill');
+  if(eventPill)eventPill.style.display='none';
+})();
+</script>
+
+
+<style>
+/* === AJUSTE 4.2: CONTROLES EN UNA SOLA FILA === */
+.pad{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(54px,1fr));
+  grid-template-rows:1fr;
+  gap:8px;
+  width:min(390px,100%);
+  max-width:390px;
+}
+#left{grid-column:1;grid-row:1}
+#right{grid-column:2;grid-row:1}
+#up{grid-column:3;grid-row:1}
+#down{grid-column:4;grid-row:1}
+@media(max-width:700px){
+  .pad{width:min(280px,96vw);max-width:280px;gap:4px}
+  .control{min-width:0}
+}
+@media(max-width:700px) and (orientation:landscape){
+  .game-wrap{padding:2px}
+  canvas{max-height:calc(100dvh - 88px)}
+  .controls{position:static;right:auto;top:auto;transform:none;width:auto;padding:3px 6px 5px;border-radius:0}
+  .pad{width:270px;max-width:270px;gap:4px}
+  .control{height:34px;min-height:34px;font-size:17px}
+}
+</style>
+<script>
+'use strict';
+/* === AJUSTE 4.2: NIVEL 9, LINTERNAS, BOTÓN Y CONTROLES === */
+
+let flashlightItem42=null;
+let flashlightOwned42=false;
+let level9Trampoline42=null;
+let level9Landing42=null;
+let lastFacing42={dx:1,dy:0};
+let darknessCanvas42=null;
+let darknessCtx42=null;
+
+/* El nivel 17 usa nuestra oscuridad direccional; el 11 conserva la original. */
+if(typeof DARK_LEVELS!=='undefined')DARK_LEVELS.delete(17);
+
+/* Un anteojo en el 11 y uno en el 17. */
+setupVisionGlasses=function(){
+  visionGlasses=[];visionRadius=2.15;
+  const amount=(level===11||level===17)?1:0;
+  if(!amount)return;
+  const dist=distancesFrom(levelStart);
+  const forbidden=occupiedKeys();
+  if(logicChallenge)forbidden.add(cellKey(logicChallenge.item));
+  let cells=allCells().filter(c=>!forbidden.has(cellKey(c))&&!sameCell(c,exit)&&(!friend||!sameCell(c,friend)));
+  cells.sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+  if(cells.length)visionGlasses=[{...cells[0],got:false}];
+};
+
+function placeFlashlight42(){
+  flashlightItem42=null;flashlightOwned42=false;
+  if(level!==9&&level!==17)return;
+  const forbidden=occupiedForIntro39();
+  if(level9Trampoline42)forbidden.add(cellKey(level9Trampoline42));
+  if(level9Landing42)forbidden.add(cellKey(level9Landing42));
+  const dist=distancesFrom(levelStart);
+  let cells=allCells().filter(c=>
+    !forbidden.has(cellKey(c)) && !sameCell(c,exit) &&
+    (!friend||!sameCell(c,friend)) && (dist.get(cellKey(c))||0)>=3
+  );
+  /* Que pueda encontrarse explorando, sin quedar pegada al comienzo. */
+  cells.sort((a,b)=>{
+    const da=dist.get(cellKey(a))||0,db=dist.get(cellKey(b))||0;
+    const branchA=neighborsOf(a.x,a.y).length===1?5:0;
+    const branchB=neighborsOf(b.x,b.y).length===1?5:0;
+    return (db+branchB)-(da+branchA);
+  });
+  if(cells.length)flashlightItem42={...cells[Math.min(2,cells.length-1)],got:false};
+}
+
+function setupLevel9Trampoline42(){
+  level9Trampoline42=null;level9Landing42=null;
+  if(level!==9)return;
+  const occupied=occupiedForIntro39();
+  const path=shortestPath(levelStart,exit);
+  if(path.length<7)return;
+  const sourceBand=path.slice(2,Math.max(4,Math.floor(path.length*.48))).filter(c=>!occupied.has(cellKey(c)));
+  const source=sourceBand[Math.floor(sourceBand.length*.58)]||sourceBand[0];
+  if(!source)return;
+  occupied.add(cellKey(source));
+  const fromSource=distancesFrom(source);
+  const fromExit=distancesFrom(exit);
+  let landings=allCells().filter(c=>
+    !occupied.has(cellKey(c)) &&
+    (fromSource.get(cellKey(c))||0)>=Math.max(6,Math.floor((cols+rows)/3)) &&
+    (fromExit.get(cellKey(c))||0)>=3
+  );
+  landings.sort((a,b)=>(fromSource.get(cellKey(b))||0)-(fromSource.get(cellKey(a))||0));
+  const landing=landings[0]||path.slice(Math.floor(path.length*.65),-1).find(c=>!occupied.has(cellKey(c)));
+  if(landing){level9Trampoline42={...source};level9Landing42={...landing};}
+}
+
+/* Botón del nivel 3: arriba y a la derecha, siempre fuera de la ruta directa. */
+function placeLevel3ButtonUpperRight42(){
+  if(level!==3)return;
+  level3GateOpen=false;
+  const mainSet=new Set(shortestPath(levelStart,exit).map(cellKey));
+  const occupied=occupiedForIntro39();
+  if(level3Button)occupied.delete(cellKey(level3Button));
+  const dist=distancesFrom(levelStart);
+  let candidates=allCells().filter(c=>
+    !mainSet.has(cellKey(c)) && !occupied.has(cellKey(c)) &&
+    c.x>=Math.floor(cols*.55) && c.y<=Math.floor(rows*.45) &&
+    (dist.get(cellKey(c))||0)>=3
+  );
+  if(!candidates.length)candidates=allCells().filter(c=>
+    !mainSet.has(cellKey(c))&&!occupied.has(cellKey(c))&&(dist.get(cellKey(c))||0)>=3
+  );
+  candidates.sort((a,b)=>{
+    const deadA=neighborsOf(a.x,a.y).length===1?8:0;
+    const deadB=neighborsOf(b.x,b.y).length===1?8:0;
+    const scoreA=a.x*3-a.y*3+deadA+(dist.get(cellKey(a))||0)*.15;
+    const scoreB=b.x*3-b.y*3+deadB+(dist.get(cellKey(b))||0)*.15;
+    return scoreB-scoreA;
+  });
+  if(candidates.length)level3Button={...candidates[0],pressed:false};
+}
+
+const buildLevel42Base=buildLevel;
+buildLevel=function(n){
+  buildLevel42Base(n);
+  setupLevel9Trampoline42();
+  placeFlashlight42();
+  placeLevel3ButtonUpperRight42();
+  draw();
+};
+
+function flashlightSound42(){
+  tone(240,.08,'square',.025);
+  tone(520,.16,'sine',.045,.05);
+  tone(760,.18,'triangle',.035,.14);
+}
+
+function startTrampolineFlight42(source,landing){
+  if(!source||!landing||trampolineBusy||trampolineFlight41)return;
+  trampolineBusy=true;moveLock=true;steps++;
+  trampolineSound41();
+  trampolineFlight41={from:{...source},to:{...landing},start:performance.now(),duration:860};
+  updateHud();
+  setTimeout(()=>{
+    player={...landing};
+    trampolineFlight41=null;trampolineBusy=false;moveLock=false;
+    checkCell42Base();updateHud();draw();
+    tone(250,.08,'square',.028);tone(150,.12,'sine',.035,.05);
+  },860);
+}
+
+const checkCell42Base=checkCell;
+checkCell=function(){
+  if(level===9&&level9Trampoline42&&level9Landing42&&!trampolineBusy&&sameCell(player,level9Trampoline42)){
+    startTrampolineFlight42(level9Trampoline42,level9Landing42);return;
+  }
+  if(flashlightItem42&&!flashlightItem42.got&&sameCell(player,flashlightItem42)){
+    flashlightItem42.got=true;flashlightOwned42=true;flashlightSound42();
+  }
+  checkCell42Base();
+};
+
+/* La linterna apunta hacia la última flecha o tecla direccional presionada. */
+const tryMove42Base=tryMove;
+tryMove=function(dx,dy){
+  if(dx||dy)lastFacing42={dx,dy};
+  tryMove42Base(dx,dy);
+};
+
+function drawFlashlight42(size,ox,oy){
+  if(!flashlightItem42||flashlightItem42.got)return;
+  const cx=ox+(flashlightItem42.x+.5)*size;
+  const cy=oy+(flashlightItem42.y+.5)*size+Math.sin(animTime*3.2)*size*.035;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(-.45);
+  ctx.shadowColor='rgba(255,235,120,.9)';ctx.shadowBlur=size*.14;
+  ctx.fillStyle='#f3c94c';ctx.strokeStyle='#5d4b19';ctx.lineWidth=Math.max(2,size*.035);
+  ctx.beginPath();ctx.roundRect(-size*.20,-size*.09,size*.27,size*.18,size*.05);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#dfe8ef';
+  ctx.beginPath();ctx.moveTo(size*.06,-size*.13);ctx.lineTo(size*.22,-size*.18);ctx.lineTo(size*.22,size*.18);ctx.lineTo(size*.06,size*.13);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle='#fff7ae';ctx.beginPath();ctx.arc(size*.20,0,size*.065,0,Math.PI*2);ctx.fill();
+  ctx.restore();
+}
+
+function drawTrampoline42(item,size,ox,oy){
+  if(!item)return;
+  const cx=ox+(item.x+.5)*size,cy=oy+(item.y+.5)*size;
+  const active=trampolineFlight41!==null;
+  const squash=active?.55:(.92+.08*Math.sin(animTime*4));
+  ctx.save();ctx.translate(cx,cy);
+  ctx.strokeStyle='#5a3b70';ctx.lineWidth=Math.max(3,size*.045);
+  for(const sx of [-.17,.17]){
+    ctx.beginPath();ctx.moveTo(size*sx,size*.19);ctx.lineTo(size*sx,size*.10);
+    ctx.lineTo(size*(sx-.055),size*.03);ctx.lineTo(size*(sx+.055),-size*.04);
+    ctx.lineTo(size*sx,-size*.11);ctx.stroke();
+  }
+  ctx.fillStyle='#59356f';ctx.beginPath();ctx.ellipse(0,size*.22,size*.31,size*.10,0,0,Math.PI*2);ctx.fill();
+  ctx.shadowColor='rgba(210,120,255,.85)';ctx.shadowBlur=size*.15;
+  ctx.scale(1,squash);ctx.fillStyle='#b564e6';ctx.strokeStyle='#4d2768';ctx.lineWidth=Math.max(3,size*.05);
+  ctx.beginPath();ctx.ellipse(0,-size*.08,size*.31,size*.15,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.strokeStyle='#efd8ff';ctx.lineWidth=Math.max(2,size*.025);
+  ctx.beginPath();ctx.ellipse(0,-size*.08,size*.23,size*.09,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+}
+
+function ensureDarkCanvas42(){
+  if(!darknessCanvas42){darknessCanvas42=document.createElement('canvas');darknessCtx42=darknessCanvas42.getContext('2d');}
+  if(darknessCanvas42.width!==canvas.width||darknessCanvas42.height!==canvas.height){
+    darknessCanvas42.width=canvas.width;darknessCanvas42.height=canvas.height;
+  }
+}
+
+function drawDirectionalDarkness42(size,ox,oy){
+  if(level!==9&&level!==17)return;
+  ensureDarkCanvas42();
+  const dctx=darknessCtx42,w=darknessCanvas42.width,h=darknessCanvas42.height;
+  const cx=ox+(player.x+.5)*size,cy=oy+(player.y+.5)*size;
+  dctx.clearRect(0,0,w,h);
+  dctx.globalCompositeOperation='source-over';
+  dctx.fillStyle='rgba(3,9,17,.94)';dctx.fillRect(0,0,w,h);
+  dctx.globalCompositeOperation='destination-out';
+
+  /* Pequeña claridad alrededor de Nito; el anteojo del 17 la amplía. */
+  const baseRadius=size*(level===17?visionRadius:1.25);
+  const radial=dctx.createRadialGradient(cx,cy,size*.30,cx,cy,baseRadius);
+  radial.addColorStop(0,'rgba(0,0,0,1)');radial.addColorStop(.65,'rgba(0,0,0,.88)');radial.addColorStop(1,'rgba(0,0,0,0)');
+  dctx.fillStyle=radial;dctx.beginPath();dctx.arc(cx,cy,baseRadius,0,Math.PI*2);dctx.fill();
+
+  if(flashlightOwned42){
+    const angle=Math.atan2(lastFacing42.dy,lastFacing42.dx);
+    const length=size*(level===17?5.2:4.8),half=.46;
+    const cone=dctx.createRadialGradient(cx,cy,size*.35,cx,cy,length);
+    cone.addColorStop(0,'rgba(0,0,0,1)');cone.addColorStop(.72,'rgba(0,0,0,.92)');cone.addColorStop(1,'rgba(0,0,0,0)');
+    dctx.fillStyle=cone;dctx.beginPath();dctx.moveTo(cx,cy);
+    dctx.arc(cx,cy,length,angle-half,angle+half);dctx.closePath();dctx.fill();
+  }
+  dctx.globalCompositeOperation='source-over';
+  ctx.drawImage(darknessCanvas42,0,0);
+}
+
+const draw42Base=draw;
+draw=function(){
+  draw42Base();
+  if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  if(level===9)drawTrampoline42(level9Trampoline42,size,ox,oy);
+  drawFlashlight42(size,ox,oy);
+  drawDirectionalDarkness42(size,ox,oy);
+};
+</script>
+
+
+
+<script>
+'use strict';
+/* === VERSIÓN 2.1 — ESTABILIDAD, REMOLINO TEMPORAL Y PROTECCIÓN === */
+
+let nitoInvulnerableUntil21=0;
+let whirlpoolEffectUntil21=0;
+let whirlpoolTimer21=null;
+const INVULNERABILITY_MS_21=2000;
+const WHIRLPOOL_DURATION_MS_21=10000;
+
+function now21(){return performance.now()}
+function nitoIsInvulnerable21(){return now21()<nitoInvulnerableUntil21}
+
+/* Toda devolución al inicio activa dos segundos de protección.
+   Esto intercepta también las llamadas antiguas de los guardianes. */
+resetToStart=function(){
+  if(nitoIsInvulnerable21())return;
+  player={...levelStart};
+  nitoInvulnerableUntil21=now21()+INVULNERABILITY_MS_21;
+  moveLock=true;
+  setTimeout(()=>{moveLock=false},220);
+  bumpSound();
+  updateHud();
+  draw();
+};
+
+function clearWhirlpoolEffect21(){
+  controlsReversed=false;
+  whirlpoolEffectUntil21=0;
+  if(whirlpoolTimer21){clearTimeout(whirlpoolTimer21);whirlpoolTimer21=null}
+}
+function activateWhirlpoolEffect21(){
+  controlsReversed=true;
+  whirlpoolEffectUntil21=now21()+WHIRLPOOL_DURATION_MS_21;
+  if(whirlpoolTimer21)clearTimeout(whirlpoolTimer21);
+  whirlpoolTimer21=setTimeout(()=>{
+    clearWhirlpoolEffect21();
+    glassesSound();
+    draw();
+  },WHIRLPOOL_DURATION_MS_21);
+  glassesSound();
+}
+
+/* Reinicio limpio al entrar a cualquier nivel. */
+const buildLevel21Base=buildLevel;
+buildLevel=function(n){
+  clearWhirlpoolEffect21();
+  nitoInvulnerableUntil21=0;
+  buildLevel21Base(n);
+};
+
+/* Intercepta el remolino antes de la lógica anterior para que el efecto
+   dure diez segundos y no permanezca invertido durante todo el nivel. */
+const checkCell21Base=checkCell;
+checkCell=function(){
+  if(whirlpool&&!whirlpool.used&&sameCell(player,whirlpool)){
+    whirlpool.used=true;
+    activateWhirlpoolEffect21();
+  }
+  checkCell21Base();
+};
+
+/* Las versiones antiguas alternaban el estado al tocar el remolino.
+   Restauramos explícitamente el estado temporal después de cada chequeo. */
+const tryMove21Base=tryMove;
+tryMove=function(dx,dy){
+  if(whirlpoolEffectUntil21&&now21()>=whirlpoolEffectUntil21)clearWhirlpoolEffect21();
+  tryMove21Base(dx,dy);
+};
+
+/* Colisión permanente y fiable: se revisa al mover a Nito y también
+   después de cada paso de cualquier guardián. */
+function guardianTouchesNito21(){
+  if(nitoIsInvulnerable21())return false;
+  return Boolean((guardian&&sameCell(player,guardian))||(extraGuardian&&sameCell(player,extraGuardian)));
+}
+const advanceGuardian21Base=advanceGuardian;
+advanceGuardian=function(t){
+  advanceGuardian21Base(t);
+  if(guardianTouchesNito21())resetToStart();
+};
+const tryMoveCollision21Base=tryMove;
+tryMove=function(dx,dy){
+  tryMoveCollision21Base(dx,dy);
+  if(guardianTouchesNito21())resetToStart();
+};
+
+/* Nito titila durante la invulnerabilidad. */
+const drawNito21Base=drawNito;
+drawNito=function(x,y,size,ox,oy){
+  if(nitoIsInvulnerable21()&&Math.floor(now21()/95)%2===0)return;
+  drawNito21Base(x,y,size,ox,oy);
+};
+
+/* El círculo fijo de la esquina superior izquierda pertenecía al indicador
+   del atajo por bananas. Se elimina: el mapa debe explicarse jugando. */
+drawExplorerRoute33=function(){};
+
+/* Señal visual del remolino: diez estrellas, una por cada segundo restante.
+   No usa texto ni explica la mecánica. */
+function drawWhirlpoolStars21(size,ox,oy){
+  if(!whirlpoolEffectUntil21)return;
+  const left=Math.max(0,whirlpoolEffectUntil21-now21());
+  if(left<=0){clearWhirlpoolEffect21();return}
+  const count=Math.max(1,Math.ceil(left/1000));
+  const cx=ox+(player.x+.5)*size;
+  const cy=oy+(player.y+.5)*size-size*.36;
+  ctx.save();
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font=`${Math.max(10,size*.14)}px Arial`;
+  for(let i=0;i<count;i++){
+    const a=animTime*4+i*(Math.PI*2/10);
+    const r=size*(.28+.025*Math.sin(animTime*5+i));
+    ctx.save();ctx.translate(cx+Math.cos(a)*r,cy+Math.sin(a)*r*.42);
+    ctx.rotate(-a*.35);ctx.fillText('⭐',0,0);ctx.restore();
+  }
+  ctx.restore();
+}
+
+const draw21Base=draw;
+draw=function(){
+  draw21Base();
+  if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  drawWhirlpoolStars21(size,ox,oy);
+};
+
+/* Los trampolines quedan disponibles siempre. No se marca ninguno como usado.
+   La única limitación es esperar a que termine el vuelo actual. */
+function keepTrampolinesReusable21(){
+  if(level4Trampoline&&'used' in level4Trampoline)delete level4Trampoline.used;
+  if(level9Trampoline42&&'used' in level9Trampoline42)delete level9Trampoline42.used;
+}
+const buildLevelReusable21Base=buildLevel;
+buildLevel=function(n){buildLevelReusable21Base(n);keepTrampolinesReusable21()};
+</script>
+</body>
+</html>
