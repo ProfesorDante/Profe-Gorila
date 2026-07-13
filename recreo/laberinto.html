@@ -2634,7 +2634,7 @@ let nitoInvulnerableUntil21=0;
 let whirlpoolEffectUntil21=0;
 let whirlpoolTimer21=null;
 const INVULNERABILITY_MS_21=2000;
-const WHIRLPOOL_DURATION_MS_21=10000;
+const WHIRLPOOL_DURATION_MS_21=15000;
 
 function now21(){return performance.now()}
 function nitoIsInvulnerable21(){return now21()<nitoInvulnerableUntil21}
@@ -2678,7 +2678,7 @@ buildLevel=function(n){
 };
 
 /* Intercepta el remolino antes de la lógica anterior para que el efecto
-   dure diez segundos y no permanezca invertido durante todo el nivel. */
+   dure quince segundos y no permanezca invertido durante todo el nivel. */
 const checkCell21Base=checkCell;
 checkCell=function(){
   if(whirlpool&&!whirlpool.used&&sameCell(player,whirlpool)){
@@ -2724,20 +2724,20 @@ drawNito=function(x,y,size,ox,oy){
    del atajo por bananas. Se elimina: el mapa debe explicarse jugando. */
 drawExplorerRoute33=function(){};
 
-/* Señal visual del remolino: diez estrellas, una por cada segundo restante.
+/* Señal visual del remolino: tres estrellas que desaparecen de a una cada cinco segundos.
    No usa texto ni explica la mecánica. */
 function drawWhirlpoolStars21(size,ox,oy){
   if(!whirlpoolEffectUntil21)return;
   const left=Math.max(0,whirlpoolEffectUntil21-now21());
   if(left<=0){clearWhirlpoolEffect21();return}
-  const count=Math.max(1,Math.ceil(left/1000));
+  const count=Math.max(1,Math.ceil(left/5000));
   const cx=ox+(player.x+.5)*size;
   const cy=oy+(player.y+.5)*size-size*.36;
   ctx.save();
   ctx.textAlign='center';ctx.textBaseline='middle';
-  ctx.font=`${Math.max(10,size*.14)}px Arial`;
+  ctx.font=`${Math.max(12,size*.17)}px Arial`;
   for(let i=0;i<count;i++){
-    const a=animTime*4+i*(Math.PI*2/10);
+    const a=animTime*4+i*(Math.PI*2/3);
     const r=size*(.28+.025*Math.sin(animTime*5+i));
     ctx.save();ctx.translate(cx+Math.cos(a)*r,cy+Math.sin(a)*r*.42);
     ctx.rotate(-a*.35);ctx.fillText('⭐',0,0);ctx.restore();
@@ -2762,5 +2762,120 @@ function keepTrampolinesReusable21(){
 const buildLevelReusable21Base=buildLevel;
 buildLevel=function(n){buildLevelReusable21Base(n);keepTrampolinesReusable21()};
 </script>
+
+
+<script>
+'use strict';
+/* === VERSIÓN 2.2.1 — GORILA CURIOSO ===
+   Interacción secreta: si Nito alterna rápidamente izquierda/derecha
+   o arriba/abajo dentro de la visión recta de un gorila, este investiga
+   el lugar del movimiento. No hay explicación escrita. */
+
+const TAUNT_WINDOW_MS_221=1350;
+const TAUNT_ALERT_MS_221=850;
+const TAUNT_SEARCH_MS_221=6500;
+let tauntInputs221=[];
+
+function isGorilla221(g){return Boolean(g&&(g.kind==='gorilla1'||g.kind==='gorilla2'||g.icon==='🦍'))}
+function directionToken221(dx,dy){
+  if(dx<0)return 'L';if(dx>0)return 'R';if(dy<0)return 'U';if(dy>0)return 'D';return '';
+}
+function isAlternatingTaunt221(tokens){
+  if(tokens.length<6)return false;
+  const a=tokens.slice(-6).join('');
+  return a==='LRLRLR'||a==='RLRLRL'||a==='UDUDUD'||a==='DUDUDU';
+}
+function guardianSeesPlayerStraight221(g){
+  if(!g)return false;
+  if(g.x===player.x){
+    const step=player.y>g.y?1:-1;
+    const key=step>0?'down':'up';
+    for(let y=g.y;y!==player.y;y+=step){if(maze[y][g.x].walls[key])return false}
+    return true;
+  }
+  if(g.y===player.y){
+    const step=player.x>g.x?1:-1;
+    const key=step>0?'right':'left';
+    for(let x=g.x;x!==player.x;x+=step){if(maze[g.y][x].walls[key])return false}
+    return true;
+  }
+  return false;
+}
+function awakenGorilla221(g){
+  if(!isGorilla221(g)||!guardianSeesPlayerStraight221(g))return false;
+  const t=performance.now();
+  g.tauntTarget221={x:player.x,y:player.y};
+  g.tauntUntil221=t+TAUNT_SEARCH_MS_221;
+  g.alertUntil221=t+TAUNT_ALERT_MS_221;
+  g.questionUntil221=0;
+  g.nextAt=Math.min(g.nextAt||t,t+120);
+  tone(196,.08,'square',.025);tone(247,.10,'square',.022,.06);
+  return true;
+}
+function registerTauntInput221(dx,dy){
+  const token=directionToken221(dx,dy);if(!token)return;
+  const t=performance.now();
+  tauntInputs221.push({token,t});
+  tauntInputs221=tauntInputs221.filter(e=>t-e.t<=TAUNT_WINDOW_MS_221).slice(-8);
+  const tokens=tauntInputs221.map(e=>e.token);
+  if(!isAlternatingTaunt221(tokens))return;
+  const reacted=awakenGorilla221(guardian)|awakenGorilla221(extraGuardian);
+  if(reacted)tauntInputs221=[];
+}
+
+/* Se registra la intención original del jugador, antes de cualquier inversión
+   producida por el remolino. */
+const tryMove221Base=tryMove;
+tryMove=function(dx,dy){registerTauntInput221(dx,dy);tryMove221Base(dx,dy)};
+
+/* Durante la investigación el gorila abandona su patrulla y camina hasta
+   la última casilla donde vio el movimiento. Luego vuelve solo a su ruta. */
+const chooseGuardianNext221Base=chooseGuardianNext;
+chooseGuardianNext=function(g){
+  if(isGorilla221(g)&&g.tauntTarget221){
+    const t=performance.now();
+    if(t<g.tauntUntil221){
+      if(sameCell(g,g.tauntTarget221)){
+        g.tauntTarget221=null;g.questionUntil221=t+900;
+      }else{
+        const path=shortestPath({x:g.x,y:g.y},g.tauntTarget221);
+        if(path.length>1)return path[1];
+        g.tauntTarget221=null;g.questionUntil221=t+900;
+      }
+    }else{
+      g.tauntTarget221=null;g.questionUntil221=t+900;
+    }
+  }
+  return chooseGuardianNext221Base(g);
+};
+
+function drawGorillaState221(g,size,ox,oy){
+  if(!isGorilla221(g))return;
+  const t=performance.now();
+  const cx=ox+(g.x+.5)*size,cy=oy+(g.y+.5)*size;
+  ctx.save();
+  if(t<(g.alertUntil221||0)){
+    ctx.globalAlpha=.30+.12*Math.sin(animTime*18);
+    ctx.fillStyle='#ef3d2f';ctx.beginPath();ctx.arc(cx,cy,size*.34,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;ctx.font=`900 ${Math.max(15,size*.27)}px Arial`;
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('❗',cx,cy-size*.48);
+  }else if(t<(g.questionUntil221||0)){
+    ctx.font=`900 ${Math.max(14,size*.24)}px Arial`;
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('❓',cx,cy-size*.46);
+  }
+  ctx.restore();
+}
+const draw221Base=draw;
+draw=function(){
+  draw221Base();if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  drawGorillaState221(guardian,size,ox,oy);
+  drawGorillaState221(extraGuardian,size,ox,oy);
+};
+
+const buildLevel221Base=buildLevel;
+buildLevel=function(n){tauntInputs221=[];buildLevel221Base(n)};
+</script>
+
 </body>
 </html>
