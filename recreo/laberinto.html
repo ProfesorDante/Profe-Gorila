@@ -3335,5 +3335,240 @@ buildLevel=function(n){
 };
 </script>
 
+
+<script>
+'use strict';
+/* === VERSIÓN 2.3.0 — LUZ Y PUERTAS DE COLORES === */
+
+/* El nivel 17 deja de usar la oscuridad fija: ahora depende de sus botones. */
+if(typeof DARK_LEVELS!=='undefined')DARK_LEVELS.delete(17);
+
+const LIGHT_LEVELS_230=new Set([8,17,19,20]);
+const PRIMARY_COLOR_LEVELS_230=new Set([10,16]);
+const SECONDARY_COLOR_LEVELS_230=new Set([13]);
+const LIGHT_STUN_MS_230=2500;
+
+let lightOn230=true;
+let lightButtons230=[];
+let lightButtonCooldown230=0;
+let colorButtons230=[];
+let colorGates230=[];
+let pressedColors230=new Set();
+let lightPulse230=0;
+
+function cellBlocked230(c){
+  if(!c)return true;
+  if(sameCell(c,levelStart)||sameCell(c,exit)||sameCell(c,player))return true;
+  if(friend&&!friend.found&&sameCell(c,friend))return true;
+  if(specialItem&&!specialItem.got&&sameCell(c,specialItem))return true;
+  if(bananas.some(b=>!b.got&&sameCell(c,b)))return true;
+  const herd=typeof allGuardians224==='function'?allGuardians224():[];
+  return herd.some(g=>sameCell(c,g));
+}
+function availableCells230(){return allCells().filter(c=>!cellBlocked230(c))}
+function farCells230(){
+  const dist=distancesFrom(levelStart);
+  return availableCells230().sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+}
+function placeLightButtons230(){
+  lightButtons230=[];lightOn230=true;lightPulse230=0;
+  if(!LIGHT_LEVELS_230.has(level))return;
+  const cells=farCells230();
+  if(!cells.length)return;
+  const off=cells[0];
+  let on=cells.find(c=>!sameCell(c,off)&&Math.abs(c.x-off.x)+Math.abs(c.y-off.y)>=Math.max(3,Math.floor((cols+rows)/4)));
+  if(!on)on=cells[Math.min(cells.length-1,Math.floor(cells.length*.55))];
+  lightButtons230=[{...off,type:'off',pressed:false},{...on,type:'on',pressed:false}];
+}
+function lightSound230(on){
+  if(on){tone(330,.08,'square',.025);tone(660,.16,'triangle',.035,.07)}
+  else{tone(260,.12,'sine',.03);tone(130,.22,'triangle',.025,.08)}
+}
+function setLight230(on){
+  if(lightOn230===on)return;
+  lightOn230=on;lightPulse230=performance.now()+500;lightSound230(on);
+  const herd=typeof allGuardians224==='function'?allGuardians224():[];
+  const now=performance.now();
+  for(const g of herd){
+    if(on){
+      g.stunnedUntil230=now+LIGHT_STUN_MS_230;
+      g.alertSymbol230='!!!';g.alertUntil230=now+900;
+      g.nextAt=Math.max(g.nextAt||0,g.stunnedUntil230);
+    }else{
+      g.alertSymbol230='???';g.alertUntil230=Infinity;
+      if(g.tauntPath221)g.tauntPath221=[];
+      g.tauntUntil221=0;
+    }
+  }
+}
+
+function closedInteriorEdges230(){
+  const edges=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    const c=maze[y][x];
+    if(x<cols-1&&c.walls.right)edges.push({x,y,key:'right',nx:x+1,ny:y,opp:'left'});
+    if(y<rows-1&&c.walls.down)edges.push({x,y,key:'down',nx:x,ny:y+1,opp:'up'});
+  }
+  return edges;
+}
+function gateFarScore230(e){
+  return Math.min(
+    Math.abs(e.x-levelStart.x)+Math.abs(e.y-levelStart.y),
+    Math.abs(e.nx-levelStart.x)+Math.abs(e.ny-levelStart.y)
+  );
+}
+function chooseGates230(count){
+  const edges=closedInteriorEdges230().sort((a,b)=>gateFarScore230(b)-gateFarScore230(a));
+  const chosen=[];
+  for(const e of edges){
+    if(chosen.some(q=>Math.abs(q.x-e.x)+Math.abs(q.y-e.y)<2))continue;
+    chosen.push(e);if(chosen.length>=count)break;
+  }
+  return chosen;
+}
+function openGate230(g){
+  if(!g||g.open)return;
+  g.open=true;
+  maze[g.y][g.x].walls[g.key]=false;
+  maze[g.ny][g.nx].walls[g.opp]=false;
+  tone(150,.18,'square',.035);tone(95,.28,'triangle',.03,.08);
+}
+function placeColorSystems230(){
+  colorButtons230=[];colorGates230=[];pressedColors230=new Set();
+  if(PRIMARY_COLOR_LEVELS_230.has(level)){
+    const colors=[['red','#e54848'],['yellow','#f0c928'],['blue','#3d75d6']];
+    const gates=chooseGates230(3),cells=farCells230();
+    colors.forEach((c,i)=>{
+      if(gates[i])colorGates230.push({...gates[i],id:c[0],color:c[1],requires:[c[0]],open:false});
+      if(cells[i*2])colorButtons230.push({...cells[i*2],id:c[0],color:c[1],pressed:false});
+    });
+  }else if(SECONDARY_COLOR_LEVELS_230.has(level)){
+    const prim=[['red','#e54848'],['yellow','#f0c928'],['blue','#3d75d6']];
+    const secondary=[
+      ['orange','#e88931',['red','yellow']],
+      ['green','#43a65b',['yellow','blue']],
+      ['violet','#8856c7',['red','blue']]
+    ];
+    const gates=chooseGates230(3),cells=farCells230();
+    prim.forEach((c,i)=>{if(cells[i*2])colorButtons230.push({...cells[i*2],id:c[0],color:c[1],pressed:false})});
+    secondary.forEach((c,i)=>{if(gates[i])colorGates230.push({...gates[i],id:c[0],color:c[1],requires:c[2],open:false})});
+  }
+}
+function pressColor230(btn){
+  if(!btn||btn.pressed)return;
+  btn.pressed=true;pressedColors230.add(btn.id);
+  tone(420,.08,'square',.025);tone(620,.12,'triangle',.03,.06);
+  for(const g of colorGates230){
+    if(!g.open&&g.requires.every(c=>pressedColors230.has(c)))openGate230(g);
+  }
+}
+
+function drawFloorButton230(b,size,ox,oy){
+  const cx=ox+(b.x+.5)*size,cy=oy+(b.y+.5)*size;
+  ctx.save();ctx.translate(cx,cy);
+  const depressed=b.pressed?size*.035:0;
+  ctx.fillStyle='rgba(60,40,25,.35)';ctx.beginPath();ctx.ellipse(0,size*.12,size*.28,size*.12,0,0,Math.PI*2);ctx.fill();
+  ctx.translate(0,depressed);
+  if(b.type){
+    const isOn=b.type==='on';
+    ctx.fillStyle=isOn?'#f7dc4d':'#343b4e';
+    ctx.strokeStyle=isOn?'#fff2a6':'#8d95aa';
+  }else{ctx.fillStyle=b.color;ctx.strokeStyle='rgba(255,255,255,.8)'}
+  ctx.lineWidth=Math.max(2,size*.045);ctx.beginPath();ctx.ellipse(0,0,size*.23,size*.15,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  if(b.type){
+    ctx.fillStyle=isOn?'#fffbd1':'#d8def1';ctx.font=`900 ${Math.max(13,size*.22)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(isOn?'☀':'☾',0,0);
+  }
+  ctx.restore();
+}
+function drawColorGate230(g,size,ox,oy){
+  if(g.open)return;
+  const x1=ox+g.x*size,y1=oy+g.y*size;
+  ctx.save();ctx.strokeStyle=g.color;ctx.lineWidth=Math.max(7,size*.15);ctx.lineCap='round';
+  ctx.shadowColor=g.color;ctx.shadowBlur=Math.max(6,size*.12);ctx.beginPath();
+  if(g.key==='right'){ctx.moveTo(x1+size,y1+size*.08);ctx.lineTo(x1+size,y1+size*.92)}
+  else{ctx.moveTo(x1+size*.08,y1+size);ctx.lineTo(x1+size*.92,y1+size)}
+  ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=Math.max(2,size*.035);ctx.stroke();ctx.restore();
+}
+function drawLightDarkness230(size,ox,oy){
+  if(!LIGHT_LEVELS_230.has(level)||lightOn230)return;
+  ctx.save();ctx.fillStyle='rgba(2,7,15,.84)';ctx.fillRect(0,0,canvas.width,canvas.height);
+  const cx=ox+(player.x+.5)*size,cy=oy+(player.y+.5)*size;
+  ctx.globalCompositeOperation='destination-out';
+  const grad=ctx.createRadialGradient(cx,cy,size*.15,cx,cy,size*1.25);
+  grad.addColorStop(0,'rgba(0,0,0,1)');grad.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=grad;ctx.beginPath();ctx.arc(cx,cy,size*1.25,0,Math.PI*2);ctx.fill();ctx.restore();
+}
+function drawGuardianLightState230(g,size,ox,oy){
+  if(!g)return;const now=performance.now();
+  let symbol='';
+  if(now<(g.stunnedUntil230||0))symbol='✦';
+  else if(!lightOn230&&LIGHT_LEVELS_230.has(level))symbol='???';
+  else if(now<(g.alertUntil230||0))symbol=g.alertSymbol230||'';
+  if(!symbol)return;
+  const cx=ox+(g.x+.5)*size,cy=oy+(g.y+.5)*size-size*.48;
+  ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`900 ${Math.max(13,size*.22)}px Arial`;
+  ctx.fillStyle=symbol==='???'?'#d8e7ff':symbol==='✦'?'#ffe36b':'#ffdf57';ctx.fillText(symbol,cx,cy);ctx.restore();
+}
+
+const buildLevel230Base=buildLevel;
+buildLevel=function(n){
+  buildLevel230Base(n);
+  placeLightButtons230();placeColorSystems230();
+  draw();
+};
+
+const checkCell230Base=checkCell;
+checkCell=function(){
+  const now=performance.now();
+  for(const b of lightButtons230){
+    if(sameCell(player,b)&&now>=lightButtonCooldown230){
+      b.pressed=true;lightButtonCooldown230=now+300;setLight230(b.type==='on');
+      setTimeout(()=>{b.pressed=false},180);
+    }
+  }
+  for(const b of colorButtons230)if(sameCell(player,b))pressColor230(b);
+  checkCell230Base();
+};
+
+/* En oscuridad los guardianes pierden a Nito; al encender quedan aturdidos. */
+const guardianCanCapture230Base=guardianCanCapture223;
+guardianCanCapture223=function(g=null){
+  if(LIGHT_LEVELS_230.has(level)&&!lightOn230)return false;
+  const stunned=x=>x&&performance.now()<(x.stunnedUntil230||0);
+  if(g&&stunned(g))return false;
+  if(!g){
+    const herd=typeof allGuardians224==='function'?allGuardians224():[];
+    if(herd.some(stunned)){
+      const active=herd.filter(x=>!stunned(x));
+      if(!active.length)return false;
+      return active.some(x=>guardianCanCapture230Base(x));
+    }
+  }
+  return guardianCanCapture230Base(g);
+};
+guardianTouchesNito21=function(){return guardianCanCapture223()};
+activeGuardianTouch222=function(g){return guardianCanCapture223(g)};
+
+const registerTauntInput230Base=registerTauntInput221;
+registerTauntInput221=function(dx,dy){
+  if(LIGHT_LEVELS_230.has(level)&&!lightOn230)return;
+  registerTauntInput230Base(dx,dy);
+};
+
+const draw230Base=draw;
+draw=function(){
+  draw230Base();if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  for(const g of colorGates230)drawColorGate230(g,size,ox,oy);
+  for(const b of colorButtons230)drawFloorButton230(b,size,ox,oy);
+  for(const b of lightButtons230)drawFloorButton230(b,size,ox,oy);
+  drawLightDarkness230(size,ox,oy);
+  const herd=typeof allGuardians224==='function'?allGuardians224():[];
+  for(const g of herd)drawGuardianLightState230(g,size,ox,oy);
+  if(performance.now()<lightPulse230){
+    ctx.save();ctx.fillStyle=`rgba(255,245,180,${.18*(lightPulse230-performance.now())/500})`;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();
+  }
+};
+</script>
+
 </body>
 </html>
