@@ -2634,7 +2634,7 @@ let nitoInvulnerableUntil21=0;
 let whirlpoolEffectUntil21=0;
 let whirlpoolTimer21=null;
 const INVULNERABILITY_MS_21=2000;
-const WHIRLPOOL_DURATION_MS_21=15000;
+const WHIRLPOOL_DURATION_MS_21=10000;
 
 function now21(){return performance.now()}
 function nitoIsInvulnerable21(){return now21()<nitoInvulnerableUntil21}
@@ -2678,7 +2678,7 @@ buildLevel=function(n){
 };
 
 /* Intercepta el remolino antes de la lógica anterior para que el efecto
-   dure quince segundos y no permanezca invertido durante todo el nivel. */
+   dure diez segundos y no permanezca invertido durante todo el nivel. */
 const checkCell21Base=checkCell;
 checkCell=function(){
   if(whirlpool&&!whirlpool.used&&sameCell(player,whirlpool)){
@@ -2890,7 +2890,7 @@ const BIRD_LEVELS_222=new Set([12,18]);
 const BIRD_FIRST_DELAY_MS_222=5500;
 const BIRD_REPEAT_MS_222=18000;
 const BIRD_FLIGHT_MS_222=4200;
-const BIRD_WHIRLPOOL_LIFE_MS_222=15000;
+const BIRD_WHIRLPOOL_LIFE_MS_222=10000;
 
 let birdEvent222=null;
 let birdNextAt222=0;
@@ -2998,7 +2998,7 @@ function drawBirdWhirlpools222(size,ox,oy){
   }
 }
 
-/* Tocar un remolino dejado por un pájaro produce el mismo efecto de 15 s. */
+/* Tocar un remolino dejado por un pájaro produce el mismo efecto de 10 s. */
 const checkCell222Base=checkCell;
 checkCell=function(){
   const t=performance.now();
@@ -3568,6 +3568,620 @@ draw=function(){
     ctx.save();ctx.fillStyle=`rgba(255,245,180,${.18*(lightPulse230-performance.now())/500})`;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.restore();
   }
 };
+</script>
+
+
+
+<script>
+'use strict';
+/* === VERSIÓN 2.3.1 — VELOCIDAD TEMPORAL Y REMOLINO DE 10 SEGUNDOS === */
+const VEHICLE_BOOST_DURATION_MS_231=10000;
+let vehicleBoostUntil231=0;
+
+function clearVehicleBoost231(){
+  vehicleBoostUntil231=0;
+  currentVehicle=null;
+}
+function vehicleBoostActive231(){
+  return Boolean(currentVehicle&&performance.now()<vehicleBoostUntil231);
+}
+
+/* Cada nivel comienza sin conservar la velocidad del anterior. */
+const buildLevel231Base=buildLevel;
+buildLevel=function(n){
+  clearVehicleBoost231();
+  buildLevel231Base(n);
+};
+
+/* Al recoger patines, bicicleta o patineta, la ventaja dura diez segundos. */
+const collectQuietly231Base=collectQuietly;
+collectQuietly=function(){
+  const previousVehicle=currentVehicle;
+  collectQuietly231Base();
+  if(currentVehicle&&currentVehicle!==previousVehicle){
+    vehicleBoostUntil231=performance.now()+VEHICLE_BOOST_DURATION_MS_231;
+    tone(880,.07,'triangle',.028);
+    tone(1175,.11,'triangle',.025,.06);
+  }
+};
+
+/* La velocidad se apaga sola, sin penalidad ni cartel. */
+const tryMove231Base=tryMove;
+tryMove=function(dx,dy){
+  if(currentVehicle&&performance.now()>=vehicleBoostUntil231)clearVehicleBoost231();
+  tryMove231Base(dx,dy);
+};
+
+function drawVehicleBoost231(size,ox,oy){
+  if(!vehicleBoostActive231())return;
+  const remain=Math.max(0,vehicleBoostUntil231-performance.now());
+  const life=remain/VEHICLE_BOOST_DURATION_MS_231;
+  const cx=ox+(player.x+.5)*size,cy=oy+(player.y+.5)*size;
+  ctx.save();
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.globalAlpha=Math.min(1,life*3);
+  ctx.font=`${Math.max(16,size*.28)}px Arial`;
+  ctx.fillText(currentVehicle.icon,cx,cy-size*.42);
+  ctx.strokeStyle='rgba(255,255,255,.72)';
+  ctx.lineWidth=Math.max(2,size*.025);
+  for(let i=0;i<3;i++){
+    const drift=(animTime*70+i*size*.28)%(size*.85);
+    ctx.beginPath();
+    ctx.moveTo(cx-size*.25-drift*.35,cy+size*(.15+i*.09));
+    ctx.lineTo(cx-size*.45-drift*.35,cy+size*(.15+i*.09));
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+const draw231Base=draw;
+draw=function(){
+  if(currentVehicle&&performance.now()>=vehicleBoostUntil231)clearVehicleBoost231();
+  draw231Base();
+  if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  drawVehicleBoost231(size,ox,oy);
+};
+</script>
+
+
+<script>
+'use strict';
+/* === VERSIÓN 2.4.0 — PULIDO Y RESPUESTA VISUAL === */
+let polishParticles240=[];
+let schoolEntry240=null;
+let trampolineWasFlying240=false;
+let lastAmbient240=0;
+
+function addPolishBurst240(x,y,type='spark',count=7){
+  const now=performance.now();
+  for(let i=0;i<count;i++){
+    const a=(Math.PI*2*i/count)+(Math.random()-.5)*.55;
+    const speed=.18+Math.random()*.24;
+    polishParticles240.push({x:x+.5,y:y+.5,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed-.12,start:now,life:520+Math.random()*260,type});
+  }
+}
+function updateAndDrawParticles240(size,ox,oy){
+  const now=performance.now();
+  polishParticles240=polishParticles240.filter(p=>now-p.start<p.life);
+  for(const p of polishParticles240){
+    const t=(now-p.start)/p.life;
+    const x=ox+(p.x+p.vx*t*5)*size;
+    const y=oy+(p.y+(p.vy*t*5)+1.4*t*t)*size;
+    ctx.save();ctx.globalAlpha=1-t;
+    if(p.type==='dust'){
+      ctx.fillStyle='rgba(245,235,200,.8)';ctx.beginPath();ctx.arc(x,y,size*(.035+.055*t),0,Math.PI*2);ctx.fill();
+    }else{
+      ctx.translate(x,y);ctx.rotate(t*5+iSafe240(p));ctx.fillStyle='#fff29a';
+      const r=size*.055;ctx.beginPath();
+      for(let i=0;i<8;i++){const rr=i%2?r*.36:r;const aa=i*Math.PI/4;ctx.lineTo(Math.cos(aa)*rr,Math.sin(aa)*rr)}
+      ctx.closePath();ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+function iSafe240(p){return ((p.x*13+p.y*17)%7)*.2}
+
+/* Destello periódico de las bananas, sin alterar su diseño principal. */
+function drawBananaSparkles240(size,ox,oy){
+  bananas.forEach((b,i)=>{
+    if(b.got)return;
+    const phase=(animTime*1.4+i*.73)%4.6;
+    if(phase>1.15)return;
+    const alpha=Math.sin(Math.PI*phase/1.15)*.85;
+    const cx=ox+(b.x+.5)*size+Math.cos(i*2.1)*size*.22;
+    const cy=oy+(b.y+.5)*size-size*.22;
+    ctx.save();ctx.globalAlpha=alpha;ctx.translate(cx,cy);ctx.rotate(animTime*1.8);
+    ctx.strokeStyle='#fffbd0';ctx.lineWidth=Math.max(1.5,size*.025);
+    ctx.beginPath();ctx.moveTo(-size*.08,0);ctx.lineTo(size*.08,0);ctx.moveTo(0,-size*.08);ctx.lineTo(0,size*.08);ctx.stroke();ctx.restore();
+  });
+}
+
+/* Los compañeros saludan cuando Nito está cerca. */
+function drawFriendWave240(size,ox,oy){
+  if(!friend||friend.found)return;
+  const d=Math.abs(player.x-friend.x)+Math.abs(player.y-friend.y);
+  if(d>2)return;
+  const cx=ox+(friend.x+.5)*size,cy=oy+(friend.y+.5)*size;
+  ctx.save();ctx.translate(cx+size*.27,cy-size*.22);ctx.rotate(Math.sin(animTime*8)*.35);
+  ctx.font=`${Math.max(14,size*.25)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('👋',0,0);ctx.restore();
+}
+
+/* En los últimos dos segundos, el vehículo titila sin mostrar números. */
+function drawVehicleEnding240(size,ox,oy){
+  if(typeof vehicleBoostActive231!=='function'||!vehicleBoostActive231())return;
+  const remain=vehicleBoostUntil231-performance.now();
+  if(remain>2000)return;
+  if(Math.floor(performance.now()/145)%2===0)return;
+  const cx=ox+(player.x+.5)*size,cy=oy+(player.y+.5)*size;
+  ctx.save();ctx.globalAlpha=.42;ctx.fillStyle='#fff7b0';ctx.beginPath();ctx.arc(cx,cy,size*.38,0,Math.PI*2);ctx.fill();ctx.restore();
+}
+
+/* Entrada animada a la escuela antes del resultado. */
+function canEnterSchool240(){
+  if(!playing||!sameCell(player,exit))return false;
+  if(friend&&!friend.found)return false;
+  if(level===3&&typeof level3GateOpen!=='undefined'&&!level3GateOpen)return false;
+  return true;
+}
+const finishLevel240Base=finishLevel;
+finishLevel=function(){
+  if(schoolEntry240){return}
+  if(!canEnterSchool240()){finishLevel240Base();return}
+  const now=performance.now();
+  schoolEntry240={start:now,duration:720,from:{...player}};
+  playing=false;moveLock=true;
+  tone(523,.10,'triangle',.032);tone(659,.12,'triangle',.032,.09);tone(784,.18,'sine',.036,.18);
+  setTimeout(()=>{
+    schoolEntry240=null;moveLock=false;
+    finishLevel240Base();
+  },720);
+};
+
+function drawSchoolEntry240(size,ox,oy){
+  if(!schoolEntry240)return;
+  const t=Math.min(1,(performance.now()-schoolEntry240.start)/schoolEntry240.duration);
+  const cx=ox+(exit.x+.5)*size,cy=oy+(exit.y+.5)*size;
+  /* puerta abriéndose */
+  ctx.save();ctx.translate(cx,cy+size*.08);
+  ctx.fillStyle='#2e507b';ctx.fillRect(-size*.07,-size*.08,size*.14,size*.20);
+  ctx.fillStyle='#f3c85a';ctx.fillRect(-size*.07,-size*.08,size*.14*(1-t),size*.20);
+  ctx.restore();
+  /* Nito se acerca, se achica y desaparece dentro. */
+  const yy=cy+size*(.22-.18*t);
+  ctx.save();ctx.globalAlpha=1-Math.max(0,(t-.62)/.38);ctx.translate(cx,yy);ctx.scale(1-.48*t,1-.48*t);
+  drawNito240Base(0,0,size, -size/2,-size/2);
+  ctx.restore();
+}
+const drawNito240Base=drawNito;
+drawNito=function(x,y,size,ox,oy){
+  if(schoolEntry240)return;
+  drawNito240Base(x,y,size,ox,oy);
+};
+
+/* Detecta el aterrizaje del trampolín para sumar polvo y una vibración breve. */
+function trampolineImpact240(){
+  addPolishBurst240(player.x,player.y,'dust',10);
+  const c=document.getElementById('game');
+  c.style.transform='translate(2px,1px)';
+  setTimeout(()=>c.style.transform='translate(-2px,0)',45);
+  setTimeout(()=>c.style.transform='',105);
+}
+
+/* Partículas al recoger bananas y al rescatar compañeros. */
+const checkCell240Base=checkCell;
+checkCell=function(){
+  const beforeBananas=new Set(bananas.filter(b=>b.got).map(cellKey));
+  const friendWasFound=friend?friend.found:true;
+  checkCell240Base();
+  for(const b of bananas){
+    if(b.got&&!beforeBananas.has(cellKey(b)))addPolishBurst240(b.x,b.y,'spark',9);
+  }
+  if(friend&&!friendWasFound&&friend.found)addPolishBurst240(friend.x,friend.y,'spark',12);
+};
+
+/* Ambiente muy espaciado y suave, sin tapar la música. */
+function ambientTick240(){
+  const now=performance.now();
+  if(!playing||!audioCtx||now-lastAmbient240<9000)return;
+  lastAmbient240=now+Math.random()*7000;
+  const choice=Math.floor(Math.random()*3);
+  if(choice===0){tone(1250,.08,'sine',.006);tone(1510,.07,'sine',.005,.11)}
+  else if(choice===1){tone(180,.12,'sine',.004);tone(145,.16,'sine',.003,.10)}
+  else{tone(760,.05,'triangle',.004);tone(920,.06,'triangle',.004,.08)}
+}
+
+const buildLevel240Base=buildLevel;
+buildLevel=function(n){
+  polishParticles240=[];schoolEntry240=null;trampolineWasFlying240=false;lastAmbient240=performance.now()+5000;
+  buildLevel240Base(n);
+};
+
+const draw240Base=draw;
+draw=function(){
+  const wasFlying=trampolineWasFlying240;
+  trampolineWasFlying240=Boolean(typeof trampolineFlight41!=='undefined'&&trampolineFlight41);
+  if(wasFlying&&!trampolineWasFlying240)trampolineImpact240();
+  ambientTick240();
+  draw240Base();
+  if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  drawBananaSparkles240(size,ox,oy);
+  drawFriendWave240(size,ox,oy);
+  drawVehicleEnding240(size,ox,oy);
+  updateAndDrawParticles240(size,ox,oy);
+  drawSchoolEntry240(size,ox,oy);
+};
+</script>
+
+
+<script>
+'use strict';
+/* === VERSIÓN 2.5 — PASADA 1/2: CAMPAÑA COMPLETA ===
+   Activa las cantidades definitivas de trampolines y remolinos por nivel.
+   Todo se comunica de forma visual y sonora, sin tutoriales nuevos. */
+
+const FINAL_TRAMPOLINE_COUNTS_250={6:2,14:2,17:3,19:3,20:4};
+const FINAL_WHIRLPOOL_COUNTS_250={14:2,16:3,20:2};
+let campaignTrampolines250=[];
+let campaignWhirlpools250=[];
+let campaignFlightBusy250=false;
+
+function campaignOccupied250(){
+  const s=new Set([cellKey(levelStart),cellKey(exit)]);
+  bananas.forEach(b=>{if(!b.got)s.add(cellKey(b))});
+  if(friend&&!friend.found)s.add(cellKey(friend));
+  if(specialItem&&!specialItem.got)s.add(cellKey(specialItem));
+  if(typeof level3Button!=='undefined'&&level3Button)s.add(cellKey(level3Button));
+  if(typeof level4Trampoline!=='undefined'&&level4Trampoline)s.add(cellKey(level4Trampoline));
+  if(typeof level4Landing!=='undefined'&&level4Landing)s.add(cellKey(level4Landing));
+  if(typeof level9Trampoline42!=='undefined'&&level9Trampoline42)s.add(cellKey(level9Trampoline42));
+  if(typeof level9Landing42!=='undefined'&&level9Landing42)s.add(cellKey(level9Landing42));
+  if(typeof flashlightItem42!=='undefined'&&flashlightItem42&&!flashlightItem42.got)s.add(cellKey(flashlightItem42));
+  if(typeof vehicleItem!=='undefined'&&vehicleItem&&!vehicleItem.got)s.add(cellKey(vehicleItem));
+  if(typeof visionGlasses!=='undefined')visionGlasses.forEach(v=>{if(!v.got)s.add(cellKey(v))});
+  if(typeof lightButtons230!=='undefined')lightButtons230.forEach(b=>s.add(cellKey(b)));
+  if(typeof colorButtons230!=='undefined')colorButtons230.forEach(b=>s.add(cellKey(b)));
+  if(typeof falseExit!=='undefined'&&falseExit)s.add(cellKey(falseExit));
+  if(typeof allGuardians224==='function')allGuardians224().forEach(g=>s.add(cellKey(g)));
+  return s;
+}
+
+function sortedCampaignCells250(occupied){
+  const distStart=distancesFrom(levelStart);
+  const distExit=distancesFrom(exit);
+  return allCells().filter(c=>
+    !occupied.has(cellKey(c)) &&
+    !sameCell(c,levelStart) &&
+    !sameCell(c,exit)
+  ).sort((a,b)=>{
+    const da=(distStart.get(cellKey(a))||0)+(distExit.get(cellKey(a))||0);
+    const db=(distStart.get(cellKey(b))||0)+(distExit.get(cellKey(b))||0);
+    const branchA=neighborsOf(a.x,a.y).length===1?4:0;
+    const branchB=neighborsOf(b.x,b.y).length===1?4:0;
+    return (db+branchB)-(da+branchA);
+  });
+}
+
+function setupCampaignTrampolines250(){
+  campaignTrampolines250=[];
+  const count=FINAL_TRAMPOLINE_COUNTS_250[level]||0;
+  if(!count)return;
+  const occupied=campaignOccupied250();
+  const cells=sortedCampaignCells250(occupied);
+  for(let i=0;i<count;i++){
+    const source=cells.find(c=>!occupied.has(cellKey(c)));
+    if(!source)break;
+    occupied.add(cellKey(source));
+
+    const distances=distancesFrom(source);
+    const landing=allCells().filter(c=>
+      !occupied.has(cellKey(c)) &&
+      !sameCell(c,source) &&
+      (distances.get(cellKey(c))||0)>=Math.max(4,Math.floor((cols+rows)/4))
+    ).sort((a,b)=>(distances.get(cellKey(b))||0)-(distances.get(cellKey(a))||0))[0];
+
+    if(!landing)continue;
+    occupied.add(cellKey(landing));
+    campaignTrampolines250.push({
+      x:source.x,y:source.y,
+      to:{x:landing.x,y:landing.y},
+      bouncePhase:i*.8
+    });
+  }
+}
+
+function setupCampaignWhirlpools250(){
+  campaignWhirlpools250=[];
+  const count=FINAL_WHIRLPOOL_COUNTS_250[level]||0;
+  if(!count)return;
+
+  /* En estos niveles reemplazamos el remolino antiguo por la cantidad exacta. */
+  if(typeof whirlpool!=='undefined')whirlpool=null;
+
+  const occupied=campaignOccupied250();
+  campaignTrampolines250.forEach(p=>{
+    occupied.add(cellKey(p));
+    occupied.add(cellKey(p.to));
+  });
+  const cells=sortedCampaignCells250(occupied);
+  for(let i=0;i<count;i++){
+    const c=cells.find(p=>!occupied.has(cellKey(p)));
+    if(!c)break;
+    occupied.add(cellKey(c));
+    campaignWhirlpools250.push({...c,used:false,phase:i*1.7});
+  }
+}
+
+function drawCampaignTrampoline250(p,size,ox,oy){
+  const cx=ox+(p.x+.5)*size;
+  const cy=oy+(p.y+.5)*size;
+  const squash=campaignFlightBusy250&&sameCell(player,p)?0.72:1;
+  ctx.save();ctx.translate(cx,cy+size*.08);
+  ctx.fillStyle='rgba(55,38,75,.30)';
+  ctx.beginPath();ctx.ellipse(0,size*.18,size*.31,size*.11,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#60506d';ctx.lineWidth=Math.max(3,size*.055);
+  for(let i=-1;i<=1;i+=2){
+    ctx.beginPath();
+    ctx.moveTo(i*size*.15,size*.10);
+    ctx.lineTo(i*size*.09,size*.22);
+    ctx.lineTo(i*size*.17,size*.31);
+    ctx.stroke();
+  }
+  ctx.scale(1,squash);
+  const pulse=.94+.06*Math.sin(animTime*4+p.bouncePhase);
+  ctx.scale(pulse,pulse);
+  ctx.fillStyle='#8d5ed1';ctx.strokeStyle='#f0d9ff';ctx.lineWidth=Math.max(3,size*.045);
+  ctx.beginPath();ctx.roundRect(-size*.31,-size*.12,size*.62,size*.25,size*.09);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#c9a6ff';ctx.beginPath();ctx.roundRect(-size*.22,-size*.08,size*.44,size*.08,size*.04);ctx.fill();
+  ctx.restore();
+}
+
+function drawCampaignWhirlpool250(w,size,ox,oy){
+  if(w.used)return;
+  const cx=ox+(w.x+.5)*size,cy=oy+(w.y+.5)*size;
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(animTime*3.1+w.phase);
+  ctx.strokeStyle='#7653c6';ctx.lineWidth=Math.max(3,size*.055);ctx.lineCap='round';
+  ctx.shadowColor='#c9b6ff';ctx.shadowBlur=Math.max(5,size*.09);
+  for(let r=.09;r<=.34;r+=.075){
+    ctx.beginPath();ctx.arc(0,0,size*r,0,Math.PI*1.55);ctx.stroke();ctx.rotate(.72);
+  }
+  ctx.restore();
+}
+
+function startCampaignTrampoline250(p){
+  if(!p||campaignFlightBusy250||trampolineFlight41)return;
+  campaignFlightBusy250=true;trampolineBusy=true;moveLock=true;steps++;
+  trampolineSound41();
+  trampolineFlight41={
+    from:{x:p.x,y:p.y},
+    to:{...p.to},
+    start:performance.now(),
+    duration:820
+  };
+  updateHud();
+  setTimeout(()=>{
+    player={...p.to};
+    trampolineFlight41=null;
+    campaignFlightBusy250=false;trampolineBusy=false;moveLock=false;
+    checkCell250Base();
+    updateHud();draw();
+    tone(250,.08,'square',.028);tone(150,.12,'sine',.035,.05);
+  },820);
+}
+
+const buildLevel250Base=buildLevel;
+buildLevel=function(n){
+  campaignTrampolines250=[];campaignWhirlpools250=[];campaignFlightBusy250=false;
+  buildLevel250Base(n);
+  setupCampaignTrampolines250();
+  setupCampaignWhirlpools250();
+  draw();
+};
+
+const checkCell250Base=checkCell;
+checkCell=function(){
+  if(!campaignFlightBusy250){
+    const pad=campaignTrampolines250.find(p=>sameCell(player,p));
+    if(pad){startCampaignTrampoline250(p);return}
+  }
+  const spin=campaignWhirlpools250.find(w=>!w.used&&sameCell(player,w));
+  if(spin){
+    spin.used=true;
+    if(typeof activateWhirlpoolEffect21==='function')activateWhirlpoolEffect21();
+  }
+  checkCell250Base();
+};
+
+const draw250Base=draw;
+draw=function(){
+  draw250Base();
+  if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  campaignWhirlpools250.forEach(w=>drawCampaignWhirlpool250(w,size,ox,oy));
+  campaignTrampolines250.forEach(p=>drawCampaignTrampoline250(p,size,ox,oy));
+};
+
+/* Limpieza defensiva para que efectos temporales no crucen de nivel. */
+const startGame250Base=startGame;
+startGame=function(n){
+  if(typeof clearWhirlpoolEffect21==='function')clearWhirlpoolEffect21();
+  campaignFlightBusy250=false;
+  startGame250Base(n);
+};
+</script>
+
+
+
+<script>
+'use strict';
+/* === VERSIÓN 2.5 — PASADA FINAL: ESTABILIDAD DE CAMPAÑA ===
+   Revisión defensiva de estados temporales, apariciones y superposiciones.
+   No incorpora tutoriales ni cambia las reglas de las mecánicas. */
+
+let levelGeneration251=0;
+
+function clearTransientState251(){
+  levelGeneration251++;
+  if(typeof clearWhirlpoolEffect21==='function')clearWhirlpoolEffect21();
+  if(typeof clearVehicleBoost231==='function')clearVehicleBoost231();
+  if(typeof stopHeldMove==='function')stopHeldMove();
+  if(typeof birdEvent222!=='undefined')birdEvent222=null;
+  if(typeof birdWhirlpools222!=='undefined')birdWhirlpools222=[];
+  if(typeof elephantBursts225!=='undefined')elephantBursts225=[];
+  if(typeof polishParticles240!=='undefined')polishParticles240=[];
+  if(typeof schoolEntry240!=='undefined')schoolEntry240=null;
+  if(typeof trampolineFlight41!=='undefined')trampolineFlight41=null;
+  if(typeof campaignFlightBusy250!=='undefined')campaignFlightBusy250=false;
+  if(typeof trampolineBusy!=='undefined')trampolineBusy=false;
+  if(typeof moveLock!=='undefined')moveLock=false;
+  const c=document.getElementById('game');
+  if(c)c.style.transform='';
+  document.querySelectorAll('.game-wrap > div:not(.overlay)').forEach(el=>{
+    if(el.style&&el.style.position==='absolute')el.remove();
+  });
+}
+
+function inBounds251(c){
+  return Boolean(c&&Number.isFinite(c.x)&&Number.isFinite(c.y)&&c.x>=0&&c.y>=0&&c.x<cols&&c.y<rows);
+}
+function freeCell251(used,preferFar=true){
+  const dist=distancesFrom(levelStart);
+  const cells=allCells().filter(c=>!used.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
+  cells.sort((a,b)=>preferFar
+    ?(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0)
+    :(dist.get(cellKey(a))||0)-(dist.get(cellKey(b))||0));
+  return cells[0]||null;
+}
+function reserveObject251(obj,used,preferFar=true){
+  if(!obj)return;
+  let k=inBounds251(obj)?cellKey(obj):'';
+  if(!k||used.has(k)){
+    const c=freeCell251(used,preferFar);
+    if(c){obj.x=c.x;obj.y=c.y;k=cellKey(obj)}
+  }
+  if(k)used.add(k);
+}
+function reserveGuardian251(g,used){
+  if(!g)return;
+  let placed=false;
+  if(Array.isArray(g.route)){
+    for(let i=0;i<g.route.length;i++){
+      const p=g.route[i];
+      if(inBounds251(p)&&!used.has(cellKey(p))){
+        g.index=i;g.x=p.x;g.y=p.y;placed=true;break;
+      }
+    }
+  }
+  if(!placed){
+    const c=freeCell251(used,true);
+    if(c){g.x=c.x;g.y=c.y}
+  }
+  if(inBounds251(g))used.add(cellKey(g));
+}
+
+/* Último control de seguridad después de que todas las capas terminaron de
+   colocar sus objetos. Evita apariciones dobles sin cambiar el diseño. */
+function sanitizeLevel251(){
+  if(!maze)return;
+  const used=new Set();
+  used.add(cellKey(levelStart));
+  used.add(cellKey(exit));
+
+  reserveObject251(friend,used,true);
+  for(const b of bananas)if(!b.got)reserveObject251(b,used,true);
+  if(specialItem&&!specialItem.got)reserveObject251(specialItem,used,true);
+  if(typeof vehicleItem!=='undefined'&&vehicleItem&&!vehicleItem.got)reserveObject251(vehicleItem,used,true);
+  if(typeof visionGlasses!=='undefined')for(const v of visionGlasses)if(!v.got)reserveObject251(v,used,true);
+  if(typeof flashlightItem42!=='undefined'&&flashlightItem42&&!flashlightItem42.got)reserveObject251(flashlightItem42,used,true);
+  if(typeof level3Button!=='undefined'&&level3Button)reserveObject251(level3Button,used,true);
+  if(typeof level4Trampoline!=='undefined'&&level4Trampoline)reserveObject251(level4Trampoline,used,true);
+  if(typeof level4Landing!=='undefined'&&level4Landing)reserveObject251(level4Landing,used,true);
+  if(typeof level9Trampoline42!=='undefined'&&level9Trampoline42)reserveObject251(level9Trampoline42,used,true);
+  if(typeof level9Landing42!=='undefined'&&level9Landing42)reserveObject251(level9Landing42,used,true);
+  if(typeof lightButtons230!=='undefined')for(const b of lightButtons230)reserveObject251(b,used,true);
+  if(typeof colorButtons230!=='undefined')for(const b of colorButtons230)reserveObject251(b,used,true);
+
+  if(typeof campaignTrampolines250!=='undefined'){
+    for(const p of campaignTrampolines250){
+      reserveObject251(p,used,true);
+      reserveObject251(p.to,used,true);
+    }
+  }
+  if(typeof campaignWhirlpools250!=='undefined')for(const w of campaignWhirlpools250)reserveObject251(w,used,true);
+  if(typeof whirlpool!=='undefined'&&whirlpool)reserveObject251(whirlpool,used,true);
+  if(typeof falseExit!=='undefined'&&falseExit)reserveObject251(falseExit,used,true);
+
+  const herd=typeof allGuardians224==='function'?allGuardians224():[guardian,extraGuardian].filter(Boolean);
+  for(const g of herd)reserveGuardian251(g,used);
+
+  player={...levelStart};
+  updateHud();
+}
+
+function verifyCampaign251(){
+  const expectedPads=(typeof FINAL_TRAMPOLINE_COUNTS_250!=='undefined'&&FINAL_TRAMPOLINE_COUNTS_250[level])||0;
+  const expectedSpins=(typeof FINAL_WHIRLPOOL_COUNTS_250!=='undefined'&&FINAL_WHIRLPOOL_COUNTS_250[level])||0;
+  const actualPads=typeof campaignTrampolines250!=='undefined'?campaignTrampolines250.length:0;
+  const actualSpins=typeof campaignWhirlpools250!=='undefined'?campaignWhirlpools250.length:0;
+  if(actualPads<expectedPads||actualSpins<expectedSpins){
+    console.warn('Nito: el nivel no pudo colocar todos los elementos previstos.',{
+      level,expectedPads,actualPads,expectedSpins,actualSpins
+    });
+  }
+}
+
+const buildLevel251Base=buildLevel;
+buildLevel=function(n){
+  clearTransientState251();
+  buildLevel251Base(n);
+  sanitizeLevel251();
+  verifyCampaign251();
+  draw();
+};
+
+/* La selección de nivel y el reinicio siempre parten de una pantalla limpia. */
+const startGame251Base=startGame;
+startGame=function(n){
+  clearTransientState251();
+  const finalOverlay=document.getElementById('finalAdventureOverlay');
+  if(finalOverlay){finalOverlay.style.display='none';finalOverlay.setAttribute('aria-hidden','true')}
+  startGame251Base(n);
+};
+
+/* Protección final: ningún guardián puede capturar durante un salto ni durante
+   la entrada animada a la escuela. */
+const guardianCanCapture251Base=guardianCanCapture223;
+guardianCanCapture223=function(g=null){
+  if((typeof trampolineFlight41!=='undefined'&&trampolineFlight41)||
+     (typeof schoolEntry240!=='undefined'&&schoolEntry240))return false;
+  return guardianCanCapture251Base(g);
+};
+guardianTouchesNito21=function(){return guardianCanCapture223()};
+activeGuardianTouch222=function(g){return guardianCanCapture223(g)};
+
+/* Si el efecto temporal termina mientras el jugador permanece quieto, el
+   dibujo también lo limpia sin esperar una nueva pulsación. */
+const draw251Base=draw;
+draw=function(){
+  if(typeof whirlpoolEffectUntil21!=='undefined'&&whirlpoolEffectUntil21&&
+     performance.now()>=whirlpoolEffectUntil21&&typeof clearWhirlpoolEffect21==='function'){
+    clearWhirlpoolEffect21();
+  }
+  if(typeof vehicleBoostUntil231!=='undefined'&&vehicleBoostUntil231&&
+     performance.now()>=vehicleBoostUntil231&&typeof clearVehicleBoost231==='function'){
+    clearVehicleBoost231();
+  }
+  draw251Base();
+};
+
+/* Estado inicial limpio incluso si el navegador restaura el documento. */
+window.addEventListener('pageshow',()=>{
+  const finalOverlay=document.getElementById('finalAdventureOverlay');
+  if(!playing&&finalOverlay&&finalOverlay.getAttribute('aria-hidden')!=='false'){
+    finalOverlay.style.display='none';
+  }
+});
 </script>
 
 </body>
