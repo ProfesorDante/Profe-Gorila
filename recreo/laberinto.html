@@ -571,7 +571,7 @@ function resetToStart(message){
   bumpSound();showToast(message);updateHud();draw();
 }
 function checkGuardianCollision(){
-  if(guardian&&player.x===guardian.x&&player.y===guardian.y){
+  if(guardianCanCapture223(guardian)){
     resetToStart(guardian.message);
   }
 }
@@ -945,7 +945,7 @@ checkCell=function(){
   if(whirlpool&&!whirlpool.used&&sameCell(player,whirlpool)){
     whirlpool.used=true;controlsReversed=!controlsReversed;glassesSound();
   }
-  if(guardian&&sameCell(player,guardian)){resetToStart();return}
+  if(guardianCanCapture223(guardian)){resetToStart();return}
   collectQuietly();
   updateHud();
   if(sameCell(player,exit)){
@@ -1520,7 +1520,7 @@ const tryMove33Base=tryMove;
 tryMove=function(dx,dy){
   const wasLocked=moveLock;tryMove33Base(dx,dy);
   if(!wasLocked&&currentVehicle&&moveLock)setTimeout(()=>{moveLock=false},Math.max(20,Math.round(70*currentVehicle.speed)));
-  if((guardian&&sameCell(player,guardian))||(extraGuardian&&sameCell(player,extraGuardian))){resetToStart();return}
+  if(guardianCanCapture223()){resetToStart();return}
   if(explorerRoute&&!explorerRoute.opened&&permanentBananas>=explorerRoute.required&&sameCell(player,levelStart))openExplorerRoute();
 };
 
@@ -3036,5 +3036,54 @@ draw=function(){
   drawBirdEvent222(size,ox,oy);
 };
 </script>
+
+
+<script>
+'use strict';
+/* === VERSIÓN 2.2.3 — SUEÑO REAL DEL PEREZOSO ===
+   Corrige todas las colisiones antiguas que todavía podían atraparlo dormido. */
+
+function guardianCanCapture223(g=null){
+  if(typeof nitoIsInvulnerable21==='function'&&nitoIsInvulnerable21())return false;
+  const canCapture=target=>Boolean(
+    target&&sameCell(player,target)&&
+    !(typeof isSloth222==='function'&&isSloth222(target)&&slothSleeping222(target))
+  );
+  return g?canCapture(g):canCapture(guardian)||canCapture(extraGuardian);
+}
+
+/* Todas las comprobaciones modernas pasan por una única regla. */
+guardianTouchesNito21=function(){return guardianCanCapture223()};
+activeGuardianTouch222=function(g){return guardianCanCapture223(g)};
+
+/* Aviso visual breve al despertar: ojos/alerta, sin palabras ni tutorial. */
+function slothWakeProgress223(g,t=performance.now()){
+  if(!g||!isSloth222(g)||typeof g.slothCycleStart222!=='number')return -1;
+  const sleep=SLOTH_SLEEP_MS_222,cycle=sleep+SLOTH_AWAKE_MS_222;
+  const phase=(t-g.slothCycleStart222)%cycle;
+  if(phase<sleep||phase>sleep+700)return -1;
+  return (phase-sleep)/700;
+}
+function drawSlothWake223(g,size,ox,oy){
+  const p=slothWakeProgress223(g);
+  if(p<0)return;
+  const cx=ox+(g.x+.5)*size,cy=oy+(g.y+.5)*size-size*.42;
+  ctx.save();
+  ctx.globalAlpha=Math.sin(Math.PI*Math.min(1,p));
+  ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.font=`900 ${Math.max(14,size*.24)}px Arial`;
+  ctx.fillText('❗',cx,cy);
+  ctx.restore();
+}
+const draw223Base=draw;
+draw=function(){
+  draw223Base();
+  if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  drawSlothWake223(guardian,size,ox,oy);
+  drawSlothWake223(extraGuardian,size,ox,oy);
+};
+</script>
+
 </body>
 </html>
