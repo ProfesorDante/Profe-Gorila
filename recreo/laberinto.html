@@ -3085,5 +3085,140 @@ draw=function(){
 };
 </script>
 
+
+<script>
+'use strict';
+/* === VERSIÓN 2.2.4 — PERSONALIDADES Y REORGANIZACIÓN DE GUARDIANES ===
+   La campaña queda preparada por nivel sin explicar mecánicas al jugador. */
+
+/* Plan completo de campaña. Las propiedades de luz, colores y cantidades de
+   trampolines/remolinos se usarán en las próximas versiones. No se muestran. */
+const CAMPAIGN_PLAN_224={
+  1:{guardians:[]},2:{guardians:[]},3:{guardians:[],doorButton:true},
+  4:{guardians:[],trampolines:1},5:{guardians:[]},6:{guardians:[],trampolines:2},
+  7:{guardians:['gorilla1']},8:{guardians:[],lightButtons:true},
+  9:{guardians:[],trampolines:1,dark:true,flashlight:true},
+  10:{guardians:[],primaryButtons:true},11:{guardians:[],dark:true},
+  12:{guardians:['parrot']},13:{guardians:['elephant'],secondaryButtons:true},
+  14:{guardians:[],trampolines:2,whirlpools:2},
+  15:{guardians:['sloth','sloth','sloth']},
+  16:{guardians:['gorilla1'],whirlpools:3,primaryButtons:true},
+  17:{guardians:['gorilla2'],trampolines:3,lightButtons:true},
+  18:{guardians:['parrot','gorilla1']},
+  19:{guardians:['turtle','elephant'],trampolines:3,lightButtons:true},
+  20:{guardians:['gorilla2','turtle','elephant'],trampolines:4,whirlpools:2,lightButtons:true}
+};
+
+/* Se actualiza el plan antiguo para que cualquier sistema previo consulte
+   las mismas decisiones de campaña. */
+for(const k of Object.keys(GUARDIAN_PLAN))delete GUARDIAN_PLAN[k];
+for(const [n,cfg] of Object.entries(CAMPAIGN_PLAN_224)){
+  if(cfg.guardians&&cfg.guardians.length)GUARDIAN_PLAN[n]=[...cfg.guardians];
+}
+
+/* Personalidades más claras. */
+GUARDIAN_PERSONALITIES.elephant.step=1780;
+GUARDIAN_PERSONALITIES.elephant.pause=1050; // pasos largos y pausados
+GUARDIAN_PERSONALITIES.turtle.step=1850;
+GUARDIAN_PERSONALITIES.turtle.pause=0;      // lenta, pero nunca se detiene
+
+let thirdGuardian224=null;
+
+function allGuardians224(){return [guardian,extraGuardian,thirdGuardian224].filter(Boolean)}
+function guardianStartOccupied224(g,others){return others.some(o=>o&&sameCell(g,o))}
+function shiftGuardianStart224(g,others){
+  if(!g||!g.route||!g.route.length)return;
+  for(let i=0;i<g.route.length;i++){
+    const p=g.route[i];
+    if(sameCell(p,levelStart)||sameCell(p,exit)||guardianStartOccupied224(p,others))continue;
+    g.index=i;g.x=p.x;g.y=p.y;return;
+  }
+}
+
+/* Hasta tres guardianes simultáneos, con comienzos separados. */
+placeGuardian=function(){
+  guardian=null;extraGuardian=null;thirdGuardian224=null;turtleDash=null;
+  const plan=(CAMPAIGN_PLAN_224[level]&&CAMPAIGN_PLAN_224[level].guardians)||[];
+  guardian=plan[0]?makeGuardian(plan[0],0):null;
+  if(guardian)shiftGuardianStart224(guardian,[]);
+  extraGuardian=plan[1]?makeGuardian(plan[1],1):null;
+  if(extraGuardian)shiftGuardianStart224(extraGuardian,[guardian]);
+  thirdGuardian224=plan[2]?makeGuardian(plan[2],2):null;
+  if(thirdGuardian224)shiftGuardianStart224(thirdGuardian224,[guardian,extraGuardian]);
+  const t=performance.now();
+  for(const g of allGuardians224()){
+    g.nextAt=t+1450+(g===extraGuardian?350:g===thirdGuardian224?700:0);
+    if(typeof isSloth222==='function'&&isSloth222(g))g.slothCycleStart222=t;
+  }
+};
+
+/* El tercer guardián participa del movimiento y de las colisiones. */
+const advanceGuardian224Base=advanceGuardian;
+advanceGuardian=function(t){
+  advanceGuardian224Base(t);
+  if(thirdGuardian224)moveOneGuardian(thirdGuardian224,t);
+  if(typeof guardianTouchesNito21==='function'&&guardianTouchesNito21())resetToStart();
+};
+
+guardianCanCapture223=function(g=null){
+  if(typeof nitoIsInvulnerable21==='function'&&nitoIsInvulnerable21())return false;
+  const canCapture=target=>Boolean(
+    target&&sameCell(player,target)&&
+    !(typeof isSloth222==='function'&&isSloth222(target)&&slothSleeping222(target))
+  );
+  return g?canCapture(g):allGuardians224().some(canCapture);
+};
+guardianTouchesNito21=function(){return guardianCanCapture223()};
+activeGuardianTouch222=function(g){return guardianCanCapture223(g)};
+
+/* El taunt también puede llamar la atención de cualquier gorila adicional. */
+registerTauntInput221=function(dx,dy){
+  const token=directionToken221(dx,dy);if(!token)return;
+  const t=performance.now();
+  tauntInputs221.push({token,t});
+  tauntInputs221=tauntInputs221.filter(e=>t-e.t<=TAUNT_WINDOW_MS_221).slice(-8);
+  if(!isAlternatingTaunt221(tauntInputs221.map(e=>e.token)))return;
+  let reacted=false;
+  for(const g of allGuardians224())reacted=awakenGorilla221(g)||reacted;
+  if(reacted)tauntInputs221=[];
+};
+
+/* Estados visuales compartidos y tercer guardián. */
+function drawThirdGuardian224(size,ox,oy){
+  if(!thirdGuardian224)return;
+  drawGuardian33(thirdGuardian224,size,ox,oy);
+  if(typeof drawGorillaState221==='function')drawGorillaState221(thirdGuardian224,size,ox,oy);
+  if(typeof drawSlothDream222==='function')drawSlothDream222(thirdGuardian224,size,ox,oy);
+  if(typeof drawSlothWake223==='function')drawSlothWake223(thirdGuardian224,size,ox,oy);
+}
+
+/* El elefante marca su pausa con una pequeña mirada; la tortuga no muestra
+   pausa porque su comportamiento distintivo es seguir avanzando siempre. */
+function drawGuardianMood224(g,size,ox,oy){
+  if(!g)return;
+  const cx=ox+(g.x+.5)*size,cy=oy+(g.y+.5)*size-size*.43;
+  if(g.kind==='elephant'&&performance.now()<(g.pauseUntil||0)){
+    ctx.save();ctx.globalAlpha=.7;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font=`${Math.max(12,size*.19)}px Arial`;ctx.fillText('•••',cx,cy);ctx.restore();
+  }
+}
+
+const draw224Base=draw;
+draw=function(){
+  draw224Base();if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  drawThirdGuardian224(size,ox,oy);
+  for(const g of allGuardians224())drawGuardianMood224(g,size,ox,oy);
+};
+
+/* Cada construcción termina aplicando una sola vez el plan definitivo. */
+const buildLevel224Base=buildLevel;
+buildLevel=function(n){
+  buildLevel224Base(n);
+  placeGuardian();
+  draw();
+};
+</script>
+
 </body>
 </html>
