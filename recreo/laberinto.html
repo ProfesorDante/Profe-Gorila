@@ -144,7 +144,7 @@ body,.controls,.pad,.control{
 </head>
 <body>
 <div class="app">
-<header><div class="title">🐒 NITO Y EL LABERINTO</div><div class="hud"><div class="pill">Nivel <span id="levelLabel">1</span>/20</div><div class="pill">🍌 <span id="bananaLabel">0</span>/<span id="bananaTotal">0</span></div><div class="pill">👣 <span id="stepsLabel">0</span></div><div id="eventPill" class="pill event-pill" style="display:none">✨ <span id="eventLabel"></span></div></div></header>
+<header><div class="title">🐒 NITO Y EL LABERINTO</div><div class="hud"><div class="pill scene-pill"><span id="sceneLabel">Camino de la Semilla</span></div><span id="levelLabel" style="display:none">1</span><div class="pill">🍌 <span id="bananaLabel">0</span>/<span id="bananaTotal">0</span></div><div class="pill">👣 <span id="stepsLabel">0</span></div><div id="eventPill" class="pill event-pill" style="display:none">✨ <span id="eventLabel"></span></div></div></header>
 <div class="game-wrap"><canvas id="game" width="900" height="620"></canvas>
 <div id="startOverlay" class="overlay"><div class="card"><h1>🌳 El primer día de Nito</h1><p>Nito es nuevo en la Selva del Gran Árbol y quiere llegar a la escuela.</p><p>Ayudalo a encontrar el camino. En algunos rincones hay bananas y compañeros de la Escuela del Gran Árbol esperándolo.</p><div class="buttons"><button onclick="beginBananaRun(1)">▶ Jugar</button><button class="secondary" onclick="showLevels()">🗺 Elegir nivel</button></div><div class="legend">Teclado: flechas o WASD · Celular/tablet: botones en pantalla</div></div></div>
 <div id="messageOverlay" class="overlay" style="display:none"><div class="card"><h2 id="messageTitle">¡Muy bien!</h2><p id="messageText"></p><div class="buttons" id="messageButtons"></div></div></div>
@@ -401,7 +401,7 @@ const ADVENTURE_CLASSMATES=[
 
 const BOSS_LEVELS={
   7:{icon:'🦍',name:'Gorila Dormilón',message:'El Gorila Dormilón te llevó con cuidado al comienzo.'},
-  13:{icon:'🐘',name:'Elefante Paseandero',message:'El Elefante Paseandero te acompañó de vuelta al inicio.'},
+  13:{icon:'🐘',name:'Guardián Demoledor',message:'El Elefante Paseandero te acompañó de vuelta al inicio.'},
   19:{icon:'🐢',name:'Tortuga Gigante',message:'La Tortuga Gigante cerró el paso. ¡Probemos otra ruta!'}
 };
 
@@ -1403,7 +1403,7 @@ updateBananaHud32();
 const GUARDIAN_PERSONALITIES={
   gorilla1:{icon:'🦍',name:'Gorila curioso',step:1450,pause:700,canUseSecrets:false,mode:'patrol'},
   parrot:{icon:'🦜',name:'Loro explorador',step:760,pause:160,canUseSecrets:false,mode:'fly'},
-  elephant:{icon:'🐘',name:'Elefante paseandero',step:1700,pause:900,canUseSecrets:false,mode:'patrol'},
+  elephant:{icon:'🐘',name:'Guardián Demoledor',step:1700,pause:900,canUseSecrets:false,mode:'patrol'},
   sloth:{icon:'🦥',name:'Perezoso soñador',step:2100,pause:2300,canUseSecrets:false,mode:'patrol'},
   gorilla2:{icon:'🦍',name:'Gorila ágil',step:900,pause:250,canUseSecrets:true,mode:'chase'},
   turtle:{icon:'🐢',name:'Tortuga gigante',step:1850,pause:350,canUseSecrets:false,mode:'chase'}
@@ -4299,6 +4299,1036 @@ buildLevel=function(n){
   if(typeof sanitizeLevel251==='function')sanitizeLevel251();
   draw();
 };
+</script>
+
+
+<script>
+'use strict';
+/* =========================================================
+   GUARDIÁN DEMOLEDOR — VERSIÓN 1
+   Persecución oculta por proximidad, sin señales visuales.
+   ========================================================= */
+const DEMOLISHER_CHASE_DISTANCE_V1=5;
+const DEMOLISHER_ESCAPE_DISTANCE_V1=7;
+
+function demolisherDistanceV1(g){
+  return g ? Math.abs(g.x-player.x)+Math.abs(g.y-player.y) : Infinity;
+}
+
+function updateDemolisherStateV1(g){
+  if(!g||g.kind!=='elephant')return;
+  const distance=demolisherDistanceV1(g);
+  if(!g.demolisherChasingV1&&distance<=DEMOLISHER_CHASE_DISTANCE_V1){
+    g.demolisherChasingV1=true;
+  }else if(g.demolisherChasingV1&&distance>DEMOLISHER_ESCAPE_DISTANCE_V1){
+    g.demolisherChasingV1=false;
+  }
+}
+
+const chooseGuardianNextDemolisherV1Base=chooseGuardianNext;
+chooseGuardianNext=function(g){
+  if(g&&g.kind==='elephant'){
+    updateDemolisherStateV1(g);
+    if(g.demolisherChasingV1){
+      const path=shortestPath({x:g.x,y:g.y},player);
+      if(path.length>1)return path[1];
+    }
+  }
+  return chooseGuardianNextDemolisherV1Base(g);
+};
+
+const makeGuardianDemolisherV1Base=makeGuardian;
+makeGuardian=function(kind,offset=0){
+  const g=makeGuardianDemolisherV1Base(kind,offset);
+  if(g&&g.kind==='elephant'){
+    g.name='Guardián Demoledor';
+    g.demolisherChasingV1=false;
+  }
+  return g;
+};
+
+/* El golpe sigue orientándose hacia Nito, pero la persecución solo se activa
+   dentro del radio oculto de cinco casillas. */
+const moveOneGuardianDemolisherV1Base=moveOneGuardian;
+moveOneGuardian=function(g,t){
+  if(g&&g.kind==='elephant')updateDemolisherStateV1(g);
+  moveOneGuardianDemolisherV1Base(g,t);
+};
+</script>
+
+
+<script>
+'use strict';
+/* =========================================================
+   GUARDIANES 3.0 — PERSONALIDAD DEFINITIVA
+   Atento: sospecha gradual por movimiento.
+   Demoledor: demolición útil + zancada sin teletransportes.
+   Del Viento: serie móvil de tres remolinos.
+   ========================================================= */
+
+/* Nombres coherentes y descriptivos. */
+if(typeof GUARDIAN_PERSONALITIES!=='undefined'){
+  if(GUARDIAN_PERSONALITIES.gorilla1)GUARDIAN_PERSONALITIES.gorilla1.name='Guardián Atento';
+  if(GUARDIAN_PERSONALITIES.gorilla2)GUARDIAN_PERSONALITIES.gorilla2.name='Guardián Atento';
+  if(GUARDIAN_PERSONALITIES.elephant)GUARDIAN_PERSONALITIES.elephant.name='Guardián Demoledor';
+  if(GUARDIAN_PERSONALITIES.sloth)GUARDIAN_PERSONALITIES.sloth.name='Guardián Dormilón';
+  if(GUARDIAN_PERSONALITIES.turtle)GUARDIAN_PERSONALITIES.turtle.name='Guardián Incansable';
+  if(GUARDIAN_PERSONALITIES.parrot)GUARDIAN_PERSONALITIES.parrot.name='Guardián del Viento';
+}
+
+/* ---------- GUARDIÁN ATENTO ---------- */
+const ATTENTIVE_INVESTIGATE_30=30;
+const ATTENTIVE_CHASE_30=65;
+const ATTENTIVE_DECAY_PER_SEC_30=9;
+let attentiveLastInput30={key:'',at:0};
+
+function isAttentive30(g){return Boolean(g&&(g.kind==='gorilla1'||g.kind==='gorilla2'||g.icon==='🦍'))}
+function initAttentive30(g){
+  if(!isAttentive30(g))return;
+  if(typeof g.suspicion30!=='number')g.suspicion30=0;
+  if(typeof g.suspicionUpdated30!=='number')g.suspicionUpdated30=performance.now();
+  g.name='Guardián Atento';
+}
+function straightVision30(g){
+  if(!g)return null;
+  const dx=player.x-g.x,dy=player.y-g.y;
+  if(dx!==0&&dy!==0)return null;
+  if(dx===0&&dy===0)return {distance:0,max:1};
+  const sx=Math.sign(dx),sy=Math.sign(dy);
+  const key=sx===1?'right':sx===-1?'left':sy===1?'down':'up';
+  let x=g.x,y=g.y,max=0;
+  while(true){
+    if(maze[y][x].walls[key])break;
+    x+=sx;y+=sy;max++;
+    if(x<0||y<0||x>=cols||y>=rows)break;
+  }
+  const distance=Math.abs(dx)+Math.abs(dy);
+  if(distance>max)return null;
+  return {distance,max:Math.max(1,max)};
+}
+function addSuspicion30(g,dirKey,moved){
+  initAttentive30(g);
+  const vision=straightVision30(g);if(!vision)return;
+  const ratio=vision.distance/vision.max;
+  let amount=ratio>.60?1:ratio>.30?3:6;
+  const now=performance.now();
+  const rapid=attentiveLastInput30.key&&attentiveLastInput30.key!==dirKey&&(now-attentiveLastInput30.at)<520;
+  if(rapid)amount+=4;
+  if(!moved)amount+=2; // golpear una pared también hace ruido.
+  g.suspicion30=Math.min(100,g.suspicion30+amount);
+  g.lastSeen30={x:player.x,y:player.y};
+  g.suspicionUpdated30=now;
+  if(g.suspicion30>=ATTENTIVE_CHASE_30){g.alertSymbol224='!';g.alertUntil224=now+450}
+  else if(g.suspicion30>=ATTENTIVE_INVESTIGATE_30){g.questionUntil221=now+420}
+}
+function decaySuspicion30(g,t){
+  if(!isAttentive30(g))return;
+  initAttentive30(g);
+  const dt=Math.max(0,t-g.suspicionUpdated30)/1000;
+  if(dt>0){
+    g.suspicion30=Math.max(0,g.suspicion30-dt*ATTENTIVE_DECAY_PER_SEC_30);
+    g.suspicionUpdated30=t;
+    if(g.suspicion30<20)g.lastSeen30=null;
+  }
+}
+
+const tryMoveGuardians30Base=tryMove;
+tryMove=function(dx,dy){
+  const before={x:player.x,y:player.y};
+  const key=dx===1?'right':dx===-1?'left':dy===1?'down':'up';
+  tryMoveGuardians30Base(dx,dy);
+  const moved=before.x!==player.x||before.y!==player.y;
+  const herd=typeof allGuardians224==='function'?allGuardians224():[guardian,extraGuardian].filter(Boolean);
+  for(const g of herd)if(isAttentive30(g))addSuspicion30(g,key,moved);
+  attentiveLastInput30={key,at:performance.now()};
+};
+
+/* ---------- GUARDIÁN DEMOLEDOR ---------- */
+function isElephant30(g){return Boolean(g&&g.kind==='elephant')}
+function openNeighbors30(g){return neighborsOf(g.x,g.y).map(n=>({x:n.x,y:n.y}))}
+function safePatrolStep30(g){
+  const ns=openNeighbors30(g);if(!ns.length)return null;
+  if(!g.patrolMemory30)g.patrolMemory30=[];
+  ns.sort((a,b)=>{
+    const av=g.patrolMemory30.includes(cellKey(a))?1:0,bv=g.patrolMemory30.includes(cellKey(b))?1:0;
+    return av-bv||Math.abs(b.x-player.x)+Math.abs(b.y-player.y)-Math.abs(a.x-player.x)-Math.abs(a.y-player.y);
+  });
+  const n=ns[0];g.patrolMemory30.push(cellKey(n));if(g.patrolMemory30.length>10)g.patrolMemory30.shift();return n;
+}
+function elephantBestBreak30(g){
+  const dirs=[
+    {dx:1,dy:0,key:'right',opp:'left'}, {dx:-1,dy:0,key:'left',opp:'right'},
+    {dx:0,dy:1,key:'down',opp:'up'}, {dx:0,dy:-1,key:'up',opp:'down'}
+  ];
+  const currentPath=shortestPath({x:g.x,y:g.y},player);
+  const currentLen=currentPath.length?currentPath.length-1:Infinity;
+  const dist=Math.abs(g.x-player.x)+Math.abs(g.y-player.y);
+  const candidates=[];
+  for(const d of dirs){
+    const nx=g.x+d.dx,ny=g.y+d.dy;
+    if(nx<0||ny<0||nx>=cols||ny>=rows||!maze[g.y][g.x].walls[d.key])continue;
+    maze[g.y][g.x].walls[d.key]=false;maze[ny][nx].walls[d.opp]=false;
+    const p=shortestPath({x:g.x,y:g.y},player);
+    const newLen=p.length?p.length-1:Infinity;
+    maze[g.y][g.x].walls[d.key]=true;maze[ny][nx].walls[d.opp]=true;
+    candidates.push({...d,nx,ny,newLen,saving:currentLen-newLen,manhattan:Math.abs(nx-player.x)+Math.abs(ny-player.y)});
+  }
+  if(!candidates.length)return null;
+  candidates.sort((a,b)=>b.saving-a.saving||a.manhattan-b.manhattan);
+  if(dist>5)return candidates[0]; // lejos: demoler es obligatorio.
+  return candidates[0].saving>=1?candidates[0]:null; // cerca: rompe si ahorra al menos un paso.
+}
+
+/* Reemplazo estable: nunca restaura una posición antigua de patrulla. */
+const chooseGuardianNextGuardians30Base=chooseGuardianNext;
+chooseGuardianNext=function(g){
+  if(isElephant30(g)){
+    updateDemolisherStateV1(g);
+    if(g.demolisherChasingV1){
+      const path=shortestPath({x:g.x,y:g.y},player);
+      if(path.length>1)return path[1];
+    }
+    return safePatrolStep30(g);
+  }
+  if(isAttentive30(g)){
+    initAttentive30(g);
+    const target=g.suspicion30>=ATTENTIVE_CHASE_30?player:
+      (g.suspicion30>=ATTENTIVE_INVESTIGATE_30?g.lastSeen30:null);
+    if(target){
+      const path=shortestPath({x:g.x,y:g.y},target);
+      if(path.length>1)return path[1];
+    }
+  }
+  return chooseGuardianNextGuardians30Base(g);
+};
+
+/* Demolición cada cinco segundos con la regla acordada. */
+breakWallForElephant225=function(g,t){
+  if(!isElephant30(g)||!playing)return;
+  if(typeof g.nextWallBreak225!=='number')g.nextWallBreak225=t+5000;
+  if(t<g.nextWallBreak225)return;
+  g.nextWallBreak225=t+5000;
+  const d=elephantBestBreak30(g);if(!d)return;
+  maze[g.y][g.x].walls[d.key]=false;maze[d.ny][d.nx].walls[d.opp]=false;
+  elephantBursts225.push({x:g.x+d.dx*.5,y:g.y+d.dy*.5,start:t,duration:900,dx:d.dx,dy:d.dy});
+  elephantBoomSound225();
+  g.x=d.nx;g.y=d.ny;g.pauseUntil=0;g.nextAt=t+Math.min(g.step||900,900);
+  if(typeof guardianCanCapture223==='function'&&guardianCanCapture223(g))resetToStart();
+};
+
+/* Cada cuatro movimientos reales, una segunda casilla continua la misma decisión.
+   No usa índices viejos, por lo que no puede teletransportarse. */
+const moveOneGuardianGuardians30Base=moveOneGuardian;
+moveOneGuardian=function(g,t){
+  const before=g?{x:g.x,y:g.y}:null;
+  moveOneGuardianGuardians30Base(g,t);
+  if(!g||!before)return;
+  const moved=before.x!==g.x||before.y!==g.y;
+  if(isElephant30(g)&&moved){
+    g.elephantSteps30=(g.elephantSteps30||0)+1;
+    if(g.elephantSteps30%4===0&&playing){
+      const next=chooseGuardianNext(g);
+      if(next&&Math.abs(next.x-g.x)+Math.abs(next.y-g.y)===1&&!sameCell(next,levelStart)){
+        g.x=next.x;g.y=next.y;
+        if(typeof guardianCanCapture223==='function'&&guardianCanCapture223(g))resetToStart();
+      }
+    }
+  }
+  if(g.kind==='parrot'&&moved)parrotMoved30(g,t);
+};
+
+/* ---------- GUARDIÁN DEL VIENTO ---------- */
+const WIND_WHIRL_LIFE_30=12000;
+const WIND_CONFUSION_30=8000;
+const WIND_DROP_EVERY_MOVES_30=7;
+let windWhirlpools30=[];
+
+/* Se desactiva el pájaro anónimo: ahora el viento pertenece al loro. */
+if(typeof BIRD_LEVELS_222!=='undefined'&&BIRD_LEVELS_222.clear)BIRD_LEVELS_222.clear();
+
+function farFromWind30(c){return windWhirlpools30.every(w=>Math.abs(w.x-c.x)+Math.abs(w.y-c.y)>=4)}
+function parrotMoved30(g,t){
+  if(!g||g.kind!=='parrot')return;
+  g.windMoveCount30=(g.windMoveCount30||0)+1;
+  if(g.windMoveCount30%WIND_DROP_EVERY_MOVES_30!==0)return;
+  let drop={x:g.x,y:g.y};
+  if(!farFromWind30(drop)){
+    const opts=allCells().filter(c=>neighborsOf(c.x,c.y).length>0&&farFromWind30(c)&&!sameCell(c,levelStart)&&!sameCell(c,exit));
+    opts.sort((a,b)=>Math.abs(b.x-g.x)+Math.abs(b.y-g.y)-Math.abs(a.x-g.x)-Math.abs(a.y-g.y));
+    if(opts.length)drop=opts[0];
+  }
+  windWhirlpools30=windWhirlpools30.filter(w=>w.expiresAt>t);
+  windWhirlpools30.push({...drop,bornAt:t,expiresAt:t+WIND_WHIRL_LIFE_30,used:false});
+  while(windWhirlpools30.length>3)windWhirlpools30.shift();
+  g.avoidWind30={x:drop.x,y:drop.y,until:t+5500};
+  tone(700,.08,'triangle',.022);tone(510,.11,'triangle',.018,.06);
+}
+
+/* Tras dejar viento, el loro prefiere alejarse del remolino reciente. */
+const chooseGuardianNextWind30Base=chooseGuardianNext;
+chooseGuardianNext=function(g){
+  if(g&&g.kind==='parrot'&&g.avoidWind30&&performance.now()<g.avoidWind30.until){
+    const ns=DIRS.map(d=>({x:g.x+d.dx,y:g.y+d.dy})).filter(n=>n.x>=0&&n.y>=0&&n.x<cols&&n.y<rows);
+    ns.sort((a,b)=>(Math.abs(b.x-g.avoidWind30.x)+Math.abs(b.y-g.avoidWind30.y))-(Math.abs(a.x-g.avoidWind30.x)+Math.abs(a.y-g.avoidWind30.y)));
+    if(ns.length)return ns[0];
+  }
+  return chooseGuardianNextWind30Base(g);
+};
+
+/* Ocho segundos de confusión; otro remolino no reinicia el efecto. */
+activateWhirlpoolEffect21=function(){
+  const now=performance.now();
+  if(whirlpoolEffectUntil21>now)return;
+  controlsReversed=true;whirlpoolEffectUntil21=now+WIND_CONFUSION_30;
+  if(whirlpoolTimer21)clearTimeout(whirlpoolTimer21);
+  whirlpoolTimer21=setTimeout(()=>{clearWhirlpoolEffect21();glassesSound();draw()},WIND_CONFUSION_30);
+  glassesSound();
+};
+
+const checkCellGuardians30Base=checkCell;
+checkCell=function(){
+  const now=performance.now();
+  windWhirlpools30=windWhirlpools30.filter(w=>w.expiresAt>now);
+  for(const w of windWhirlpools30){
+    if(!w.used&&sameCell(player,w)){
+      w.used=true;activateWhirlpoolEffect21();
+      break;
+    }
+  }
+  checkCellGuardians30Base();
+};
+
+function drawWindWhirlpools30(size,ox,oy){
+  const now=performance.now();
+  windWhirlpools30=windWhirlpools30.filter(w=>w.expiresAt>now);
+  for(const w of windWhirlpools30){
+    const left=w.expiresAt-now;
+    /* Tres titileos en el último segundo. */
+    const visible=left>1000||Math.floor((1000-left)/166)%2===0;
+    if(!visible)continue;
+    const cx=ox+(w.x+.5)*size,cy=oy+(w.y+.5)*size;
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(animTime*3.3);
+    ctx.strokeStyle='#7654c7';ctx.lineWidth=Math.max(3,size*.055);
+    for(let r=.09;r<.35;r+=.075){ctx.beginPath();ctx.arc(0,0,size*r,0,Math.PI*1.55);ctx.stroke();ctx.rotate(.78)}
+    ctx.restore();
+  }
+}
+
+const advanceGuardianGuardians30Base=advanceGuardian;
+advanceGuardian=function(t){
+  const herd=typeof allGuardians224==='function'?allGuardians224():[guardian,extraGuardian].filter(Boolean);
+  for(const g of herd)decaySuspicion30(g,t);
+  windWhirlpools30=windWhirlpools30.filter(w=>w.expiresAt>t);
+  advanceGuardianGuardians30Base(t);
+};
+
+const drawGuardians30Base=draw;
+draw=function(){
+  drawGuardians30Base();if(!maze)return;
+  const {size,ox,oy}=cellMetrics();drawWindWhirlpools30(size,ox,oy);
+};
+
+const makeGuardianGuardians30Base=makeGuardian;
+makeGuardian=function(kind,offset=0){
+  const g=makeGuardianGuardians30Base(kind,offset);if(!g)return g;
+  if(isAttentive30(g)){initAttentive30(g);g.name='Guardián Atento'}
+  if(g.kind==='elephant'){g.name='Guardián Demoledor';g.elephantSteps30=0;g.patrolMemory30=[]}
+  if(g.kind==='sloth')g.name='Guardián Dormilón';
+  if(g.kind==='turtle')g.name='Guardián Incansable';
+  if(g.kind==='parrot'){g.name='Guardián del Viento';g.windMoveCount30=0}
+  return g;
+};
+
+const buildLevelGuardians30Base=buildLevel;
+buildLevel=function(n){
+  windWhirlpools30=[];attentiveLastInput30={key:'',at:0};
+  buildLevelGuardians30Base(n);
+  const herd=typeof allGuardians224==='function'?allGuardians224():[guardian,extraGuardian].filter(Boolean);
+  for(const g of herd){
+    if(isAttentive30(g))initAttentive30(g);
+    if(isElephant30(g)){g.elephantSteps30=0;g.patrolMemory30=[]}
+    if(g.kind==='parrot')g.windMoveCount30=0;
+  }
+};
+</script>
+
+
+<script>
+'use strict';
+/* =========================================================
+   VERSIÓN 3.0 — LOS BOSQUES · PASADA 1
+   Nombres de escenarios + Guardián Incansable definitivo.
+   ========================================================= */
+
+const SCENE_NAMES_30=[
+  '',
+  'Camino de la Semilla',
+  'Camino de la Hoja',
+  'Camino de la Hoja II',
+  'Sendero del Brote',
+  'Sendero de la Rama',
+  'Sendero de la Rama II',
+  'Camino del Claro',
+  'Sendero de las Raíces',
+  'Camino de las Mariposas',
+  'Sendero del Arroyo',
+  'Camino de la Sombra',
+  'Sendero del Viento Suave',
+  'Camino de la Piedra',
+  'Sendero del Eco Lejano',
+  'Camino del Bosque Antiguo',
+  'Sendero de la Niebla',
+  'Camino del Gran Claro',
+  'Bosque del Viento',
+  'Bosque del Eco',
+  'Bosque del Gran Árbol'
+];
+
+const sceneLabel30=document.getElementById('sceneLabel');
+function updateSceneName30(){
+  if(sceneLabel30)sceneLabel30.textContent=SCENE_NAMES_30[level]||('Camino '+level);
+  document.title=`Nito y el Laberinto — ${SCENE_NAMES_30[level]||''}`;
+}
+const updateHudScenes30Base=updateHud;
+updateHud=function(){updateHudScenes30Base();updateSceneName30();};
+updateSceneName30();
+
+/* Selector: conserva números compactos, pero cada botón revela el nombre
+   sin convertirlo en una explicación de mecánicas. */
+const showLevelsScenes30Base=showLevels;
+showLevels=function(returnTo='start'){
+  showLevelsScenes30Base(returnTo);
+  const buttons=[...document.querySelectorAll('#levelGrid .level-btn')];
+  buttons.forEach((b,i)=>{b.title=SCENE_NAMES_30[i+1]||'';b.setAttribute('aria-label',SCENE_NAMES_30[i+1]||`Camino ${i+1}`)});
+};
+
+/* ---------- GUARDIÁN INCANSABLE ---------- */
+const TURTLE_SLOW_MS_30=2200;
+const TURTLE_PUSH_GRACE_MS_30=900;
+let turtleSlowUntil30=0;
+let turtleMoveGate30=0;
+let turtlePushGraceUntil30=0;
+let turtleImpact30=null;
+
+function isTurtle30(g){return Boolean(g&&(g.kind==='turtle'||g.icon==='🐢'))}
+function directionKey30(dx,dy){return dx===1?'right':dx===-1?'left':dy===1?'down':'up'}
+function oppositeKey30(key){return {right:'left',left:'right',up:'down',down:'up'}[key]}
+
+function canStep30(x,y,dx,dy){
+  if(!maze||x<0||y<0||x>=cols||y>=rows)return false;
+  const key=directionKey30(dx,dy),nx=x+dx,ny=y+dy;
+  return nx>=0&&ny>=0&&nx<cols&&ny<rows&&!maze[y][x].walls[key];
+}
+
+/* Empuja hasta tres casillas, pero solo por pasajes realmente abiertos.
+   Si el corredor termina, usa la última casilla válida. */
+function findTurtlePushDestination30(start,dx,dy){
+  let x=start.x,y=start.y,best=null;
+  for(let i=0;i<3;i++){
+    if(!canStep30(x,y,dx,dy))break;
+    x+=dx;y+=dy;
+    if(!sameCell({x,y},exit))best={x,y};
+  }
+  if(best)return best;
+  const options=neighborsOf(start.x,start.y)
+    .filter(n=>!sameCell(n,exit))
+    .sort((a,b)=>{
+      const da=Math.abs(a.x-start.x-dx)+Math.abs(a.y-start.y-dy);
+      const db=Math.abs(b.x-start.x-dx)+Math.abs(b.y-start.y-dy);
+      return da-db;
+    });
+  return options[0]||null;
+}
+
+function turtlePush30(g,dx,dy,t=performance.now()){
+  if(!g||t<turtlePushGraceUntil30)return false;
+  let dest=findTurtlePushDestination30(player,dx,dy);
+  if(dest){player={x:dest.x,y:dest.y};}
+  turtleSlowUntil30=t+TURTLE_SLOW_MS_30;
+  turtlePushGraceUntil30=t+TURTLE_PUSH_GRACE_MS_30;
+  turtleImpact30={x:player.x,y:player.y,start:t,duration:520};
+  tone(115,.16,'square',.045);tone(76,.24,'triangle',.035,.07);
+  moveLock=true;setTimeout(()=>{moveLock=false},180);
+  updateHud();draw();
+  return Boolean(dest);
+}
+
+/* La tortuga nunca captura ni reinicia: su castigo es posición + lentitud. */
+const guardianCanCaptureTurtle30Base=guardianCanCapture223;
+guardianCanCapture223=function(g=null){
+  if(g&&isTurtle30(g))return false;
+  if(!g){
+    const herd=typeof allGuardians224==='function'?allGuardians224():[guardian,extraGuardian].filter(Boolean);
+    return herd.some(x=>!isTurtle30(x)&&guardianCanCaptureTurtle30Base(x));
+  }
+  return guardianCanCaptureTurtle30Base(g);
+};
+guardianTouchesNito21=function(){return guardianCanCapture223()};
+activeGuardianTouch222=function(g){return guardianCanCapture223(g)};
+
+/* Siempre calcula el camino más corto hacia Nito. */
+const chooseGuardianNextTurtle30Base=chooseGuardianNext;
+chooseGuardianNext=function(g){
+  if(isTurtle30(g)){
+    const path=shortestPath({x:g.x,y:g.y},player);
+    if(path.length>1)return path[1];
+  }
+  return chooseGuardianNextTurtle30Base(g);
+};
+
+/* Movimiento propio: si llega a Nito, ocupa su casilla anterior y lo empuja
+   en la misma dirección de avance. Nunca se detiene a patrullar. */
+const moveOneGuardianTurtle30Base=moveOneGuardian;
+moveOneGuardian=function(g,t){
+  if(!isTurtle30(g)){moveOneGuardianTurtle30Base(g,t);return}
+  if(!g||!playing||t<g.nextAt||t<g.pauseUntil)return;
+  const next=chooseGuardianNext(g);if(!next){g.nextAt=t+(g.step||1850);return}
+  const old={x:g.x,y:g.y};
+  const dx=next.x-g.x,dy=next.y-g.y;
+  if(sameCell(next,player)){
+    const originalPlayer={x:player.x,y:player.y};
+    const pushed=turtlePush30(g,dx,dy,t);
+    if(pushed){g.x=originalPlayer.x;g.y=originalPlayer.y;}
+    else {g.x=old.x;g.y=old.y;}
+  }else{
+    g.x=next.x;g.y=next.y;
+  }
+  g.nextAt=t+(g.step||1850);g.pauseUntil=0;
+};
+
+/* Si Nito intenta entrar en la tortuga, ella lo devuelve por donde vino. */
+const tryMoveTurtle30Base=tryMove;
+tryMove=function(dx,dy){
+  const now=performance.now();
+  if(now<turtleSlowUntil30&&now<turtleMoveGate30)return;
+  const before={x:player.x,y:player.y};
+  tryMoveTurtle30Base(dx,dy);
+  const moved=!sameCell(before,player);
+  if(moved&&now<turtleSlowUntil30)turtleMoveGate30=now+230;
+  const herd=typeof allGuardians224==='function'?allGuardians224():[guardian,extraGuardian].filter(Boolean);
+  const turtle=herd.find(g=>isTurtle30(g)&&sameCell(g,player));
+  if(turtle){
+    const collision={x:player.x,y:player.y};
+    const pushed=turtlePush30(turtle,-dx,-dy,performance.now());
+    if(!pushed)player=before;
+    turtle.x=collision.x;turtle.y=collision.y;
+  }
+};
+
+function drawTurtleStatus30(size,ox,oy){
+  const now=performance.now();
+  if(now<turtleSlowUntil30){
+    const cx=ox+(player.x+.5)*size,cy=oy+(player.y+.5)*size-size*.38;
+    ctx.save();ctx.globalAlpha=.55+.35*Math.sin(animTime*10);
+    ctx.font=`${Math.max(14,size*.22)}px Arial`;ctx.textAlign='center';ctx.fillText('💫',cx,cy);ctx.restore();
+  }
+  if(turtleImpact30){
+    const p=(now-turtleImpact30.start)/turtleImpact30.duration;
+    if(p>=1)turtleImpact30=null;
+    else{
+      const cx=ox+(turtleImpact30.x+.5)*size,cy=oy+(turtleImpact30.y+.5)*size;
+      ctx.save();ctx.globalAlpha=1-p;ctx.strokeStyle='#fff1a8';ctx.lineWidth=Math.max(3,size*.05);
+      ctx.beginPath();ctx.arc(cx,cy,size*(.15+.48*p),0,Math.PI*2);ctx.stroke();ctx.restore();
+    }
+  }
+}
+const drawTurtle30Base=draw;
+draw=function(){drawTurtle30Base();if(!maze)return;const {size,ox,oy}=cellMetrics();drawTurtleStatus30(size,ox,oy)};
+
+const makeGuardianTurtle30Base=makeGuardian;
+makeGuardian=function(kind,offset=0){
+  const g=makeGuardianTurtle30Base(kind,offset);
+  if(g&&isTurtle30(g)){g.name='Guardián Incansable';g.pause=0;g.mode='chase'}
+  return g;
+};
+
+const buildLevelTurtle30Base=buildLevel;
+buildLevel=function(n){
+  turtleSlowUntil30=0;turtleMoveGate30=0;turtlePushGraceUntil30=0;turtleImpact30=null;
+  buildLevelTurtle30Base(n);updateSceneName30();
+};
+</script>
+
+
+<script>
+'use strict';
+/* =========================================================
+   VERSIÓN 3.0 — LOS BOSQUES, PASADA 2
+   - Campaña final de guardianes 18–20.
+   - Guardián Atento sin saltos al abandonar una persecución.
+   - Oído a través de paredes.
+   - Saludos con línea de visión real.
+   - Nivel 3 con cadena de dos botones.
+   - Nivel 10 distribuido por todo el mapa.
+   ========================================================= */
+
+/* ---------- COMBINACIONES FINALES ---------- */
+if(typeof CAMPAIGN_PLAN_224!=='undefined'){
+  CAMPAIGN_PLAN_224[18]={...(CAMPAIGN_PLAN_224[18]||{}),guardians:['parrot','turtle']};
+  CAMPAIGN_PLAN_224[19]={...(CAMPAIGN_PLAN_224[19]||{}),guardians:['sloth','sloth','elephant']};
+  CAMPAIGN_PLAN_224[20]={...(CAMPAIGN_PLAN_224[20]||{}),guardians:['gorilla1','elephant','turtle']};
+}
+if(typeof GUARDIAN_PLAN!=='undefined'){
+  GUARDIAN_PLAN[18]=['parrot','turtle'];
+  GUARDIAN_PLAN[19]=['sloth','sloth','elephant'];
+  GUARDIAN_PLAN[20]=['gorilla1','elephant','turtle'];
+}
+
+/* ---------- GUARDIÁN ATENTO ---------- */
+/* Oye movimiento aunque haya paredes. La distancia, no la línea visual,
+   regula cuánto aumenta su sospecha. */
+straightVision30=function(g){
+  if(!g)return null;
+  const distance=Math.abs(player.x-g.x)+Math.abs(player.y-g.y);
+  const max=Math.max(6,Math.ceil((cols+rows)*.40));
+  if(distance>max)return null;
+  return {distance,max};
+};
+
+function attentiveLocalPatrolV32(g){
+  const ns=neighborsOf(g.x,g.y).map(n=>({x:n.x,y:n.y}));
+  if(!ns.length)return null;
+  if(!Array.isArray(g.attentiveMemoryV32))g.attentiveMemoryV32=[];
+  const last=g.attentivePreviousV32||null;
+  ns.sort((a,b)=>{
+    const ar=g.attentiveMemoryV32.includes(cellKey(a))?1:0;
+    const br=g.attentiveMemoryV32.includes(cellKey(b))?1:0;
+    const ab=last&&sameCell(a,last)?1:0;
+    const bb=last&&sameCell(b,last)?1:0;
+    return ar-br||ab-bb;
+  });
+  const next=ns[0];
+  g.attentivePreviousV32={x:g.x,y:g.y};
+  g.attentiveMemoryV32.push(cellKey(next));
+  if(g.attentiveMemoryV32.length>8)g.attentiveMemoryV32.shift();
+  return next;
+}
+
+/* Al calmarse continúa desde la casilla real donde quedó. Nunca recupera
+   un índice antiguo de patrulla, evitando el teletransporte. */
+const chooseGuardianNextV32Base=chooseGuardianNext;
+chooseGuardianNext=function(g){
+  if(typeof isAttentive30==='function'&&isAttentive30(g)){
+    initAttentive30(g);
+    const target=g.suspicion30>=ATTENTIVE_CHASE_30?player:
+      (g.suspicion30>=ATTENTIVE_INVESTIGATE_30?g.lastSeen30:null);
+    if(target){
+      const path=shortestPath({x:g.x,y:g.y},target);
+      if(path.length>1)return path[1];
+    }
+    return attentiveLocalPatrolV32(g);
+  }
+  return chooseGuardianNextV32Base(g);
+};
+
+/* ---------- SALUDO DE LOS COMPAÑEROS ---------- */
+function friendHasClearSightV32(){
+  if(!friend||friend.found)return false;
+  const dx=friend.x-player.x,dy=friend.y-player.y;
+  const distance=Math.abs(dx)+Math.abs(dy);
+  if(distance>2||distance===0)return false;
+  if(dx!==0&&dy!==0)return false;
+  const sx=Math.sign(dx),sy=Math.sign(dy);
+  const key=sx===1?'right':sx===-1?'left':sy===1?'down':'up';
+  let x=player.x,y=player.y;
+  while(x!==friend.x||y!==friend.y){
+    if(maze[y][x].walls[key])return false;
+    x+=sx;y+=sy;
+  }
+  return true;
+}
+drawFriendWave240=function(size,ox,oy){
+  if(!friendHasClearSightV32())return;
+  const cx=ox+(friend.x+.5)*size,cy=oy+(friend.y+.5)*size;
+  ctx.save();ctx.translate(cx+size*.27,cy-size*.22);ctx.rotate(Math.sin(animTime*8)*.35);
+  ctx.font=`${Math.max(14,size*.25)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('👋',0,0);ctx.restore();
+};
+
+/* ---------- NIVEL 3: DOS BOTONES EN CADENA ---------- */
+let level3ButtonAV32=null;
+let level3ButtonBV32=null;
+let level3SecondReleasedV32=false;
+
+function setupLevel3ChainV32(){
+  level3ButtonAV32=null;level3ButtonBV32=null;level3SecondReleasedV32=false;
+  if(level!==3)return;
+  /* Desactiva el botón antiguo para que no abra directamente la escuela. */
+  level3Button=null;level3GateOpen=false;
+  const main=new Set(shortestPath(levelStart,exit).map(cellKey));
+  const dist=distancesFrom(levelStart);
+  const forbidden=new Set([cellKey(levelStart),cellKey(exit)]);
+  if(friend)forbidden.add(cellKey(friend));
+  bananas.forEach(b=>forbidden.add(cellKey(b)));
+  if(specialItem)forbidden.add(cellKey(specialItem));
+  let candidates=allCells().filter(c=>!forbidden.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
+  /* Primer botón: arriba/derecha y fuera del camino principal si es posible. */
+  candidates.sort((a,b)=>{
+    const ao=main.has(cellKey(a))?1:0,bo=main.has(cellKey(b))?1:0;
+    const as=(cols-1-a.x)+a.y,bs=(cols-1-b.x)+b.y;
+    return ao-bo||as-bs||((dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+  });
+  const a=candidates[0];
+  if(!a)return;
+  level3ButtonAV32={...a,pressed:false};forbidden.add(cellKey(a));
+  /* Segundo botón: lejos del primero y en otro ramal. */
+  candidates=allCells().filter(c=>!forbidden.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
+  candidates.sort((p,q)=>{
+    const pd=Math.abs(p.x-a.x)+Math.abs(p.y-a.y),qd=Math.abs(q.x-a.x)+Math.abs(q.y-a.y);
+    const po=main.has(cellKey(p))?1:0,qo=main.has(cellKey(q))?1:0;
+    return qo-po||qd-pd||((dist.get(cellKey(q))||0)-(dist.get(cellKey(p))||0));
+  });
+  if(candidates[0])level3ButtonBV32={...candidates[0],pressed:false};
+}
+
+function pressLevel3ChainV32(){
+  if(level!==3)return;
+  if(level3ButtonAV32&&!level3ButtonAV32.pressed&&sameCell(player,level3ButtonAV32)){
+    level3ButtonAV32.pressed=true;level3SecondReleasedV32=true;
+    tone(360,.08,'square',.025);tone(560,.15,'triangle',.035,.06);
+  }
+  if(level3SecondReleasedV32&&level3ButtonBV32&&!level3ButtonBV32.pressed&&sameCell(player,level3ButtonBV32)){
+    level3ButtonBV32.pressed=true;level3GateOpen=true;
+    tone(420,.08,'square',.028);tone(660,.18,'triangle',.038,.07);
+  }
+}
+
+function drawLevel3ButtonV32(b,size,ox,oy,active,locked=false){
+  if(!b)return;
+  const cx=ox+(b.x+.5)*size,cy=oy+(b.y+.5)*size;
+  ctx.save();ctx.translate(cx,cy);
+  ctx.globalAlpha=locked?.55:1;
+  ctx.shadowColor=active?'rgba(100,235,125,.85)':'rgba(255,225,70,.85)';ctx.shadowBlur=size*.14;
+  ctx.fillStyle=active?'#4eae61':locked?'#8e8a68':'#e8c438';ctx.strokeStyle='#654b1f';ctx.lineWidth=Math.max(2,size*.04);
+  ctx.beginPath();ctx.ellipse(0,active?size*.045:0,size*.23,size*.15,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  if(locked){
+    ctx.shadowBlur=0;ctx.strokeStyle='#35643f';ctx.lineWidth=Math.max(3,size*.055);
+    ctx.beginPath();ctx.moveTo(-size*.27,-size*.18);ctx.lineTo(size*.27,size*.18);ctx.moveTo(size*.27,-size*.18);ctx.lineTo(-size*.27,size*.18);ctx.stroke();
+  }
+  ctx.restore();
+}
+
+/* ---------- NIVEL 10: RECORRIDO EXTENDIDO ---------- */
+function level10OccupiedV32(){
+  const s=new Set([cellKey(levelStart),cellKey(exit)]);
+  if(friend)s.add(cellKey(friend));
+  bananas.forEach(b=>s.add(cellKey(b)));
+  if(specialItem)s.add(cellKey(specialItem));
+  const herd=typeof allGuardians224==='function'?allGuardians224():[];
+  herd.forEach(g=>s.add(cellKey(g)));
+  return s;
+}
+function level10ShortcutEdgesV32(){
+  const base=pathLength(levelStart,exit),out=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    for(const d of [{dx:1,dy:0,key:'right',opp:'left'},{dx:0,dy:1,key:'down',opp:'up'}]){
+      const nx=x+d.dx,ny=y+d.dy;
+      if(nx>=cols||ny>=rows||!maze[y][x].walls[d.key])continue;
+      maze[y][x].walls[d.key]=false;maze[ny][nx].walls[d.opp]=false;
+      const len=pathLength(levelStart,exit);
+      maze[y][x].walls[d.key]=true;maze[ny][nx].walls[d.opp]=true;
+      const gain=Number.isFinite(len)&&Number.isFinite(base)?base-len:0;
+      if(gain>=1)out.push({x,y,key:d.key,nx,ny,opp:d.opp,gain});
+    }
+  }
+  return out.sort((a,b)=>b.gain-a.gain);
+}
+function rebuildLevel10SpreadV32(){
+  if(level!==10||typeof colorButtons230==='undefined'||typeof colorGates230==='undefined')return;
+  const colors=[['red','#e54848'],['yellow','#f0c928'],['blue','#3d75d6']];
+  const used=level10OccupiedV32();
+  const dist=distancesFrom(levelStart);
+  const cells=allCells().filter(c=>!used.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0)
+    .sort((a,b)=>(dist.get(cellKey(a))||0)-(dist.get(cellKey(b))||0));
+  const maxD=Math.max(1,...cells.map(c=>dist.get(cellKey(c))||0));
+  const targets=[Math.max(2,maxD*.20),maxD*.55,maxD*.85];
+  colorButtons230=[];pressedColors230=new Set();
+  targets.forEach((target,i)=>{
+    let best=null,bestScore=Infinity;
+    for(const c of cells){
+      if(used.has(cellKey(c)))continue;
+      const spread=colorButtons230.reduce((m,b)=>Math.min(m,Math.abs(c.x-b.x)+Math.abs(c.y-b.y)),999);
+      const score=Math.abs((dist.get(cellKey(c))||0)-target)+(spread<3?20:0);
+      if(score<bestScore){best=c;bestScore=score;}
+    }
+    if(best){used.add(cellKey(best));colorButtons230.push({...best,id:colors[i][0],color:colors[i][1],pressed:false});}
+  });
+  const edges=level10ShortcutEdgesV32(),picked=[];
+  for(const e of edges){
+    if(picked.some(q=>Math.abs(q.x-e.x)+Math.abs(q.y-e.y)<3))continue;
+    picked.push(e);if(picked.length===3)break;
+  }
+  colorGates230=[];
+  colors.forEach((spec,i)=>{const e=picked[i];if(e)colorGates230.push({...e,id:spec[0],color:spec[1],requires:[spec[0]],open:false});});
+
+  /* La tabla deja de estar junto al rompecabezas: queda en un rincón lejano,
+     preferentemente un callejón, para que el resto del mapa tenga valor. */
+  if(typeof logicChallenge!=='undefined'&&logicChallenge&&logicChallenge.kind==='bridge'){
+    const main=new Set(shortestPath(levelStart,exit).map(cellKey));
+    let options=allCells().filter(c=>!used.has(cellKey(c))&&!main.has(cellKey(c))&&neighborsOf(c.x,c.y).length===1);
+    if(!options.length)options=allCells().filter(c=>!used.has(cellKey(c))&&!main.has(cellKey(c)));
+    options.sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+    if(options[0])logicChallenge.item={...options[0]};
+  }
+}
+
+/* ---------- INTEGRACIÓN ---------- */
+const buildLevelV32Base=buildLevel;
+buildLevel=function(n){
+  buildLevelV32Base(n);
+  setupLevel3ChainV32();
+  rebuildLevel10SpreadV32();
+  draw();
+};
+
+const checkCellV32Base=checkCell;
+checkCell=function(){pressLevel3ChainV32();checkCellV32Base();};
+
+const drawV32Base=draw;
+draw=function(){
+  drawV32Base();if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  if(level===3){
+    drawLevel3ButtonV32(level3ButtonAV32,size,ox,oy,Boolean(level3ButtonAV32&&level3ButtonAV32.pressed),false);
+    drawLevel3ButtonV32(level3ButtonBV32,size,ox,oy,Boolean(level3ButtonBV32&&level3ButtonBV32.pressed),!level3SecondReleasedV32);
+  }
+};
+</script>
+
+
+<script>
+'use strict';
+/* =========================================================
+   NITO 3.1 — COMPAÑEROS, LLAVE Y EMBLEMAS DE LOS BOSQUES
+   ========================================================= */
+
+const STORY_CLASSMATES_31=[
+  'Franchu','Martu','Lucy','Jose','Samy','Ori','Rousy','Vicky chiquita',
+  'Vicky grande','Anto','Vitti','Ramirito','Santi','Francis','Leandrus',
+  'Feli','Beltru','Lauti'
+];
+
+let extraFriends31=[];
+let forestItems31=[];
+let forestDoorUnlocked31=false;
+let questPill31=null;
+
+function storyIntro31(){
+  const card=document.querySelector('#startOverlay .card');
+  if(!card)return;
+  const h=card.querySelector('h1');
+  const ps=card.querySelectorAll('p');
+  if(h)h.textContent='🌳 Nito y los compañeros perdidos';
+  if(ps[0])ps[0].textContent='Nito es un nuevo compañerito del aula. Al llegar, descubre que sus compañeros todavía no llegaron a la escuela.';
+  if(ps[1])ps[1].textContent='Nadie sabe dónde está el profe… ¿se habrá quedado dormido? Parece que Nito tendrá que encontrar a sus compañeros y acompañarlos hasta la escuela.';
+}
+
+function ensureQuestPill31(){
+  if(questPill31&&questPill31.isConnected)return questPill31;
+  questPill31=document.createElement('div');
+  questPill31.className='pill';
+  questPill31.id='forestQuestPill31';
+  questPill31.style.display='none';
+  document.querySelector('.hud')?.appendChild(questPill31);
+  return questPill31;
+}
+
+function updateQuestHud31(){
+  const pill=ensureQuestPill31();
+  if(level<17){pill.style.display='none';return}
+  pill.style.display='block';
+  const got=forestItems31.filter(i=>i.got).length;
+  const total=forestItems31.length;
+  const icon=level===17?'🗝️':level===18?'🍃':level===19?'🔔':'🌳';
+  pill.textContent=`${icon} ${got}/${total}`;
+}
+
+function occupiedForStory31(){
+  const s=new Set([cellKey(levelStart),cellKey(exit)]);
+  bananas.forEach(b=>{if(!b.got)s.add(cellKey(b));});
+  if(friend&&!friend.found)s.add(cellKey(friend));
+  extraFriends31.forEach(f=>{if(!f.found)s.add(cellKey(f));});
+  if(specialItem&&!specialItem.got)s.add(cellKey(specialItem));
+  if(typeof allGuardians224==='function')allGuardians224().forEach(g=>g&&s.add(cellKey(g)));
+  for(const name of ['trampolines210','campaignWhirlpools250','colorButtons230','lightButtons230']){
+    const a=globalThis[name];if(Array.isArray(a))a.forEach(o=>o&&s.add(cellKey(o)));
+  }
+  return s;
+}
+
+function pickSpreadCells31(count,seed=31){
+  const used=occupiedForStory31();
+  const dist=distancesFrom(levelStart);
+  let cells=allCells().filter(c=>!used.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0);
+  cells.sort((a,b)=>(dist.get(cellKey(b))||0)-(dist.get(cellKey(a))||0));
+  const chosen=[];
+  while(cells.length&&chosen.length<count){
+    let best=null,bestScore=-Infinity;
+    for(const c of cells){
+      const d=dist.get(cellKey(c))||0;
+      const spread=chosen.length?Math.min(...chosen.map(q=>Math.abs(c.x-q.x)+Math.abs(c.y-q.y))):d;
+      const score=d+spread*2+((c.x*17+c.y*31+seed)%7)*.01;
+      if(score>bestScore){best=c;bestScore=score;}
+    }
+    if(!best)break;
+    chosen.push({...best});used.add(cellKey(best));
+    cells=cells.filter(c=>cellKey(c)!==cellKey(best));
+  }
+  return chosen;
+}
+
+function setupStoryObjectives31(){
+  extraFriends31=[];forestItems31=[];forestDoorUnlocked31=false;
+
+  if(level<=15){
+    if(friend)friend.name=STORY_CLASSMATES_31[level-1];
+  }else if(level===16){
+    if(friend)friend.name=STORY_CLASSMATES_31[15];
+    const cells=pickSpreadCells31(2,160);
+    extraFriends31=cells.map((c,i)=>({...c,found:false,name:STORY_CLASSMATES_31[16+i]}));
+  }else{
+    friend=null;
+    const definitions={
+      17:[{icon:'🗝️',name:'Llave del Bosque'}],
+      18:[{icon:'🪶',name:'Pluma del Vendaval'},{icon:'🐢',name:'Escama Incansable'}],
+      19:[{icon:'🍂',name:'Hoja del Sueño'},{icon:'🦷',name:'Colmillo Demoledor'}],
+      20:[{icon:'👁️',name:'Ojo del Atento'},{icon:'🦷',name:'Colmillo Demoledor'},{icon:'🐢',name:'Escama Incansable'}]
+    };
+    const defs=definitions[level]||[];
+    const cells=pickSpreadCells31(defs.length,level*71);
+    forestItems31=defs.map((d,i)=>({...cells[i],...d,got:false,pulse:i*.9})).filter(i=>Number.isFinite(i.x));
+  }
+  forestDoorUnlocked31=level<17?true:false;
+  updateQuestHud31();
+}
+
+function storyAllFriendsFound31(){
+  return (!friend||friend.found)&&extraFriends31.every(f=>f.found);
+}
+function storyAllItemsFound31(){return forestItems31.length>0&&forestItems31.every(i=>i.got);}
+function storyExitUnlocked31(){
+  if(level<=16)return storyAllFriendsFound31();
+  return storyAllItemsFound31();
+}
+
+function collectStoryObjectives31(){
+  for(const f of extraFriends31){
+    if(!f.found&&sameCell(player,f)){
+      f.found=true;friendSound();
+      if(!foundClassmates.includes(f.name)){
+        foundClassmates.push(f.name);
+        localStorage.setItem('nitoFoundClassmates',JSON.stringify(foundClassmates));
+      }
+      if(typeof addPolishBurst240==='function')addPolishBurst240(f.x,f.y,'spark',12);
+    }
+  }
+  for(const item of forestItems31){
+    if(!item.got&&sameCell(player,item)){
+      item.got=true;
+      tone(523,.11,'triangle',.035);tone(659,.13,'triangle',.04,.08);tone(784,.20,'sine',.035,.17);
+      if(typeof addPolishBurst240==='function')addPolishBurst240(item.x,item.y,'spark',14);
+    }
+  }
+  forestDoorUnlocked31=storyExitUnlocked31();
+  updateQuestHud31();
+}
+
+function drawStoryItem31(item,size,ox,oy){
+  if(item.got)return;
+  const cx=ox+(item.x+.5)*size,cy=oy+(item.y+.5)*size+Math.sin(animTime*3+item.pulse)*size*.045;
+  ctx.save();ctx.translate(cx,cy);
+  const glow=.6+.4*Math.sin(animTime*4+item.pulse);
+  ctx.shadowColor=`rgba(255,226,100,${glow})`;ctx.shadowBlur=size*.20;
+  ctx.font=`${Math.max(24,size*.48)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(item.icon,0,0);
+  ctx.shadowBlur=0;ctx.font=`900 ${Math.max(9,size*.13)}px Arial`;ctx.fillStyle='#4c3a22';
+  ctx.fillText(item.name,0,-size*.35);ctx.restore();
+}
+
+function drawForestDoor31(x,y,size,ox,oy){
+  const px=ox+x*size,py=oy+y*size;
+  const open=forestDoorUnlocked31;
+  ctx.save();ctx.translate(px+size/2,py+size/2);
+  ctx.fillStyle='#5d4934';ctx.fillRect(-size*.34,-size*.38,size*.68,size*.76);
+  ctx.fillStyle=open?'#b8e6a1':'#263b34';ctx.fillRect(-size*.24,-size*.28,size*.48,size*.58);
+  ctx.strokeStyle='#d4b46c';ctx.lineWidth=Math.max(3,size*.055);ctx.strokeRect(-size*.34,-size*.38,size*.68,size*.76);
+  if(!open){
+    const total=Math.max(1,forestItems31.length),got=forestItems31.filter(i=>i.got).length;
+    for(let i=0;i<total;i++){
+      const angle=-Math.PI/2+(i-(total-1)/2)*.55;
+      ctx.fillStyle=i<got?'#f6d45d':'#6d6856';ctx.beginPath();ctx.arc(Math.cos(angle)*size*.18,Math.sin(angle)*size*.12,size*.055,0,Math.PI*2);ctx.fill();
+    }
+  }else{
+    ctx.fillStyle='rgba(255,245,174,.75)';ctx.beginPath();ctx.ellipse(0,size*.12,size*.17,size*.10,0,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+/* La escuela permanece en los primeros 16 caminos. Desde el 17 hay una puerta. */
+const drawExit31Base=drawExit;
+drawExit=function(x,y,size,ox,oy){
+  if(level>=17)drawForestDoor31(x,y,size,ox,oy);else drawExit31Base(x,y,size,ox,oy);
+};
+
+const buildLevel31Base=buildLevel;
+buildLevel=function(n){
+  buildLevel31Base(n);
+  setupStoryObjectives31();
+  draw();
+};
+
+const checkCell31Base=checkCell;
+checkCell=function(){
+  collectStoryObjectives31();
+  checkCell31Base();
+};
+
+const finishLevel31Base=finishLevel;
+finishLevel=function(){
+  if(!storyExitUnlocked31()){
+    bumpSound();
+    return;
+  }
+  const finishedLevel=level;
+  const rescuedNames=[];
+  if(finishedLevel<=16){
+    if(friend&&friend.found)rescuedNames.push(friend.name);
+    extraFriends31.filter(f=>f.found).forEach(f=>rescuedNames.push(f.name));
+  }
+  finishLevel31Base();
+  if(finishedLevel<=16){
+    const remaining=finishedLevel<16?18-finishedLevel:0;
+    const apply=()=>{
+      const overlay=document.getElementById('messageOverlay');
+      const text=document.getElementById('messageText');
+      if(!overlay||overlay.style.display==='none'||!text)return false;
+      const who=rescuedNames.length===1?rescuedNames[0]:rescuedNames.join(', ');
+      text.innerHTML=remaining>0
+        ?`Acompañaste a <strong>${who}</strong> hasta la escuela.<br><br>Faltan <strong>${remaining}</strong> compañeros por encontrar.`
+        :`Acompañaste a <strong>${who}</strong> hasta la escuela.<br><br><strong>¡Los 18 compañeros ya están a salvo!</strong>`;
+      return true;
+    };
+    let tries=0;const timer=setInterval(()=>{tries++;if(apply()||tries>20)clearInterval(timer);},100);
+  }
+};
+
+const draw31Base=draw;
+draw=function(){
+  draw31Base();if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  extraFriends31.forEach(f=>{if(!f.found)drawFriend(f.x,f.y,size,ox,oy,f.name);});
+  forestItems31.forEach(i=>drawStoryItem31(i,size,ox,oy));
+};
+
+/* La meta final no muestra explicación adicional: conserva solo la imagen final. */
+const originalFinalShow31=typeof showFinalAdventure==='function'?showFinalAdventure:null;
+if(originalFinalShow31){
+  showFinalAdventure=function(){
+    document.getElementById('messageOverlay').style.display='none';
+    originalFinalShow31();
+  };
+}
+
+storyIntro31();
+ensureQuestPill31();
 </script>
 
 </body>
