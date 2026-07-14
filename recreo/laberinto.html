@@ -3220,5 +3220,120 @@ buildLevel=function(n){
 };
 </script>
 
+
+<script>
+'use strict';
+/* === VERSIÓN 2.2.5 — ELEFANTE DEMOLEDOR Y TORTUGA IMPARABLE === */
+
+const ELEPHANT_BREAK_MS_225=15000;
+let elephantBursts225=[];
+
+function internalDirection225(g,d){
+  const nx=g.x+d.dx,ny=g.y+d.dy;
+  return nx>=0&&ny>=0&&nx<cols&&ny<rows;
+}
+function oppositeKey225(key){return({up:'down',down:'up',left:'right',right:'left'})[key]}
+function directionScore225(g,d){
+  const nx=g.x+d.dx,ny=g.y+d.dy;
+  return Math.abs(player.x-nx)+Math.abs(player.y-ny);
+}
+function elephantBreakDirection225(g){
+  if(!g||!maze||!maze[g.y]||!maze[g.y][g.x])return null;
+  const preferred=[];
+  const dx=player.x-g.x,dy=player.y-g.y;
+  if(Math.abs(dx)>=Math.abs(dy)){
+    if(dx)preferred.push(dx>0?DIRS[1]:DIRS[3]);
+    if(dy)preferred.push(dy>0?DIRS[2]:DIRS[0]);
+  }else{
+    if(dy)preferred.push(dy>0?DIRS[2]:DIRS[0]);
+    if(dx)preferred.push(dx>0?DIRS[1]:DIRS[3]);
+  }
+  const rest=DIRS.filter(d=>!preferred.includes(d)).sort((a,b)=>directionScore225(g,a)-directionScore225(g,b));
+  return [...preferred,...rest].find(d=>internalDirection225(g,d)&&maze[g.y][g.x].walls[d.key])||null;
+}
+function elephantBoomSound225(){
+  tone(92,.22,'square',.045);
+  tone(61,.34,'sawtooth',.035,.05);
+  tone(145,.16,'triangle',.025,.10);
+}
+function breakWallForElephant225(g,t){
+  if(!g||g.kind!=='elephant'||!playing)return;
+  if(typeof g.nextWallBreak225!=='number')g.nextWallBreak225=t+ELEPHANT_BREAK_MS_225;
+  if(t<g.nextWallBreak225)return;
+  g.nextWallBreak225=t+ELEPHANT_BREAK_MS_225;
+  const d=elephantBreakDirection225(g);if(!d)return;
+  const nx=g.x+d.dx,ny=g.y+d.dy;
+  maze[g.y][g.x].walls[d.key]=false;
+  maze[ny][nx].walls[oppositeKey225(d.key)]=false;
+  g.alertSymbol224='!';g.alertUntil224=t+850;
+  g.pauseUntil=t+700;g.nextAt=Math.max(g.nextAt||0,t+720);
+  elephantBursts225.push({x:g.x+d.dx*.5,y:g.y+d.dy*.5,start:t,duration:900,dx:d.dx,dy:d.dy});
+  elephantBoomSound225();
+}
+
+/* La tortuga jamás espera frente a Nito: avanza y la colisión se resuelve. */
+const moveOneGuardian225Base=moveOneGuardian;
+moveOneGuardian=function(g,t){
+  if(!g||g.kind!=='turtle')return moveOneGuardian225Base(g,t);
+  if(!playing||t<g.nextAt)return;
+  const next=chooseGuardianNext(g);if(!next){g.nextAt=t+g.step;return}
+  g.x=next.x;g.y=next.y;
+  g.pauseUntil=0;
+  g.nextAt=t+g.step;
+  if(typeof guardianCanCapture223==='function'&&guardianCanCapture223(g))resetToStart();
+};
+
+const advanceGuardian225Base=advanceGuardian;
+advanceGuardian=function(t){
+  advanceGuardian225Base(t);
+  const herd=typeof allGuardians224==='function'?allGuardians224():[guardian,extraGuardian].filter(Boolean);
+  for(const g of herd)breakWallForElephant225(g,t);
+  elephantBursts225=elephantBursts225.filter(b=>t-b.start<b.duration);
+};
+
+function drawElephantBurst225(size,ox,oy,b){
+  const p=Math.min(1,(performance.now()-b.start)/b.duration);
+  const cx=ox+(b.x+.5)*size,cy=oy+(b.y+.5)*size;
+  ctx.save();ctx.translate(cx,cy);
+  ctx.globalAlpha=1-p;
+  for(let i=0;i<9;i++){
+    const a=(Math.PI*2*i/9)+i*.31;
+    const dist=size*(.08+p*.42)*(1+(i%3)*.18);
+    const x=Math.cos(a)*dist,y=Math.sin(a)*dist;
+    ctx.fillStyle=i%2?'#6e4c2b':'#9c7040';
+    ctx.fillRect(x-size*.035,y-size*.025,size*.07,size*.05);
+  }
+  ctx.strokeStyle=`rgba(255,235,170,${1-p})`;ctx.lineWidth=Math.max(2,size*.05);
+  ctx.beginPath();ctx.arc(0,0,size*(.12+p*.36),0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+}
+
+const draw225Base=draw;
+draw=function(){
+  draw225Base();if(!maze)return;
+  const {size,ox,oy}=cellMetrics();
+  for(const b of elephantBursts225)drawElephantBurst225(size,ox,oy,b);
+  const herd=typeof allGuardians224==='function'?allGuardians224():[guardian,extraGuardian].filter(Boolean);
+  const now=performance.now();
+  for(const g of herd){
+    if(g&&g.kind==='elephant'&&now<(g.alertUntil224||0)){
+      const cx=ox+(g.x+.5)*size,cy=oy+(g.y+.5)*size-size*.5;
+      ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`900 ${Math.max(15,size*.25)}px Arial`;
+      ctx.fillStyle='#d33';ctx.fillText('!',cx,cy);ctx.restore();
+    }
+  }
+};
+
+const buildLevel225Base=buildLevel;
+buildLevel=function(n){
+  buildLevel225Base(n);
+  const t=performance.now();
+  const herd=typeof allGuardians224==='function'?allGuardians224():[guardian,extraGuardian].filter(Boolean);
+  for(const g of herd)if(g&&g.kind==='elephant')g.nextWallBreak225=t+ELEPHANT_BREAK_MS_225;
+  elephantBursts225=[];
+  draw();
+};
+</script>
+
 </body>
 </html>
