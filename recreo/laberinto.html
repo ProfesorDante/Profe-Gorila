@@ -4184,5 +4184,122 @@ window.addEventListener('pageshow',()=>{
 });
 </script>
 
+
+<script>
+'use strict';
+/* === VERSIÓN 2.5.1 — AJUSTES DEL PLAYTEST ===
+   Nivel 5 con gorila, nivel 6 sin trampolines decorativos,
+   nivel 8 estabilizado, nivel 10 con atajos tempranos y elefante agresivo. */
+
+/* Nivel 5: primer encuentro opcional con un gorila. */
+if(typeof CAMPAIGN_PLAN_224!=='undefined'){
+  CAMPAIGN_PLAN_224[5]={...(CAMPAIGN_PLAN_224[5]||{}),guardians:['gorilla1']};
+}
+if(typeof GUARDIAN_PLAN!=='undefined')GUARDIAN_PLAN[5]=['gorilla1'];
+
+/* Nivel 6: se eliminan los dos trampolines que quedaban fuera del recorrido
+   y no aportaban una decisión interesante. */
+if(typeof FINAL_TRAMPOLINE_COUNTS_250!=='undefined')FINAL_TRAMPOLINE_COUNTS_250[6]=0;
+
+/* Nivel 8: queda dedicado al primer remolino. Se desactiva aquí el sistema
+   de luz, que era la capa que producía el dibujo parcial/duplicado. */
+if(typeof LIGHT_LEVELS_230!=='undefined')LIGHT_LEVELS_230.delete(8);
+
+/* Nivel 10: botones cerca del comienzo y paredes que abren atajos reales. */
+function occupiedForLevel10Fix251(){
+  const used=new Set([cellKey(levelStart),cellKey(exit)]);
+  if(friend&&!friend.found)used.add(cellKey(friend));
+  for(const b of bananas)if(!b.got)used.add(cellKey(b));
+  if(specialItem&&!specialItem.got)used.add(cellKey(specialItem));
+  if(typeof vehicleItem!=='undefined'&&vehicleItem&&!vehicleItem.got)used.add(cellKey(vehicleItem));
+  return used;
+}
+function closedShortcutEdges251(){
+  const dist=distancesFrom(levelStart),edges=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    const c=maze[y][x];
+    if(x<cols-1&&c.walls.right){
+      const a={x,y},b={x:x+1,y};
+      edges.push({x,y,key:'right',nx:x+1,ny:y,opp:'left',gap:Math.abs((dist.get(cellKey(a))||0)-(dist.get(cellKey(b))||0)),near:Math.min(dist.get(cellKey(a))||0,dist.get(cellKey(b))||0)});
+    }
+    if(y<rows-1&&c.walls.down){
+      const a={x,y},b={x,y:y+1};
+      edges.push({x,y,key:'down',nx:x,ny:y+1,opp:'up',gap:Math.abs((dist.get(cellKey(a))||0)-(dist.get(cellKey(b))||0)),near:Math.min(dist.get(cellKey(a))||0,dist.get(cellKey(b))||0)});
+    }
+  }
+  return edges.filter(e=>e.gap>=4&&e.near>=3).sort((a,b)=>b.gap-a.gap||a.near-b.near);
+}
+function rebuildLevel10ColorLayout251(){
+  if(level!==10||typeof colorButtons230==='undefined'||typeof colorGates230==='undefined')return;
+  const colors=[['red','#e54848'],['yellow','#f0c928'],['blue','#3d75d6']];
+  const dist=distancesFrom(levelStart),used=occupiedForLevel10Fix251();
+  const nearby=allCells().filter(c=>{
+    const d=dist.get(cellKey(c));
+    return d>=2&&d<=Math.max(7,Math.floor((cols+rows)/2))&&!used.has(cellKey(c))&&neighborsOf(c.x,c.y).length>0;
+  }).sort((a,b)=>(dist.get(cellKey(a))||0)-(dist.get(cellKey(b))||0));
+
+  colorButtons230=[];pressedColors230=new Set();
+  for(let i=0;i<colors.length;i++){
+    const targetDistance=2+i*2;
+    let idx=nearby.findIndex(c=>(dist.get(cellKey(c))||0)>=targetDistance&&!used.has(cellKey(c)));
+    if(idx<0)idx=nearby.findIndex(c=>!used.has(cellKey(c)));
+    if(idx<0)break;
+    const c=nearby[idx],spec=colors[i];used.add(cellKey(c));
+    colorButtons230.push({...c,id:spec[0],color:spec[1],pressed:false});
+  }
+
+  const edges=closedShortcutEdges251(),picked=[];
+  for(const e of edges){
+    if(picked.some(q=>Math.abs(q.x-e.x)+Math.abs(q.y-e.y)<3))continue;
+    picked.push(e);if(picked.length===3)break;
+  }
+  colorGates230=[];
+  colors.forEach((spec,i)=>{
+    const e=picked[i];if(e)colorGates230.push({...e,id:spec[0],color:spec[1],requires:[spec[0]],open:false});
+  });
+}
+
+/* Elefante: golpe cada 5 segundos, abre la pared que mejor lo acerca a Nito
+   y avanza inmediatamente por el hueco recién creado. */
+const ELEPHANT_BREAK_MS_251=5000;
+breakWallForElephant225=function(g,t){
+  if(!g||g.kind!=='elephant'||!playing)return;
+  if(typeof g.nextWallBreak225!=='number')g.nextWallBreak225=t+ELEPHANT_BREAK_MS_251;
+  if(t<g.nextWallBreak225)return;
+  g.nextWallBreak225=t+ELEPHANT_BREAK_MS_251;
+  const d=elephantBreakDirection225(g);if(!d)return;
+  const nx=g.x+d.dx,ny=g.y+d.dy;
+  maze[g.y][g.x].walls[d.key]=false;
+  maze[ny][nx].walls[oppositeKey225(d.key)]=false;
+  g.alertSymbol224='!';g.alertUntil224=t+800;
+  elephantBursts225.push({x:g.x+d.dx*.5,y:g.y+d.dy*.5,start:t,duration:900,dx:d.dx,dy:d.dy});
+  elephantBoomSound225();
+  g.x=nx;g.y=ny;
+  g.pauseUntil=0;
+  g.nextAt=t+Math.min(g.step||900,900);
+  if(typeof guardianCanCapture223==='function'&&guardianCanCapture223(g))resetToStart();
+};
+if(typeof GUARDIAN_PERSONALITIES!=='undefined'&&GUARDIAN_PERSONALITIES.elephant){
+  GUARDIAN_PERSONALITIES.elephant.step=900;
+  GUARDIAN_PERSONALITIES.elephant.pause=150;
+}
+
+const buildLevel251FixBase=buildLevel;
+buildLevel=function(n){
+  buildLevel251FixBase(n);
+  if(level===6&&typeof campaignTrampolines250!=='undefined')campaignTrampolines250=[];
+  if(level===8){
+    if(typeof lightButtons230!=='undefined')lightButtons230=[];
+    if(typeof lightOn230!=='undefined')lightOn230=true;
+  }
+  if(level===10)rebuildLevel10ColorLayout251();
+  const herd=typeof allGuardians224==='function'?allGuardians224():[guardian,extraGuardian].filter(Boolean);
+  const now=performance.now();
+  for(const g of herd)if(g&&g.kind==='elephant')g.nextWallBreak225=now+ELEPHANT_BREAK_MS_251;
+  if(typeof sanitizeLevel251==='function')sanitizeLevel251();
+  draw();
+};
+</script>
+
 </body>
 </html>
