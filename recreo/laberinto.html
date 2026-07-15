@@ -5331,5 +5331,200 @@ storyIntro31();
 ensureQuestPill31();
 </script>
 
+
+
+<script>
+'use strict';
+/* =========================================================
+   REESTRUCTURACIÓN FINAL — NIVELES 16 A 20
+   Mantiene intactos los niveles 1 a 15.
+   ========================================================= */
+
+/* Historia inicial solicitada. */
+(function updateFinalStoryIntro(){
+  const card=document.querySelector('#startOverlay .card');
+  if(!card)return;
+  const h=card.querySelector('h1');
+  const ps=card.querySelectorAll('p');
+  if(h)h.textContent='🌳 Nito y la Selva del Gran Árbol';
+  if(ps[0])ps[0].textContent='Nito es nuevo en la Selva del Gran Árbol. Hoy el profe se quedó dormido y los niños lo están esperando.';
+  if(ps[1])ps[1].textContent='Ayudá a Nito a encontrar a sus compañeritos y llevarlos a todos a la escuela.';
+})();
+
+/* Elimina por completo el sistema bugueado de botones ON/OFF y sus capas
+   en la parte final de la aventura. */
+if(typeof LIGHT_LEVELS_230!=='undefined'){
+  LIGHT_LEVELS_230.delete(17);
+  LIGHT_LEVELS_230.delete(18);
+  LIGHT_LEVELS_230.delete(19);
+  LIGHT_LEVELS_230.delete(20);
+}
+if(typeof DARK_LEVELS!=='undefined'){
+  DARK_LEVELS.delete(17);
+  DARK_LEVELS.delete(18);
+  DARK_LEVELS.delete(19);
+  DARK_LEVELS.delete(20);
+}
+
+/* Orden definitivo de guardianes. */
+if(typeof CAMPAIGN_PLAN_224!=='undefined'){
+  CAMPAIGN_PLAN_224[16]={guardians:[]};
+  CAMPAIGN_PLAN_224[17]={guardians:[]};
+  CAMPAIGN_PLAN_224[18]={guardians:['turtle','parrot']};
+  CAMPAIGN_PLAN_224[19]={guardians:['elephant','sloth','sloth','sloth']};
+  CAMPAIGN_PLAN_224[20]={guardians:['gorilla2','elephant','turtle']};
+}
+if(typeof GUARDIAN_PLAN!=='undefined'){
+  GUARDIAN_PLAN[16]=[];
+  GUARDIAN_PLAN[17]=[];
+  GUARDIAN_PLAN[18]=['turtle','parrot'];
+  GUARDIAN_PLAN[19]=['elephant','sloth','sloth','sloth'];
+  GUARDIAN_PLAN[20]=['gorilla2','elephant','turtle'];
+}
+
+/* Un cuarto guardián para los tres perezosos del nivel 19. */
+let finalExtraGuardians=[];
+const allGuardiansFinalBase=typeof allGuardians224==='function'?allGuardians224:null;
+allGuardians224=function(){
+  const base=allGuardiansFinalBase?allGuardiansFinalBase():[guardian,extraGuardian,thirdGuardian224].filter(Boolean);
+  return [...base,...finalExtraGuardians].filter(Boolean);
+};
+
+const placeGuardianFinalBase=placeGuardian;
+placeGuardian=function(){
+  finalExtraGuardians=[];
+  placeGuardianFinalBase();
+  if(level===19&&typeof makeGuardian==='function'){
+    const fourth=makeGuardian('sloth',3);
+    if(fourth){
+      if(typeof shiftGuardianStart224==='function')shiftGuardianStart224(fourth,allGuardiansFinalBase?allGuardiansFinalBase():[]);
+      fourth.nextAt=performance.now()+2450;
+      if(typeof isSloth222==='function'&&isSloth222(fourth))fourth.slothCycleStart222=performance.now();
+      finalExtraGuardians.push(fourth);
+    }
+  }
+};
+
+const advanceGuardianFinalBase=advanceGuardian;
+advanceGuardian=function(t){
+  advanceGuardianFinalBase(t);
+  for(const g of finalExtraGuardians){
+    if(typeof moveOneGuardian==='function')moveOneGuardian(g,t);
+  }
+};
+
+/* Objetivos definitivos. En el 16 deben rescatarse tres compañeros.
+   Desde el 17, todos los objetos son obligatorios para abrir la puerta. */
+const setupStoryObjectivesFinalBase=setupStoryObjectives31;
+setupStoryObjectives31=function(){
+  setupStoryObjectivesFinalBase();
+  if(level===18){
+    const defs=[
+      {icon:'🐢',name:'Caparazón de la Tortuga'},
+      {icon:'🪶',name:'Pluma del Loro'}
+    ];
+    const cells=pickSpreadCells31(defs.length,1808);
+    forestItems31=defs.map((d,i)=>({...cells[i],...d,got:false,pulse:i*.9})).filter(i=>Number.isFinite(i.x));
+  }else if(level===19){
+    const defs=[
+      {icon:'🦷',name:'Colmillo del Elefante'},
+      {icon:'🍂',name:'Hoja del Perezoso I'},
+      {icon:'🍂',name:'Hoja del Perezoso II'},
+      {icon:'🍂',name:'Hoja del Perezoso III'}
+    ];
+    const cells=pickSpreadCells31(defs.length,1909);
+    forestItems31=defs.map((d,i)=>({...cells[i],...d,got:false,pulse:i*.8})).filter(i=>Number.isFinite(i.x));
+  }else if(level===20){
+    const defs=[
+      {icon:'👁️',name:'Ojo del Gorila'},
+      {icon:'🦷',name:'Colmillo del Elefante'},
+      {icon:'🐢',name:'Caparazón de la Tortuga'}
+    ];
+    const cells=pickSpreadCells31(defs.length,2020);
+    forestItems31=defs.map((d,i)=>({...cells[i],...d,got:false,pulse:i*.9})).filter(i=>Number.isFinite(i.x));
+  }
+  forestDoorUnlocked31=storyExitUnlocked31();
+  updateQuestHud31();
+};
+
+/* Puerta grande de castillo/fantasía para los niveles 17 a 20. */
+drawForestDoor31=function(x,y,size,ox,oy){
+  const px=ox+x*size,py=oy+y*size,open=forestDoorUnlocked31;
+  ctx.save();ctx.translate(px+size/2,py+size/2);
+  ctx.shadowColor='rgba(40,24,12,.55)';ctx.shadowBlur=size*.10;
+  ctx.fillStyle='#74604a';
+  ctx.fillRect(-size*.44,-size*.43,size*.88,size*.86);
+  ctx.fillStyle='#8c7658';
+  ctx.fillRect(-size*.49,-size*.40,size*.16,size*.80);
+  ctx.fillRect(size*.33,-size*.40,size*.16,size*.80);
+  ctx.fillRect(-size*.49,-size*.50,size*.98,size*.16);
+  ctx.shadowBlur=0;
+  ctx.fillStyle=open?'#d7f2b9':'#37281f';
+  ctx.beginPath();
+  ctx.moveTo(-size*.30,size*.36);ctx.lineTo(-size*.30,-size*.12);
+  ctx.arc(0,-size*.12,size*.30,Math.PI,0);
+  ctx.lineTo(size*.30,size*.36);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='#d7b45f';ctx.lineWidth=Math.max(3,size*.05);ctx.stroke();
+  if(!open){
+    ctx.fillStyle='#d7b45f';ctx.fillRect(-size*.045,size*.02,size*.09,size*.22);
+    ctx.beginPath();ctx.arc(0,-size*.01,size*.09,0,Math.PI*2);ctx.fill();
+    const total=Math.max(1,forestItems31.length),got=forestItems31.filter(i=>i.got).length;
+    for(let i=0;i<total;i++){
+      const xx=(i-(total-1)/2)*size*.14;
+      ctx.fillStyle=i<got?'#ffe16c':'#6e6758';ctx.beginPath();ctx.arc(xx,size*.29,size*.045,0,Math.PI*2);ctx.fill();
+    }
+  }else{
+    const glow=ctx.createRadialGradient(0,0,0,0,0,size*.38);
+    glow.addColorStop(0,'rgba(255,250,180,.95)');glow.addColorStop(1,'rgba(174,232,140,.15)');
+    ctx.fillStyle=glow;ctx.fillRect(-size*.30,-size*.38,size*.60,size*.74);
+  }
+  ctx.restore();
+};
+
+/* Aviso único antes del bosque profundo. Los niveles 18 y 19 no anticipan nada. */
+let forestWarningShownFinal=false;
+const buildLevelFinalBase=buildLevel;
+buildLevel=function(n){
+  buildLevelFinalBase(n);
+  if(typeof lightButtons230!=='undefined')lightButtons230=[];
+  if(typeof lightOn230!=='undefined')lightOn230=true;
+  if(typeof lightPulse230!=='undefined')lightPulse230=0;
+  if(n===17&&!forestWarningShownFinal){
+    forestWarningShownFinal=true;
+    showToast('⚠️ Estás por entrar en los bosques más profundos y protegidos. Tené cuidado…');
+  }
+  draw();
+};
+
+/* Los nuevos guardianes adicionales también se dibujan. */
+const drawFinalBossBase=draw;
+draw=function(){
+  drawFinalBossBase();
+  if(!maze||!finalExtraGuardians.length)return;
+  const {size,ox,oy}=cellMetrics();
+  for(const g of finalExtraGuardians){
+    if(typeof drawGuardian33==='function')drawGuardian33(g,size,ox,oy);
+    else{
+      const cx=ox+(g.x+.5)*size,cy=oy+(g.y+.5)*size;
+      ctx.save();ctx.font=`${Math.max(24,size*.58)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(g.icon||'🦥',cx,cy);ctx.restore();
+    }
+  }
+};
+
+/* En 18 y 19 se conserva el misterio: el cartel final no enumera guardianes
+   ni explica qué aparecerá después; solo confirma que la puerta se abrió. */
+const finishLevelFinalMysteryBase=finishLevel;
+finishLevel=function(){
+  const finished=level;
+  finishLevelFinalMysteryBase();
+  if((finished===18||finished===19)&&document.getElementById('messageOverlay').style.display!=='none'){
+    const title=document.getElementById('messageTitle');
+    const text=document.getElementById('messageText');
+    if(title)title.textContent='🚪 La puerta se abrió';
+    if(text)text.innerHTML='';
+  }
+};
+</script>
+
 </body>
 </html>
