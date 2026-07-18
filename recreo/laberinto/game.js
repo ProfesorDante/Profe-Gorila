@@ -4332,9 +4332,32 @@ moveOneGuardian=function(g,t){
   if(isElephant30(g)&&moved){
     g.elephantSteps30=(g.elephantSteps30||0)+1;
     if(g.elephantSteps30%4===0&&playing){
-      const next=chooseGuardianNext(g);
-      if(next&&Math.abs(next.x-g.x)+Math.abs(next.y-g.y)===1&&!sameCell(next,levelStart)){
-        g.x=next.x;g.y=next.y;
+      /* En su paso doble, el elefante intenta continuar hacia Nito.
+         Si la pared interior le corta ese avance, la rompe y atraviesa. */
+      const dxToPlayer=player.x-g.x,dyToPlayer=player.y-g.y;
+      const candidates=[];
+      if(Math.abs(dxToPlayer)>=Math.abs(dyToPlayer)&&dxToPlayer!==0)candidates.push({dx:Math.sign(dxToPlayer),dy:0});
+      if(dyToPlayer!==0)candidates.push({dx:0,dy:Math.sign(dyToPlayer)});
+      if(dxToPlayer!==0&&!candidates.some(d=>d.dx===Math.sign(dxToPlayer)&&d.dy===0))candidates.push({dx:Math.sign(dxToPlayer),dy:0});
+
+      let second=null;
+      for(const d of candidates){
+        const nx=g.x+d.dx,ny=g.y+d.dy;
+        if(nx<0||ny<0||nx>=cols||ny>=rows||sameCell({x:nx,y:ny},levelStart))continue;
+        const key=d.dx===1?'right':d.dx===-1?'left':d.dy===1?'down':'up';
+        const opp=oppositeKey225(key);
+        if(maze[g.y][g.x].walls[key]){
+          maze[g.y][g.x].walls[key]=false;
+          maze[ny][nx].walls[opp]=false;
+          if(typeof elephantBursts225!=='undefined')elephantBursts225.push({x:g.x+d.dx*.5,y:g.y+d.dy*.5,start:t,duration:900,dx:d.dx,dy:d.dy});
+          if(typeof elephantBoomSound225==='function')elephantBoomSound225();
+        }
+        second={x:nx,y:ny};
+        break;
+      }
+      if(!second)second=chooseGuardianNext(g);
+      if(second&&Math.abs(second.x-g.x)+Math.abs(second.y-g.y)===1&&!sameCell(second,levelStart)){
+        g.x=second.x;g.y=second.y;
         if(typeof guardianCanCapture223==='function'&&guardianCanCapture223(g))resetToStart();
       }
     }
@@ -5531,3 +5554,74 @@ checkCell=function(){
   checkCellRequestedFinalBase();
   if(rescuePending&&friend&&friend.found){openRescueWallFinal();draw()}
 };
+
+/* =========================================================
+   AJUSTE FINAL DE COLISIONES — ESCONDITES, ELEFANTE Y TORTUGA
+   ========================================================= */
+
+const TURTLE_NITO_GRACE_MS_FINAL=1500;
+let turtleNitoInvulnerableUntilFinal=0;
+
+/* Una casilla con tres o cuatro paredes funciona como escondite.
+   Se cuentan las paredes reales de la celda, sin distinguir su apariencia. */
+function nitoHiddenByThreeWallsFinal(){
+  if(!maze||!player||!maze[player.y]||!maze[player.y][player.x])return false;
+  const walls=maze[player.y][player.x].walls;
+  return ['up','right','down','left'].reduce((total,key)=>total+(walls[key]?1:0),0)>=3;
+}
+
+/* La gracia de la tortuga protege a Nito de todos los guardianes durante
+   un momento breve, para que pueda abandonar el lugar al que fue empujado. */
+const turtlePushFinalBase=turtlePush30;
+turtlePush30=function(g,dx,dy,t=performance.now()){
+  const pushed=turtlePushFinalBase(g,dx,dy,t);
+  if(pushed)turtleNitoInvulnerableUntilFinal=t+TURTLE_NITO_GRACE_MS_FINAL;
+  return pushed;
+};
+
+/* Regla definitiva de contacto. No depende de que Nito haya pulsado una tecla:
+   si un guardián ocupa su casilla, lo atrapa salvo escondite o invulnerabilidad. */
+guardianCanCapture223=function(g=null){
+  const now=performance.now();
+  if(now<turtleNitoInvulnerableUntilFinal)return false;
+  if(typeof nitoIsInvulnerable21==='function'&&nitoIsInvulnerable21())return false;
+  if((typeof trampolineFlight41!=='undefined'&&trampolineFlight41)||
+     (typeof schoolEntry240!=='undefined'&&schoolEntry240))return false;
+  if(nitoHiddenByThreeWallsFinal())return false;
+
+  const canCapture=target=>Boolean(
+    target&&sameCell(player,target)&&
+    !(typeof isTurtle30==='function'&&isTurtle30(target))&&
+    !(typeof isSloth222==='function'&&isSloth222(target)&&slothSleeping222(target))&&
+    !(now<(target.stunnedUntil230||0))
+  );
+
+  if(g)return canCapture(g);
+  const herd=typeof allGuardians224==='function'
+    ?allGuardians224()
+    :[guardian,extraGuardian,typeof thirdGuardian224!=='undefined'?thirdGuardian224:null].filter(Boolean);
+  return herd.some(canCapture);
+};
+guardianTouchesNito21=function(){return guardianCanCapture223()};
+activeGuardianTouch222=function(g){return guardianCanCapture223(g)};
+
+/* Comprobación continua: también funciona cuando Nito permanece quieto y el
+   guardián avanza sobre su casilla. */
+const advanceGuardianStationaryFinalBase=advanceGuardian;
+advanceGuardian=function(t){
+  advanceGuardianStationaryFinalBase(t);
+  if(!playing||nitoHiddenByThreeWallsFinal())return;
+  const herd=typeof allGuardians224==='function'?allGuardians224():[];
+  const captor=herd.find(g=>guardianCanCapture223(g));
+  if(captor){
+    const message=captor.message||'El guardián encontró a Nito. ¡Volvamos a intentar!';
+    resetToStart(message);
+  }
+};
+
+const buildLevelCollisionFinalBase=buildLevel;
+buildLevel=function(n){
+  turtleNitoInvulnerableUntilFinal=0;
+  buildLevelCollisionFinalBase(n);
+};
+
