@@ -1,0 +1,1773 @@
+const EMBEDDED_ASSETS_SRC={
+"banana":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABKUlEQVR4nO2Zuw3CMBRFLyzAEKlASkMdGiZgg1DRMgstVdiACWigpkGCiiGYwFSODDhO/GwwiHsqKx/73MSffABCCElJL7WAZjYeKNv27fHmdOy/R+dzMEBqGCA1DJCanw9ACCGEEEII+Q7KAqosYP2+E3KsiygvNOqcK3XOa5k2sbKAqva7q+1cX4K+zNkani9OdXlzeK3flMdlmT3IjE7ePqIAjVdsuLrq4nwyzZ531+LAi/yDlEcQ7wBlAVWt8+YDjBCNOOQ1XUN4BTD7tjMEYA/SQRxo74Ymojugy60hBPjIA4JZqEulMejajlgm9p3wvfIa8TpgNmI2LkEqDwQuZDFChMgDkX4x2VZeV7eyhZWOragDUvJsEzopvG1GcYX51ExGyD9wB/JJa4nfWd1gAAAAAElFTkSuQmCC",
+"golden":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAAB8UlEQVR4nO2ZPUvDUBSGn0gtOLnoJE7+AwfpEB3cFQV3de0/cHHwR3Su4O7HolMXO4iDv6BOIgi6OFqE66Cp6fW2TU5uYi+cBwpJP3Lfp/fk4ySgKIqiyIn+O0BWdlbnjev9i4f3sQ4z5cSZHmrpFdNvGeAS+ARmge2o3gxmll3YM3gPXEf15h5wBdxVH8kvtuAT8GH6rQbw/PMKGtc+eAYcRfXmTdVhysAleAi0Tb+1VXWYMrAFl4G5qN48/1leqj6SX2rW+hrwYvqtDb6Poo3qIymKoihKZQTRKRTpckLpB8VdTiiC4i4nFEEQdjkhCYq6nFAExV2O3U1MK9rlKIqiKEGwH+N8CvRf2/F2JWNeY2NeYwPFwyW/T29TSmHBUSGkksZ0eu3bzqM9hjRfoYZ31MAHu93B8mk3+xjGdHqDlbfjFdd3osVurswiwf0Y0z6P3R8unAz+/YP1zaGQLtlkpodmbYRcQh7J3IKDQKMEYUgS/oqmsctxkhz8VkiW6hALwgRJ+CM6lgxikL/8xSWaLE+UhPGiGcVAtm+LDzK5JQsiPXCJTxPpQdKDl4FUDgqeB6uQLCIHnm782id1HyVr/2ESOfB4Z9t15SIRdVWCVA5KuHUvFfUtllDas4kiF9w+xBIqefiSRdanlKIo08MXMDnDKxgiD2QAAAAASUVORK5CYII=",
+"apple":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAB2klEQVR4nO2YsU7DMBCGrwjeICqCLVJVdWPkAahY2JBYUHcUieehYu+GxMZEeQBGtqqqlA0EyhswmAFZcpzYvjvbCUT+Nlxz/v/47uIYIJFI/GtGsQJfnR4Jfezh9aO23mQxa8wBANitNmhd+3Rp/kjh03lumiIAcEY6NzBZzIRFOADUjAmXib1AulBgxKtM57kxzSSdGohBMkBht9qMtusSPX+7Lp2FHKWIi3EmKsP48leQtQtJk5guFOw9UIyzWrFV+UFjTlZ+1/5+Ps9aY1HeA94GdOESjAHJ8qti62DXQDHOhEn8zfFh6/+Yxm2xXLCc64vd3V4/6XPeHl8uXHHu3z8bY9TdIBvAiJdgTAA0jVBMkFKIIh4A4OTyzPq7RE8tSjqxa8AlXsI1gQVtQH0q3MVcqHGxu4AywO0QvmDWJadQrKfPjT/8w5wp97EtEjtPhVILXjvgEscRT8U7hUwiuxAPEOg43ZXYNoZfxH+dZKBvnAbUo23b+T0G6jquo/Xwd0An9i5Q46MM+Hx0+4BZF70DXdQCJfcl7BoIbYIbj2RAfyqhTPh81Ae5VgHgfej0cq0isZ3TbWZsu8ZpFtGuFin4dLlol7sYQrTnKP3dZqavd0oiMVR+AKr5ynW5lfx2AAAAAElFTkSuQmCC",
+"orange":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABlklEQVR4nO2ZsXHDMAxFkVw6tWly58KV60zgdGmygwfIQBnAO7hxZ0+Q2pULr6A6KXLUMTyAJD4hxYrxSlEE/xdAWoKJHMdxHGfG3I0R9OOVvqSx973tmmbBcqIlLMw0B0CEp7QYaTIgid+sl+Kc7fHMXkdNwAZS8TnREqkZxMS9elWyEc/NQ8pR7TheJAjoVoufC0+PuzDWHz7fNHHjbGgyocpAVnxC9/K8YwcE4mxoMlFtgAv6S3z09IdxpYnSehzQHtisl0XxAY0JZC9VGeBKZyAjHkFbSlAGuE37V0AGromigbR8pFPHEk0ZwRnoT5e6+5S/B1qaSqgkbmzxRAZ7QBI5hXgiogeLIFOJ5fj/p9C1AxuY4jitoWggfrXdHs/Vx6eWbrUYHorm1fo2SyhkwaqMQhwku1UG0jLiFkdJ52u/zKAMpHsBNRHP608XsWORo9oA9zRaTKTia9bjsP2ozwgKSPeiH/VQX0hqq2iywAkn0veGRmls5YzE2bFobN1uazEw6+ZuzGzb6xxT/sHhOM7M+QZRUqz55cVJaQAAAABJRU5ErkJggg==",
+"rock":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAAAwCAYAAAChS3wfAAABcklEQVR4nO2aPXKDMBCFXzI+UoZQUlFy2JSpUjqe3Ak3wSM0gLR/SGj2q2wPIO3bt5ZWNuA4juM4juM4ZgzjNA/jNJeexxY36wGGcZq7vlvevkT4+f56sx47B7NJLBkPgl/xuD9er0uKYTJwlPUV/ecH7r9/q88WMUoIoT5gKviYUIwSrlAdhBp8yJ4rAFsx1B68F3wq8C3OLBHxA4++7DjBx8Qloi2CaBmUWD6H2AkWvHNvLBF813fQ3lCx7KRZ71ukMq9ZCmo7watYPoas4pH1Q6iCUIPXcoFZL7AV0J4onMz/J2GWimDeDIXEgW5ti8+GpF6u/c9EWgrsZbAWpEvj5QWQki1AjfZfkLjAHVB6AlpwXdCMAABPhCwBaq5/KU05AKC7oDkBAJoISQFatj/QqAOAfBc0K0Buj3AowFXtT2mQmnMAtTtMXpj6ja8mOK1x9sW1lwP3XIB8IALU5wbJoQj7WJxznxW1/NfAcZzr8QTPY74wES/bSQAAAABJRU5ErkJggg==",
+"leaf":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAhElEQVR4nGNgGAWjYBSMglEwCkY6YCRVw7Q78f87O07jVfNwzjWizSVKoXyK1n8Yu7zCFC5OyCHEOIagA5AtZ2BgYFB3k2JgYGBgCDCShottOPcURc/NXc+IdgTJIYAOCIUIxSFArGOQHZKlspBkc6kGpt2Jxxlao2AUjIJRMApGATYAAIJsJdb144NZAAAAAElFTkSuQmCC"
+};
+
+const embeddedAssets={};
+Object.keys(EMBEDDED_ASSETS_SRC).forEach(k=>{const im=new Image();im.src=EMBEDDED_ASSETS_SRC[k];embeddedAssets[k]=im;});
+EMBEDDED_ASSETS_SRC.flower = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAABFUlEQVR4nGNgGAWjgETASI6mCjfz/zB2x66TJJnBQo5F7QscEYIJDP9JsZiJFAsxLMPCp5qFFW7m/3EZ3r7AESWYqWIhtQDBOCTW5chq8cUnTgthmhuMouBilQnLIHHG74ZQ+HEXQ2XCfhR1DAy4ExLeIEUzBAKQLcPGx6UPCrB6vcLN/D82Tey1ujgN+tl8GdPic8swfEn3RDM4LOzYdZKx4dwyDPHKwEqshmATxxacOC1E1oQBPu7Cz8elDwoIln/I+RBfMVaZsB/OJisfomsmpgAgpgAnqbaAAb2FiGC8FI+ZD/EBolNpx66TjMjBhgwqE/bTrnpCtxSXI3ABsmp83XYjeHxerjxHkhmDI+MPKwvpDgCQ6GUWlGCpiQAAAABJRU5ErkJggg==";
+EMBEDDED_ASSETS_SRC.star = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAcCAYAAAByDd+UAAAAtklEQVR4nO3WOw5AQBSFYazB6tQKm6BgEwq11dkD1RUZ7sw9ZwaRuJVH+H0eiSz7R5m+KlfmuCL1hdwSFB2jpIXtWFPHwUFXhSopoegYJRTUNIgSFroqVGkOhhRWZY6EfJqhmfblbl7U86o7rCE0fNrAhqzhfSFVKBR+T5gqDD9DNhz9lmrhq6jEfCEZ84cfOpklBgVljrfuaj1pUFNYdXBQRlSojgq6GkRHBWUYXdR85jfx8dkAwrlm42q8nw0AAAAASUVORK5CYII=";
+["flower","star"].forEach(k=>{ if(!embeddedAssets[k]){const im=new Image();im.src=EMBEDDED_ASSETS_SRC[k];embeddedAssets[k]=im;} });
+
+EMBEDDED_ASSETS_SRC["platform_grass"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANwAAAAwCAYAAAB63BR4AAACeElEQVR4nO2cMUvDQBiGv5QiiohW6aIgKuLmIIiu7q5u/kVXd1dFUHBUFBwEKW2FIgqCOkhKDEl63+X6Fc/nWUqb9p73Cm8vTdIma8dbX+LBwl5LXi76pdvXj1bl4eTRZ+hakEsHuXTUzdXwlWZvi6TZWyvIpYNcOkLkUhcuL8vft34TynKQqxpy6QiVK8nuUu4eLlU++a7zWfj4Zvunt92Z2cLtS2+vTmF8IZcOcukIkevytCsiihWuTJpuK5NWBQoBuXSQS0foXE1Xcdpm14GtIJcOcukIncu5cFW4LOndmdmxL/15yKWDXDp8cnkdpfTB+s1whVw6yKUjn8uscABA4QBMoXAAhlA4AEMoHIAhFA7AEAoHYAiFAzCkOb8yNbxzez2YYBSAeEl7xgoHYAiFAzCEwgEYQuEADKFwAIZQOABDKByAIRQOwJBkf2Nx+K9dO6tzk8wCEC1Xjz8XlbDCARji/SdCT/330m3LrWnfYfHhi9qn3qWsGrhK5As+fLH4ngcf7oXTDJzHZ2L48MXoc/oO99R/l4Pttpcgfb32+fjwxehTHTQ52G7XmpgWfPhi843cpcy3Pys4u+moZC5LNz58MfvUhSsSucp8JoQPX0w+78KVyaomVmdC+PDF4AtSOBeRSLgJ4cP3V30jD5poDpme3XRKP0Fcx8GHL2af03m4Ouc4UjRB8eGL1ed0WqDuGXnt6/Hhi9XHpV348Bn5VJd2aUT/6WJUfPhcfOnPcxIREX4TBzA+0rKJFHyHy24EgHrk+9QQETm/7yVVTwIAPfkend/3kl9Fy+5aAkA40kWtUfQgAIQj26vSgrHaAdSDBQxgwnwD9tuzT4XWy1sAAAAASUVORK5CYII=";
+EMBEDDED_ASSETS_SRC["palm"]="data:image/png;base64,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";
+EMBEDDED_ASSETS_SRC["bush"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAE4AAAA8CAYAAADIQIzXAAADeklEQVR4nO2bP2sUQRTA3x0pxAPNcYhyglW4KwwE0wXshFjZXyn4IfwMfoj09lYG0gWuCwg2ilVAiYSgjWIROKu3eTe78+/NezMTbn/Vsjezs/vLeztvZzcAPT09PT09PTIMSg08XcxXvjY/3n8pdn4+sp5YiCwbtUlUPxmbrJ1XD719v3342bm/BomqJ2BKC5Flw5RYWp7K4JLCTGoRKD4olSYpzIQKLCFvKHmwXNLM46dMOlzE/lJ48trCusDoyxl5IhFXUhodN2fkJYsrkSYucp2P2D2uVLSVGj9JXOkUNcmZsmxxtaWoifb5Rc9CmsVtCrbHM4rkrBt8oJRnTi1CZNlIlejt7Ar5UtK6hD06mHj7XSyvWvu4Aq2dTGGTve1m++rTbwAoW+wiIcJMTIEceZ0dqDQqDCkljkrjCDOhAmPltRrXLk1CmAkKjJG3Vo6gtMnedqe0UmhKo8eNKWEacbXWZdrSkFh5rQJ4kyLNJEbeFm2oJc1Vb9nulSk1mgTTxXzluudtaQ1sXvj3dy8BAODx24/Wdl0Sc0UbHa+r3jMZxEabb1btihSUhuwenTbbv77+cY6XWxxAWJkiunROpY1nIxjPRi1pAACf3zxvtRvPRq12JaSFjiuSqqYwLtgXo/BiebV2Ea4Uyi15MF3MV7GTAk3XEGk0wgDWU9WGL4VdSEl0FcZik4Mr0naPTht5IdJsPHnxwPrb+clls40XrBmFSeIw2kLSM0YYjTaXLApthxLNVJeENTnQ1E65p3XBkWZC+4WUFhzU6jgOKI0rjILHOD+5VIk8VsTh5CAZbS5py8N9WB7us46Lx5OOPNE6jotrBqXCuPIQSXlDgJsIKo0ZbV2iOPIkUt8kOuKk01TyvuZCOmWrSFUbB8dnQfs08K0KD/GHWtLVhIrKJS2EohEXmqYHx2ci0kLTNSSdhwA34Vhr1MWSUr5QXAuZrYi77fJSy5fQyaMRV/orbgmkyhcAv4+1iKMpa4s8fE5NWfaplZj3q61UpZ1uW9qmlC+xL6W9347cvVPVOoAo957dBwDem3xvw53XT6t8US3B33/XzXbsPb7qJ4dccCbGjRfHrSY2WlxKCbbR4lIQKXrpRyrc5SbN5SV8eVPk4+kQUgVqyNOQBqD8b5eIS6LrCSRFIH3PqvE4qfZ8yvlQES+Q9uXI05YGAPAf9Yu/bbFLnxoAAAAASUVORK5CYII=";
+EMBEDDED_ASSETS_SRC["cloud"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAABACAYAAADS1n9/AAABjUlEQVR4nO3bwVHDMBCFYZnJiTYogVqoklpSAm1wNQeGmYwGRV5Za+2T/u9OLPSeltgJKQEAAAAAAACY3zZ6AV72fb9bf2bbtnePtUQ2TQFaAq9ZoRDSBfAIvWTWMkgW4Mrgc7MVQaoAI4PPzVIEiQJECj6nXoSX0QuoiRx+SvHXVxO6ACqbq7LO/4QtgNqmqq33T8gCqG6m4rrDFUBxEx+prT9UAdQ2r0Tp93C9DVTaCA+Pt4hRP5voVoDVw75K71KcLgDBj9OjDM0FIPg4zhTBXACCj6ulCKa7AMKPremNptcLYxzLJKhOAMLXY8ks1IMg9HO0BE8LwOnXdiQ/JsDiigXg9M+hliMTYHEUYHEUYHEUYHHFAqh/3Rm/ajkyARb3tABMAW1H8mMCTOro4a0WgCmgx5KZ6Qshnk8Hv77Tp9drR/H2mj68r2E9sKY/AUyD2FryubVehM8K4jhzMM0FyC9KEcbpMZGbC5AvgiJcI9z/BZRQiL683n/xHGBxFAAAAAAAAAAAAACY1Q+h3J1lC6VLCAAAAABJRU5ErkJggg==";
+["platform_grass","palm","bush","cloud"].forEach(k=>{ if(!embeddedAssets[k]){const im=new Image();im.src=EMBEDDED_ASSETS_SRC[k];embeddedAssets[k]=im;} });
+
+EMBEDDED_ASSETS_SRC["palm_a"]="data:image/png;base64,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";
+EMBEDDED_ASSETS_SRC["palm_b"]="data:image/png;base64,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";
+EMBEDDED_ASSETS_SRC["palm_c"]="data:image/png;base64,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";
+EMBEDDED_ASSETS_SRC["small_tree"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHwAAACKCAYAAABo1S66AAAFkElEQVR4nO2dPXLjNhTHnzQ+QCaVW8dVtk6zWzmX8B32QskdfApVqTZtXHnUKk3G7VbZChoaAkiQxPvC+/86yxoSwA8PID5EHMgQ98+//p9/9vB0r5GUXZxPl5vPLi+vB4Wk3HDUTkBiFNlE5XSX8qeBiVqXF4ZX0SXyaNeOdPUIH1k20W1+tCNdVfjoshOWpKsJjyI7YUW6ivBoshMWpIsLjyo7oS1dVHh02QlN6Wp9eFTZCa38iwmf1uLoshPTcpCKchHh2mNPL0iUE7tw9NvzSPfnon04ZJeRLBdW4WjKt8FZbmIRjuieR6p82IQjuvfBVX4iEY7obkOinFiEI7r7wFGOdz0vNtKuFS0enu6LW6R6sVs4orkdTpGtbNpu0yo5enT3FNxra9Tqi8zJzpujiMIloniP/OYmvSY6otScVslrymrumlMXa+U3fbn1YSxidM+J6VkGc/dZI332i2ufuiMJrwmQyHft3i3iq+NwDLHqlAr84elerHxq92p5mC7WiK1LmqNHeE20Nmt+2nQT4Vi/LmNVNtG6nzYd5r609anSSkH0IpdtOX9LP226/rE3srWEbxn37hkeWZadmJN+IOrTjEsJ55jYqKXXo+xETfqN8K2Z4hQuOQed0u5ZdqIk/dBr+3Bv4RyzV2uvveceVsjz2nV5tAdLMnoUfn4NC6tYXOTrG3fTf2giNUW5dP1SOtJn2mW0lan0Y/pAk7lpSum0zd1zhJZAtUnXnI9eovbw5jXaU5QfPv/xe5cdK2sf2izPXJXwlt4aKr8eLQ15rBdeKY0em3hR4efTxf34tiTdk3gx4aM0iUTLmz8s060PJ6r3496jeg5veWOPcG8FshZv/Tp+LtwBT/liFT7yGnnO0mydFdiEW860BFbz31V4LYpHj+6Eh/6cvQ+PIjthPb+swq1nngvL/XlX4dYyZwVL5cIW4VGjO2E1/92EW6rFFrFSPiwRbrV2S2OxHLoIt1J7rWOhnLpHuMVarYm18lA/5AbIslt4pPnyrVgalyPCgwHhwdglHM15O1aadUR4MCA8GBAejM3C0X+vx0I/jggPBoQH46g98wNkQYQH40ikP78L5LhGOKTHAE16IM6nCx2nb+lDlI/Lh5f6lP4BxuRIdPsCVkgfi6nPa4RD+pjkHj806ZA+FqV3rd704a3SLSwEeENywan2NuXisKwkHVL9MPe+9Oo4vHRmBqTbZ+lEhNlXb6YvT1+x7fXVk6PTetBN8wFnLUckoRLUkT5AoHaqUfPLdUvRDnRZIzqxei691ym3YDu1h+gWN7vl4ZyzZXo0573OHt39vvTLy+sBzXx/WkdELKcLL4Eor8MxlBU5P3wpAYhyXno9O7EcgXE+XRDltC+6uR6OuwlHlM9jZXSDd60yYTX/XYVbqcXWsFQu3SMce+Q+5tuSbCKFExFGx3p+WYRH3TmztDRpAbYIt5hZSazmn7VJj9SfW+63p4gfVDcinvLFLnz0/txDvz1FLHGlWTjP069b16O1EWvSR9oU6VU2kWCET/G8nOqtCc9RS6y3Jt5zVE9RTXBtdc2S+Fq341E2kbLwhEXxo4lOmEn83Fq6pPhemwWtYi4DS5soOOQvjRZ++ftfIiL66+0/c+W1FrMZaN09s6UCtA4Hn9+/07e39+vfEC6E5Nap5/fvH/4eTTjLJsbeTPtODvm55JFxIXxK/uC0pQJEEpzjTnhOqgBfHn++iv/t8Se19FgHL+YLBoQHA8KDAeHBgPBgQHgw3M8cERE9fv30InWvtz//eZa6FwfmhUvK7IXlSmFKuEe5rVipBOrCR5ZcQ1O+mvCIonM0xIsLh+hbJMVjWBYMCA8G+nBFQvThORHFh3xKLzGyfIzDG/FYCazILWFeeAuYSwcAAAAAAAAA4IQfNKD6FjmCxZsAAAAASUVORK5CYII=";
+EMBEDDED_ASSETS_SRC["mushrooms"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAACPklEQVR4nO2ZMUzCQBSGX42Lo4mDkMjE4mgYnJ3cGY06wUYcGIwhsQMmahg6EOICkxpHdidnB8Lo4sQAJJIwOuJg2hwnvb531/ZqeF9C0tJ75f7/3r1eDwCGYRiGYRiGYRiGYRiGYRhmfXBMb1Ap5Bdh13qjsfH9k0a7gyrhMlk2gtwxWXh9dye0rTedLZ1n0QhSh0TxKuEyohFZM2ED21BXvNyeMnXSAGWAifhVcVkyYZPSWBa///YcHH8cnaLi5bqApVnOhZrm9ifa04pkgIgo3j/HmEBFJVxuo2NEZICfrqrR95ENCMsQPwuiCqIovlYvhbbreIPgmGoCughSWZUhFHzxtXpJKV5ug8kYEW0D5NGOM/1F8RR0TNCuAQDxisayfXAbHM+HDeP7JTYFdDNENfqi+FXnYhw2CyIzoDcaO5VCfuFNZ38K4WNxSx1crQIAwPnnd/AVtgBSWTbjGB1nNAUAAC6bF8rrLbdt+hORyJlw/fQKN2c4E0hTQHcRE1e8POdTqwFiuuqKwL4Q+c9x8dkuMh82go8K7HoAPQX8WgDwKybNt8HWw1dEiyrcdbvBGTb9AYg1QDZhp7hHCUeLd/sTp1nOLTreIKjqqlrTctswHzaCrKGsBsmPwd5o7FBHUScmairI6IgHMFgHpLGxQRWj8zKU2EIoLrCidF+JM29A0rABtjtgGzbAdgdswwbY7oBt2ADbHbDN2htgvCOUxo5PkmTqn9owrk4OIzc471/e/4UWhmEYhmGyww9ku+6J+ktC1wAAAABJRU5ErkJggg==";
+EMBEDDED_ASSETS_SRC["tiny_bird"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAgCAYAAABgrToAAAAAbklEQVR4nO3SsRGAIAyFYXAaK8ZwA6dkA8awYhwr7zwNIV7Qxv8rIS/kgBAA4N9ir2Be1q21V0tOb+ebA2qNLQd584dJWnzSXKr35s9uNygVW2+olpy8eXXAa+iLP9Y7U3xia3OtzpsHAAAAMMIOULM8CSGWiHMAAAAASUVORK5CYII=";
+["palm_a","palm_b","palm_c","small_tree","mushrooms","tiny_bird"].forEach(k=>{ if(!embeddedAssets[k]){const im=new Image();im.src=EMBEDDED_ASSETS_SRC[k];embeddedAssets[k]=im;} });
+
+EMBEDDED_ASSETS_SRC["butterflyLife"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAkCAYAAADy19hsAAABL0lEQVR4nO2XoRLCMAxAA3/BR8xgKnEYDBqNxmBQCBRmBo1GozEccgbDR/AHGMRQ4bIsa9pBGYM+uaXtu1yuSQEikT/FJCZvcv1HD21Etu7hjcpSCU3EJcaFjmvgwswKh62zTWmtSUyeXTLn7/3JqrDnebdUfdQALsrh4lxOkuWiHJu4VZjKzgfjK/2XnvY9TVqTHU7nhT0P2/S5Z5V0pTDKclEOiqO0VKcojbJclIPiknT3FVkao5WOqyyNkUpHFP5mSin3yS4FS+N4y0r/7skIANyyS5FKo3UZjsKhicKhab8wdizaejV4t+PgtURbr0ZVt2t/hgH8sqxlF/HJsm2WePu0Zht+AAJOa5K0hDRa2oQBAs7DFJcXB4CbMBLkxeGLj3AdWndLRCKRyI/xAGOOy/rjmiNqAAAAAElFTkSuQmCC";
+EMBEDDED_ASSETS_SRC["birdLife"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAkCAYAAADPRbkKAAABcUlEQVR4nO2WsXXDIBCGf/K8iTOBGtd2oca162gD1SlcZQJtELVJ7UZFejXeQLM4RR4YExB3wOWl4KskcYLvOJAAKpVKpZKBSnnpZXi/+Z6PfZfUXw6sAUPiLn+ZyBM1kCrPjc2FNFM+IXeWKTESRAdwxWJS3PhcNpxgiszYd8pNYrtrvUtqmafs5Mh7IIWx71RIHggnxkG0vLZg0x4f2q7TxVznVEKsAlq+aY+/5D/feizzZJ5TKnH78sckZ04Z1BUHfuRtTufBVMOthC2tDv4qsTZxiTUbw53pkLhpp3bsym+bXTB2uc4A/BUA7lU4nQcAwMf+4o2LyQPECmj5NWkOWnwNijxA2MSl5X08v96v1WFSVHkgkkCqvI63P5Uh7BiOuHlnVSRz9vVeAOT+A6IJAI9JeNszjxOiRwkg8rUqcBaKdlCyCiWEXaIV0IPGlkLwfUF5QPhHZu6F5AHmWSjlKCEpDwgd5qSlK5VK5f/wDYB1oqGS2IdkAAAAAElFTkSuQmCC";
+EMBEDDED_ASSETS_SRC["musicNotesLife"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAkCAYAAADy19hsAAABHklEQVR4nO3UsUrEQBCA4X9FQau0cmKVJ5ADSWXndVpJhHQWlj7AvY2FBAyIaHNeo60I4hOkEo8Dq5SKMFckRoTbcMqwiMwHC2EJw9/sgDHfuHmXUmYCXAEfwAqw7+J87r+hLXnuH4CRi/MD4Bq4D5fUzRf8DLxJmSXAS3P+BF8wwBkwdHF+EypmEV3BR8CplNleqJhF+II3gTUX55fN90a4pG7LnvttYCpltkO9JZJwSf+M2m6VqpgAY75298BFaU9r/qeuR/dTT8Cti9Jj6vBHxdktzeAJ8C5V0QemzVGnGQxwAZy4KL1TntvSDj4EzqUqdpXntjSDe8Cqi9IR9d5eV5zd8u3h39gCXqUqEuot0VecbYwxxhhjjDEBzABIlDgmAWieRgAAAABJRU5ErkJggg==";
+["butterflyLife","birdLife","musicNotesLife"].forEach(k=>{ if(!embeddedAssets[k]){const im=new Image();im.src=EMBEDDED_ASSETS_SRC[k];embeddedAssets[k]=im;} });
+
+EMBEDDED_ASSETS_SRC["storySign"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABSCAYAAACrKtGeAAAEzUlEQVR4nO3cf0zUdRzH8ef9AAQF5FciPxKFQEIFEi2ZNoUQbTlbc65YbtgqS+fMdM5/dDZXaza1tWG11fxRbeJq/hFbktPhNBIEGmIMBwJObhQ/FCE05O7oD/KGh/cV6Hvfzy3fj7/ue3ff7/vu/brv9/O97/e+B0IIIYQQQojHjelRT1iXHTtkxAv5P/um3Oaxz2atGaX5+tDqo8cApPn68tTPh64a7k/etSPfG6/psbB3X+kD0+6bo1FrgDRfX+79c++v5hggzdeHVh+tY1lAZPws3V7M46brRrPm45prgPA+CUAxCUAxCUAxCUCxMe0FjdXq1z8jJSnaNf1cViKvvDSfppYODn93HrvDicVsYuvGfKIigjl1po6Sn2sJnORP4CQ/Nr/9AlERwQCsKSzi+yObXMsaOe2pjvs8I506U0fR12c59vlbhIUG6fm2/xNdA/CzWti3Z+2o+w8eKuWDnS8TGRHMhYpGvjp2jvzcuZRdaODA3lfx97dS9VsL+4tK+Xj3mgnX0VJR3czqlZlcqmlh+bK0cc3rTYZsgnp673Bv0AEMf1pXrcjkhx+rKCxYjL//8GcgK3Mm06eFYnc4da8/MGDn74FBVuTOpbJGe7/caLquAZ4UvraY7buLWZA5k5znU0lPi+f6jW4SE5544HlbNuR5pX51bStZGQnExYTxZ8dt7HYHVqvFK7XGS9cABu0Oduw54ZpeX7CE1OTp5C1NY9GCRMorr/HlkTKyFybhdE78YKunOp78eqmJ5tZOzl9spPtWP5fr23hm3owJ19eT18eA2713sbXf4umUGJYvS+PZ+bN4d9tRYmPCaW7tIOWp4cYNDcH+Q6fYvmkFACaTCadzCLPZhMPhxGIxadbxxOkcwtZ+i6JP1gHDa0NldbPPBOD1McBkgo8OltDZ3QdAb99doiJDWJWfztHjvzD479hwrrzBdRsgOWkaNZevA8NNS06MHr3wMai/amPWjCjX9JzZca7l+gKvboJSk2NYX7CYLRvy+PBACQH+VsxmE1s3LichPhJbew+bd35LaEgQU0MC2fRmrmvejW/k8OkXpyk+WQnAe+/kPbLOoN3Btl3HXfenzY7F4XCSPudJ130BAVZCQ4K4YbtJfGy4nm9/QkadkBl5vPr+YVQ5Gjpx94+GjjwxM/KkjHwTVkwCUEwCUEwCUEwCUEwCUEwCUEwCUMyQo6EAK9ceYNGCRCxmM3aHk4tV1/jpxPtGlfdZhgWQkhRNVsZMXsybR+nZK/TcvmNUaZ9m2CYoKiIYPz8LDY3tRIRPITJ8ilGlfZqhY0DOklSKT1aSlZFgZFmfZmgAp8t+J29pGhXVvnVaUCXDAujs7mPgnp3shUl0dvXRdfMvo0r7NMMG4atNfxA2dTJX6tuwO5w0NLYbVdqnGRaA7HI+nHwRU0wCUEwCUEwCUEwCUEzzVxEgF+rpQetS1VFrgPt1rO4zi/F51HXCHv/DQK6U19/D/jPC4xig9QcTYvw89VNzEJYQ9KHVR90aPDcuZCg9drLHx2tt/dS19UqgbmQ3VDEJQDEJQDEJQDEJQDEJQDEJQDEJQDEJQDEJQDEJQDEJQDEJQDEJQDEJQDEJQDEJQDEJQDFdfx1da+vXc3FCCCGEEEII7/gHOhN5FVVtOs0AAAAASUVORK5CYII=";
+EMBEDDED_ASSETS_SRC["warningSign"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABHElEQVR4nO2YrRLCMBAGA4OK5l0wNTUYPLaah6ktGotHYzAYngRLbVAfA01bmuSuf7mdwUSE3C4RQSlBEFjJUm2GPoM3WarN67E1nEMsuTaePLCPD1eFyRdgGSBLtSny5GetyBOWCy0FqtTZBxwVpMA3bfYBdQUpALrYB5QVpIBSbvYBVYVV6AZN7A83a+18dBuyC8EFfOwDigpx34EQ+yC0QrwFKOyDkApeA1AeHvgOEd9PiMM+8KkQVwFO+8C1QjwF+rAPXCrEUaBP+6BrhfkXGMI+6FKB7UHD8Xipo7XAkPbBvwrzvQNjsA/aKszzUT8m+6CpwuTvwKK6QPWX37O019aaYmelTtfyc25rACp2G1vE5V6yfZ8gxMobfJSNSQROlJ8AAAAASUVORK5CYII=";
+EMBEDDED_ASSETS_SRC["pit"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFQAAAAkCAYAAAAXSR0AAAABTElEQVR4nO3ZLRLCMBCG4QWBQiIYFEdAcAY0R+EoHAXNGRAcAcUgkCgEYMhMJt1NNu2m05/vkQw/7TtpkxQiAACAjpik3nDYrb9tHEifHM83sdu0zQMZAwQ1hqDGENQYghpDUGMIagxBjSGosWjQ/WaJXRIj1kXcQkkfutzf4g89X5+sA+uSxVweW9vVjH39dH1U+rFBuZhSyD5HlEhxubBhVNU9dEwxieTzil2dTmWEhqOT+5KhhuRwozUcqf4oxSxvDEGNqSalsd1DifQTU61JSVo2xJYafZYzy4ewDv0rug51Ujul1DKiy4FTV1dqNHIxiRR/0hHptqCaNVqoZPA6tyPNJS2FdFRBndy9fZ3IbdHE86VCOllBHauHJiWD5waTaEM6tYL6hvhEKjeir3FQX5/jNonoMw3K6WJkq3ic4kFTSgQvGQwAwPMDJRB3WcmbQswAAAAASUVORK5CYII=";
+EMBEDDED_ASSETS_SRC["backpack"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAsCAYAAAAehFoBAAABDklEQVR4nO2YsRHCMAxFBccIqb0BG7ABFS0NczABc9CkpWIDNmAD19kBKu6CMbYlfXH4Tq+ziT8vipKcQ+Q4jlNigQ4c1vtHOjfdR9j/LFFBRHnZ0rwEmHBNCiUNuVSpzLwFSr9JUFe4JpSOtZWG9vC36iFvOlEQ8ibingy7wkhZSR5LGC0ryW2+HGlo2Bwo3s5v4xrp8fMxUVt7NAnnZFFwpdk9jJSV5EEfa7/Aha1xYWtWmsVDCOK1U4yidd1V2IWtcWFruhNWPdZyXLbHj7nd9QTL767C3QmrWqL1bSV9q+XorsJs4XRLo4Wbp9qEajHbhL6w2uYTtX9QYbUE8pOTNJfdw2hpqyI4zr/yBCIdY9hztNZdAAAAAElFTkSuQmCC";
+["storySign","warningSign","pit","backpack"].forEach(k=>{ if(!embeddedAssets[k]){const im=new Image();im.src=EMBEDDED_ASSETS_SRC[k];embeddedAssets[k]=im;} });
+
+EMBEDDED_ASSETS_SRC["backpackCarry"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACwAAAAsCAYAAAAehFoBAAABD0lEQVR4nO2YTQ4BQRBGi7gAEisLElbCXmI9Z3ACe9dxAq5gY+kAYkXiBDgCK9I6qn+/Ep3UW01PTWreVNfMpJtIURTFRQ2dsDWaP+xzt+Madp86KhHRd1nX+RRgwj4plDRkqmwZswVcsRSyK+wTsse5lYb2MFc95EuXlAj5EsU+THSFkbIp+aKE0bIpeYOnw046qBZ03q4+xj7s680xUVh7BAmbss3hlL2u3R+zsevlwMbup/372CcN/Ur8AhWWRoWlUWFpihNuIJN1el025vpxxFBchVVYGmgPb2ZLNjbZVZB7FFdhFZZGhaUpTjhrEZqL2CL0hdQynyh8QyWqJZBbTql5o3sYLS1VBEX5V545BVrkH9tFYAAAAABJRU5ErkJggg==";
+if(!embeddedAssets["backpackCarry"]){const im=new Image();im.src=EMBEDDED_ASSETS_SRC["backpackCarry"];embeddedAssets["backpackCarry"]=im;}
+
+function assetReady(name){const im=embeddedAssets[name];return im&&im.complete&&im.naturalWidth>0;}
+function drawAsset(name,x,y,w,h){
+  if(assetReady(name)){
+    ctx.save();ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(embeddedAssets[name],Math.round(x),Math.round(y),Math.round(w),Math.round(h));
+    ctx.restore();return true;
+  }
+  return false;
+}
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+const W=canvas.width,H=canvas.height;
+
+const keys={left:false,right:false,jump:false,down:false};
+
+document.addEventListener("contextmenu", e => e.preventDefault(), {passive:false});
+document.addEventListener("selectstart", e => e.preventDefault(), {passive:false});
+document.addEventListener("dragstart", e => e.preventDefault(), {passive:false});
+document.addEventListener("gesturestart", e => e.preventDefault(), {passive:false});
+let lastTouchEnd = 0;
+document.addEventListener("touchend", e => {
+  const now = Date.now();
+  if(now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, {passive:false});
+
+const worldNames={1:"Selva",2:"Gran Árbol",3:"Escuela"};
+const CLASS_ROSTER=[
+  {name:"Franchu",girl:true,glasses:false},
+  {name:"Martu",girl:true,glasses:true},
+  {name:"Lucy",girl:true,glasses:false},
+  {name:"Jose",girl:true,glasses:false},
+  {name:"Samy",girl:true,glasses:false},
+  {name:"Ori",girl:true,glasses:false},
+  {name:"Rousy",girl:true,glasses:false},
+  {name:"Vicky chiquita",girl:true,glasses:false},
+  {name:"Vicky grande",girl:true,glasses:false},
+  {name:"Anto",girl:true,glasses:false},
+  {name:"Vitti",girl:false,glasses:false},
+  {name:"Ramirito",girl:false,glasses:false},
+  {name:"Santi",girl:false,glasses:false},
+  {name:"Francis",girl:false,glasses:false},
+  {name:"Leandrus",girl:false,glasses:false},
+  {name:"Feli",girl:false,glasses:false},
+  {name:"Beltru",girl:false,glasses:false},
+  {name:"Lauti",girl:false,glasses:true}
+];
+const CLASS_BY_NAME=Object.fromEntries(CLASS_ROSTER.map(s=>[s.name,s]));
+
+let running=false,last=0,elapsed=0,totalTime=600;
+let camX=0,camY=0,world=1,screenShake=0,radioDanceTimer=0,radioBoostTimer=0;
+let bananas=0,rareFruits=0,students=0,mochilas=0,heart=0,noBumps=true,message="",rescuedStudents=[];
+let musicOn=true,layers=4,wind=0,windClock=0,radioEvent={active:false,x:0,y:0,t:0,kind:"radio"};
+let highTrumpetLevel=0, highTrumpetTriumph=false, trumpetFinale=false;
+let platforms=[],items=[],vines=[],storyProps=[],particles=[],followers=[],lifeClock=0,ambientBirds=[],curiousButterflies=[],idleTarareoTimer=0;
+let secrets={uke:false,gold:false,radio:false,hum:false,rain:false,butterfly:false};
+
+const player={x:80,y:360,w:58,h:78,vx:0,vy:0,onGround:false,onVine:false,facing:1,idle:0,state:"run",stateTimer:0,spawnX:80,spawnY:360,walkFrame:0,blink:0,coyote:0,jumpBuffer:0,landTimer:0,jumpHeldTime:0,jumpCut:false,radioLock:0};
+
+function showStart(){running=false;stopAudio();document.getElementById("endOverlay").style.display="none";document.getElementById("startOverlay").style.display="flex";}
+function startGame(){
+  document.getElementById("startOverlay").style.display="none";
+  document.getElementById("endOverlay").style.display="none";
+  buildLevel();
+  Object.assign(player,{x:80,y:360,vx:0,vy:0,onGround:false,onVine:false,facing:1,idle:0,state:"run",stateTimer:0,spawnX:80,spawnY:360,walkFrame:0,blink:0,coyote:0,jumpBuffer:0,landTimer:0,jumpHeldTime:0,jumpCut:false,radioLock:0});
+  running=true;last=performance.now();elapsed=0;camX=0;camY=0;world=1;screenShake=0;radioDanceTimer=0;radioBoostTimer=0;radioEvent={active:false,x:0,y:0,t:0,kind:"radio"};
+  highTrumpetLevel=0; highTrumpetTriumph=false; trumpetFinale=false;
+  bananas=0;rareFruits=0;students=0;mochilas=0;heart=0;noBumps=true;message="";rescuedStudents=[];particles=[];followers=[];
+  secrets={uke:false,gold:false,radio:false,hum:false,rain:false,butterfly:false};
+  hud(); if(musicOn)startAudio(); requestAnimationFrame(loop);
+}
+function endGame(win){
+  running=false;stopAudio();
+  if(win) playSchoolBell();
+  document.getElementById("endTitle").textContent=win?"🏫 Escuela del Gran Árbol":"🌙 ¡Terminó el recreo!";
+  const rescuedSet=new Set(rescuedStudents);
+  const arrived=CLASS_ROSTER.filter(s=>rescuedSet.has(s.name)).map(s=>s.name);
+  const missing=CLASS_ROSTER.filter(s=>!rescuedSet.has(s.name)).map(s=>s.name);
+  const fuerza=Math.round(mochilas*20 + students*12 + bananas + rareFruits*5 + heart);
+  const arrivedHtml=arrived.length?arrived.map(n=>`<span style="color:#24934b;font-weight:900">${n}</span>`).join(", "):"<span style='color:#777'>ningún compañero todavía</span>";
+  const missingHtml=missing.length?missing.map(n=>`<span style="color:#777;font-weight:800">${n}</span>`).join(", "):"<span style='color:#24934b;font-weight:900'>¡Nadie! Llegó toda la clase.</span>";
+  const cierre=missing.length?"<br><strong>¡Mañana volveremos a buscarlos!</strong>":"<br><strong>✨ ¡Toda la clase llegó a la escuela! ✨</strong>";
+  document.getElementById("endText").innerHTML=`<strong>Hoy viajamos con:</strong><br>${arrivedHtml}<br><br><strong>Hoy quedaron esperando:</strong><br>${missingHtml}${cierre}<br><br>Mochilas cargadas: <b>${mochilas}</b> · Energía final: <b>${Math.round(heart)}</b> · Fuerza del Profe: <b>${fuerza}</b>`+(noBumps?"<br>👏 Los monitos aplaudieron porque llegaron sin tropezar.":"");
+  document.getElementById("endOverlay").style.display="flex";
+}
+function loop(t){
+  if(!running)return;
+  const dt=Math.min(.033,(t-last)/1000);last=t;elapsed+=dt;
+  update(dt);draw();hud();
+  if(elapsed>=totalTime)endGame(false);else requestAnimationFrame(loop);
+}
+
+function buildLevel(){
+  platforms=[];items=[];vines=[];storyProps=[];
+  // Beta 1.7: La Selva Respira.
+  // El mundo crece para contener la vida: más aire, rutas con identidad y lugares con nombre.
+
+  // Terreno principal: tramos separados para que el mapa respire.
+  addPlatform(0,450,3350,220,"ground");              // Sendero de entrada: paseo horizontal.
+  addPlatform(4700,555,2550,260,"ground");           // Túnel de las Raíces: ruta segura y lenta, ahora visible en PC.
+  addPlatform(7800,450,900,220,"ground");            // Reencuentro al pie del Gran Árbol.
+  addPlatform(8580,450,1220,220,"ground");           // Base firme del Gran Árbol: ya no flota.
+  addPlatform(12100,-1390,1220,260,"ground");        // Escuela del Gran Árbol entre las ramas. Mundo 1 congelado: empieza más a la derecha para conservar la recompensa del Gran Salto.
+
+  // Carteles de mundo: ahora cada zona tiene nombre propio.
+  addStoryProp("welcomeSign",165,350,185,108);
+  addStoryProp("brokenBus",400,340,380,130); // Colectivo escolar averiado: origen de la aventura.
+  addStoryProp("treeSign",8420,280,170,105);
+  addStoryProp("schoolSign",12135,-1498,205,112);
+
+  // Decoración especial de Beta 1.7: cueva, ramas no jugables y escuela abrazada por el árbol.
+  addStoryProp("caveMouth",4480,430,330,150);
+  addStoryProp("caveMouth",7050,430,310,150);
+  addStoryProp("rootCurtain",5200,350,250,190);
+  addStoryProp("rootCurtain",6100,330,280,210);
+  addStoryProp("treeBase",8580,360,1220,130);
+  // Ramas decorativas desde el Gran Salto: la Escuela aparece entre la copa, no de golpe.
+  addStoryProp("branchBack",9850,-1630,920,105);
+  addStoryProp("branchBack",10680,-1585,880,105);
+  addStoryProp("branchFront",10340,-1375,980,110);
+  addStoryProp("branchBack",11230,-1520,900,110);
+  addStoryProp("branchBack",12020,-1660,820,110);
+  addStoryProp("branchFront",11470,-1285,1050,120);
+  addStoryProp("branchFront",12360,-1495,850,110);
+  addStoryProp("branchBack",9650,-1335,760,95);
+  addStoryProp("branchFront",10180,-1248,860,96);
+  addStoryProp("branchBack",10950,-1305,780,100);
+
+  // Mochilas: el esfuerzo aparece a lo largo del viaje, no amontonado.
+  addStoryProp("backpack",980,401,44,44);
+  addStoryProp("backpack",2920,401,44,44);
+  addStoryProp("backpack",6020,506,44,44);
+  addStoryProp("backpack",8430,401,44,44);
+  addStoryProp("backpack",11180,-1514,44,44);
+  addStoryProp("backpack",11940,-1479,44,44);
+
+  // 1) Sendero inicial más largo: entrar en la Selva antes de decidir.
+  [[360,405],[760,405],[1180,405],[1600,405],[2020,405],[2460,405],[2950,405]].forEach(p=>addItem("banana",p[0],p[1]));
+  addItem("apple",1820,405);
+  addItem("orange",3100,405);
+  addStudent(620,392,"Franchu");
+  addStudent(1380,392,"Vitti");
+  addStudent(2220,392,"Lucy");
+  addItem("rock",1450,416);
+
+  // 2) Ruta Alta: ya no se anuncia como escalera; se descubre siguiendo bananas.
+  // Objetivo: que el jugador diga “¿dónde me metí?” sin que el salto sea imposible.
+  [[3300,330,220,26],[3660,210,170,26],[4110,245,190,26],[4520,90,175,26],[4960,135,190,26],
+   [5350,-40,175,26],[5770,-170,185,26],[6210,-140,190,26],[6630,-330,195,26],[7070,-500,205,26],
+   [7500,-460,210,26],[7950,-650,220,26],[8400,-790,230,26],[8840,-965,235,26],[9270,-1145,245,26]].forEach(p=>addPlatform(p[0],p[1],p[2],p[3],"branch"));
+  // RC5.1: ramita opcional para un monito riesgoso. No anula la Ruta Alta: invita a decidir si bajás a buscarlo.
+  addPlatform(3940,285,150,24,"branch");
+  [[3345,282],[3530,245],[3705,160],[3935,175],[4170,197],[4415,135],[4565,42],[4810,70],[5015,88],
+    [5240,25],[5405,-90],[5640,-120],[5820,-225],[6060,-205],[6260,-190],[6505,-270],[6690,-385],
+    [6940,-430],[7135,-555],[7390,-530],[7585,-510],[7820,-595],[8040,-705],[8290,-735],
+    [8485,-845],[8750,-890],[8910,-1020],[9145,-1085],[9360,-1200]].forEach(p=>addItem("banana",p[0],p[1]));
+  addItem("banana",3990,238);
+  addItem("apple",4995,90); addItem("orange",6690,-385); addItem("golden",9320,-1200);
+  addStudent(3985,237,"Ramirito");
+  addStudent(5000,87,"Jose");
+  addStudent(5790,-218,"Santi");
+  addStudent(7135,-548,"Ori");
+  addStudent(7540,-508,"Beltru");
+
+  // 3) Túnel de las Raíces: seguro, más bajo, con identidad de cueva y ukelele.
+  // Hotfix 1.7.1: la entrada baja ahora es una bajada amable, no un salto de precisión.
+  // El jugador puede entrar caminando/cayendo de forma natural; el desafío queda para la Ruta Alta.
+  [[3360,470,320,30],[3700,505,330,30],[4050,535,350,30],
+   [4450,560,360,30],[4920,555,380,30],[5330,565,350,30],[5780,555,360,30],
+   [6250,540,350,30],[6720,525,360,30],[7200,500,370,30]].forEach(p=>addPlatform(p[0],p[1],p[2],p[3],"cave"));
+  [[3450,425],[3790,460],[4140,490],[4540,515],[5020,510],[5430,520],[5870,510],[6340,495],[6810,480],[7310,455]].forEach(p=>addItem("banana",p[0],p[1]));
+  // El ukelele vive en un claro visible del túnel, apoyado sobre una raíz.
+  addItem("ukulele",5365,520);
+  addItem("orange",6400,495);
+  addStudent(5365,517,"Martu");
+  addStudent(7240,452,"Lauti");
+
+  // 4) Reencuentro: la ruta alta llega arriba del Gran Árbol; la baja llega tranquila al pie.
+  [[7800,360,250,28],[8120,295,240,28],[8440,230,230,28],
+   [9050,-1120,260,28],[9400,-1280,250,28]].forEach(p=>addPlatform(p[0],p[1],p[2],p[3],"branch"));
+  [[7860,310],[8180,245],[8500,180],[9115,-1175],[9470,-1335]].forEach(p=>addItem("banana",p[0],p[1]));
+  addItem("golden",8500,182);
+  addStudent(8180,247,"Rousy");
+  addStudent(8490,182,"Francis");
+
+  // 5) Gran Árbol: vertical, enorme, con radio y ramas decorativas que lo vuelven entidad.
+  [[8750,350,250,28],[8640,220,230,28],[8950,90,240,28],[8675,-55,245,28],[9030,-205,255,28],
+   [8700,-360,255,28],[9070,-520,260,28],[8740,-690,270,28],[9120,-865,270,28],[8820,-1035,285,28],
+   [9210,-1210,280,28],[8900,-1390,300,28],[8520,-630,280,30],[8440,-535,170,24]].forEach(p=>addPlatform(p[0],p[1],p[2],p[3], p[0]===8520?"radioBranch":"branch"));
+  [[8830,300],[8720,170],[9040,40],[8765,-105],[9120,-255],[8790,-415],[9165,-575],[8835,-755],[9210,-930],[8915,-1100],[9300,-1270],[8990,-1445],[8505,-600],[8580,-675]].forEach(p=>addItem("banana",p[0],p[1]));
+  addItem("apple",9300,-1295); addItem("orange",8520,-600);
+  addStudent(9040,42,"Samy"); addStudent(8545,-678,"Vicky chiquita"); addStudent(8910,-1083,"Vicky grande");
+  addStudent(9300,-1258,"Leandrus");
+  addStudent(9130,-568,"Anto");
+  addItem("radio",8580,-690);
+  addVine(8780,-1430,1880); addVine(9210,-1290,1690); addVine(8585,-690,620);
+
+  // 6) Copa del Gran Árbol: EL GRAN SALTO con plan B amable.
+  // Hay que saltar: la ruta alta es premio. Si el cálculo sale corto, el Gran Árbol te sostiene en una rama inferior.
+  addPlatform(9500,-1315,330,28,"branch");       // Plataforma de impulso del Gran Salto.
+  [[9560,-1370],[9740,-1378]].forEach(p=>addItem("banana",p[0],p[1]));
+
+  // Plataforma exitosa: adrenalina, bananas extra y trompeta del Profe.
+  // World 1 Final Review: solo se alcanza haciendo bien EL Gran Salto, ahora apenas más amable.
+  [[10283,-1390,310,28],[10848,-1410,300,28],[11488,-1395,290,28]].forEach(p=>addPlatform(p[0],p[1],p[2],p[3],"branch"));
+  [[10318,-1445],[10483,-1455],[10653,-1458],[10903,-1470],[11078,-1462],[11553,-1455],[11693,-1445]].forEach(p=>addItem("banana",p[0],p[1]));
+  addItem("apple",10948,-1488);
+  addItem("golden",11658,-1482);
+  addItem("trumpet",10398,-1438);
+
+  // Rama inferior: plan B amable. Está bastante más abajo, así el salto se siente grande.
+  // Permite continuar hacia la escuela, pero no permite volver a la trompeta.
+  [[10120,-1070,610,28],[10820,-1125,540,28],[11490,-1205,470,28],[11940,-1290,310,28]].forEach(p=>addPlatform(p[0],p[1],p[2],p[3],"branch"));
+  [[10210,-1120],[10520,-1130],[10920,-1178],[11220,-1188],[11620,-1260],[12040,-1340]].forEach(p=>addItem("banana",p[0],p[1]));
+  addStudent(10473,-1458,"Feli");
+
+  // Puente final hacia la Escuela del Gran Árbol: conecta ambas rutas sin romper la recompensa.
+  addPlatform(12090,-1340,360,28,"branch");
+  [[12140,-1392],[12300,-1392]].forEach(p=>addItem("banana",p[0],p[1]));
+
+  // 7) Escuela del Gran Árbol: meta alta, integrada entre ramas no jugables.
+  addItem("humming",11720,-1630);
+  addItem("school",12360,-1540);
+}
+function addPlatform(x,y,w,h,type){platforms.push({x,y,w,h,type});}
+function addStoryProp(type,x,y,w,h){storyProps.push({type,x,y,w,h,bob:Math.random()*10,collected:false});}
+function addItem(type,x,y){const sizes={banana:[28,34],apple:[30,30],orange:[30,30],golden:[34,42],rock:[45,34],radio:[62,46],ukulele:[58,36],trumpet:[58,28],humming:[42,32],school:[270,190]};const s=sizes[type]||[28,28];items.push({type,x,y,w:s[0],h:s[1],taken:false,hit:false,bob:Math.random()*10});}
+function addStudent(x,y,name){
+  const data=CLASS_BY_NAME[name]||{name,girl:false,glasses:false};
+  items.push({type:"student",x,y,w:42,h:48,taken:false,name:data.name,girl:data.girl,glasses:data.glasses,bob:Math.random()*10});
+}
+function addVine(x,y,h){vines.push({x,y,w:28,h});items.push({type:"vine",x,y,w:28,h,taken:false,bob:Math.random()*10});}
+
+function update(dt){
+  const groundAccel=1700, airAccel=1080, maxSpeed=356;
+  const groundFriction=.76, airFriction=.957;
+  const jumpVelocity=-655;
+  const gravityUp=1110, gravityDown=1580;
+  const jumpHoldBoost=-560;
+  const maxHoldTime=.145;
+  const cutGravity=2250;
+
+  player.idle+=(!keys.left&&!keys.right&&!keys.jump&&!keys.down&&player.onGround)?dt:-player.idle;
+  if(player.idle>4){idleTarareoTimer+=dt;} else idleTarareoTimer=0;
+  if(idleTarareoTimer>5.5){idleTarareoTimer=0;particles.push({x:player.x+50,y:player.y-10,vx:15,vy:-28,life:1.4,color:'#ffd25b',type:'musicNote'});}
+  if(player.idle<0)player.idle=0;
+  player.stateTimer=Math.max(0,player.stateTimer-dt);
+  player.walkFrame+=Math.abs(player.vx)*dt/45;
+  player.blink+=dt;
+  player.coyote=Math.max(0,player.coyote-dt);
+  player.jumpBuffer=Math.max(0,player.jumpBuffer-dt);
+  player.landTimer=Math.max(0,player.landTimer-dt);
+  radioDanceTimer=Math.max(0,radioDanceTimer-dt);
+  radioBoostTimer=Math.max(0,radioBoostTimer-dt);
+
+  // Beta 1.4: la música también sostiene al Profe.
+  // Radio y ukelele ya no son solo easter eggs: son descansos activos que recuperan energía.
+  if(radioBoostTimer>0){
+    const musicalRecovery = radioEvent.kind==="ukulele" ? 8.2 : 7.2;
+    heart = Math.min(100, heart + musicalRecovery * dt);
+    if(Math.random()<0.06){
+      particles.push({x:player.x+player.w/2,y:player.y+8,vx:(Math.random()-.5)*28,vy:-34-Math.random()*30,life:.9,color:radioEvent.kind==="ukulele"?"#ffcf8a":"#fff1a8",type:"spark"});
+    }
+  }
+
+  if(radioEvent.active){
+    radioEvent.t-=dt;
+    if(radioEvent.t<=0) radioEvent.active=false;
+    else if(Math.random()<0.22){
+      particles.push({x:radioEvent.x+18+Math.random()*35,y:radioEvent.y+5+Math.random()*18,vx:(Math.random()-.5)*34,vy:-52-Math.random()*45,life:1.25,color:radioEvent.kind==="ukulele"?(Math.random()>.5?"#ffb35c":"#fff1cf"):(Math.random()>.5?"#ffd84d":"#fff1cf"),type:"musicNote"});
+    }
+  }
+
+  if(keys.jump) player.jumpBuffer=.12;
+  if(player.stateTimer<=0&&!player.onVine)player.state="run";
+
+  const danceActive = radioDanceTimer>0;
+  if(danceActive) player.jumpBuffer=0;
+
+  const vine=findVine();
+  if(!danceActive && vine&&(keys.jump||keys.down||player.onVine)){
+    player.onVine=true;player.vy=0;player.vx*=.74;
+    player.x+=(vine.x+vine.w/2-(player.x+player.w/2))*.20;
+    if(keys.jump)player.y-=205*dt;
+    if(keys.down)player.y+=205*dt;
+    if(keys.left){player.onVine=false;player.vx=-245;player.vy=-285;player.facing=-1;player.jumpBuffer=0}
+    if(keys.right){player.onVine=false;player.vx=245;player.vy=-285;player.facing=1;player.jumpBuffer=0}
+  }else player.onVine=false;
+
+  if(!player.onVine){
+    const accel=player.onGround?groundAccel:airAccel;
+    if(!danceActive && keys.left){player.vx-=accel*dt;player.facing=-1}
+    if(!danceActive && keys.right){player.vx+=accel*dt;player.facing=1}
+    if(danceActive || (!keys.left&&!keys.right))player.vx*=player.onGround?groundFriction:airFriction;
+    player.vx=Math.max(-maxSpeed,Math.min(maxSpeed,player.vx));
+
+    if(player.jumpBuffer>0 && (player.onGround || player.coyote>0)){
+      player.vy=jumpVelocity;
+      player.onGround=false;
+      player.coyote=0;
+      player.jumpBuffer=0;
+      player.jumpHeldTime=0;
+      player.jumpCut=false;
+      playJump();
+    }
+  }
+
+  windClock+=dt;
+  if(world===2&&windClock>8){wind=(Math.random()>.5?1:-1)*18;windClock=0;}
+  wind*=.985;if(world!==2)wind=0;
+
+  if(!player.onVine){
+    if(keys.jump && player.vy<0 && player.jumpHeldTime<maxHoldTime && !player.jumpCut){
+      player.vy += (gravityUp + jumpHoldBoost)*dt;
+      player.jumpHeldTime += dt;
+    } else {
+      if(!keys.jump && player.vy<0 && player.jumpHeldTime<maxHoldTime) player.jumpCut=true;
+      const g = player.vy<0 ? (player.jumpCut ? cutGravity : gravityUp) : gravityDown;
+      player.vy += g*dt;
+    }
+    player.vx += wind*dt;
+  }
+
+  player.vy=Math.min(player.vy,820);
+
+  if(danceActive){player.vx*=0.62;if(player.onGround)player.vy=0;}
+  player.x+=player.vx*dt;
+  player.y+=player.vy*dt;
+
+  collidePlatforms(dt);
+
+  if(player.y>980)respawn();
+  collectAndCollide();
+  updateEnergy(dt);
+  secretsCheck();
+  spawnLifeDetails(dt);
+  updateLifeDetails(dt);
+  updateParticles(dt);
+  updateFollowers(dt);
+
+  // Cámara 3.0: zona del Gran Árbol estable.
+  // Antes el cambio de mundo estaba justo cerca de la radio y hacía saltar el encuadre.
+  world=(player.x>7800 || player.y<40) ? (player.x<11650?2:3) : 1;
+  updateHighTrumpetState(dt);
+  if(player.x>12280&&player.y<-1440)endGame(true);
+
+  const mode=cameraMode();
+  const lookAhead=player.facing*82+Math.max(-48,Math.min(48,player.vx*.18));
+  const targetX=Math.max(0,Math.min(player.x-W*.40+lookAhead,12800));
+  const verticalLook=mode==="jump" ? (player.vy<-120?-26:player.vy>180?32:0) : 0;
+  let rawY=player.y-H*.66+verticalLook;
+  let minY=-20, maxY=35;
+  // RC1: el Túnel de las Raíces ya no se juega a ciegas en PC.
+  if(player.x>4200 && player.x<7600 && player.y>420){maxY=155;}
+  if(world===2){minY=-1740;maxY=65;}
+  if(world===3){minY=-1780;maxY=-1110;}
+  const targetY=Math.max(minY,Math.min(rawY,maxY));
+
+  const dx=targetX-camX, dy=targetY-camY;
+  const smoothX = Math.abs(dx)<20 ? .035 : .075;
+  const smoothY = Math.abs(dy)<16 ? .030 : .060;
+  camX += dx*smoothX;
+  camY += dy*smoothY;
+  screenShake=Math.max(0,screenShake-dt*12);
+}
+
+function updateHighTrumpetState(dt){
+  // Art/Emotion Pass: la trompeta representa conquistar la altura.
+  // Si el jugador alcanza la trompeta del Gran Salto, el efecto queda hasta la escuela.
+  if(trumpetFinale){
+    highTrumpetLevel = 1;
+    if(Math.random()<0.022){
+      particles.push({x:player.x+player.w/2,y:player.y+4,vx:(Math.random()-.5)*24,vy:-30-Math.random()*24,life:.9,color:'#fff1a8',type:'musicNote'});
+    }
+    return;
+  }
+  // Entra al subir a la Ruta Alta sobre el túnel; si el jugador cae, se apaga con fade.
+  const onTunnelHighRoute = player.x>3300 && player.x<7800 && player.y<360;
+  const reachedUpperTree = player.x>=7800 && player.y<120;
+  const onUpperCanopy = player.x>=9000 && player.y<-1260;
+
+  if(onTunnelHighRoute || (highTrumpetTriumph && (reachedUpperTree || onUpperCanopy))){
+    highTrumpetLevel = Math.min(1, highTrumpetLevel + dt*2.2);
+    if(player.x>7800 && player.y<160) highTrumpetTriumph = true;
+    if(highTrumpetLevel>.55 && Math.random()<0.018){
+      particles.push({x:player.x+player.w/2,y:player.y+4,vx:(Math.random()-.5)*22,vy:-26-Math.random()*22,life:.9,color:'#fff1a8',type:'musicNote'});
+    }
+  }else{
+    highTrumpetLevel = Math.max(0, highTrumpetLevel - dt*2.8);
+  }
+
+  // Si cae a la ruta baja antes del Gran Árbol o a la rama inferior del final, la trompeta se despide.
+  if((player.x<7800 && player.y>400) || (player.x>9900 && player.x<12150 && player.y>-1260)){
+    highTrumpetTriumph = false;
+  }
+}
+
+function cameraMode(){
+  if(player.onVine) return "climb";
+  if(!player.onGround) return "jump";
+  return "normal";
+}
+
+function findVine(){for(const v of vines){if(rect(player,{x:v.x-28,y:v.y,w:v.w+56,h:v.h}))return v;}return null;}
+function collidePlatforms(dt){
+  let grounded=false;
+  if(!player.onVine){
+    for(const p of platforms){
+      const wasAbove=player.y+player.h-player.vy*dt<=p.y+14;
+      if(rect(player,p)&&player.vy>=0&&wasAbove){
+        if(!player.onGround && player.vy>350){ screenShake=2; player.landTimer=.16; }
+        player.y=p.y-player.h;
+        player.vy=0;
+        player.onGround=true;
+        player.coyote=.10;
+        player.jumpCut=false;
+        player.jumpHeldTime=0;
+        grounded=true;
+        player.spawnX=player.x;
+        player.spawnY=player.y;
+      }
+    }
+    if(!grounded){
+      if(player.onGround) player.coyote=.10;
+      player.onGround=false;
+    }
+  }else player.onGround=false;
+}
+
+function mochilaCapacity(){
+  // Energía positiva: ayudar, comer y tocar música aumenta la capacidad del Profe.
+  // No castiga explorar; habilita llevar más mochilas.
+  if(heart>=70) return 6;
+  if(heart>=35) return 4;
+  return 2;
+}
+
+function updateEnergy(dt){
+  // La energía ya no baja por caminar ni reinicia el nivel.
+  // Ahora representa entusiasmo/fuerza acumulada para poder cargar más mochilas.
+  heart=Math.max(0,Math.min(100,heart));
+}
+
+function collectAndCollide(){
+
+  // Mochilas: pequeño storytelling del aula real.
+  for(const p of storyProps){
+    if(p.collected || p.type!=="backpack") continue;
+    const box={x:p.x,y:p.y,w:p.w,h:p.h};
+    if(rect(player,box)){
+      const cap=mochilaCapacity();
+      if(mochilas>=cap){
+        msg("🎒 el Profe necesita más energía para otra mochila",1700);
+        continue;
+      }
+      p.collected=true;
+      mochilas++;
+      heart=Math.min(100,heart+6);
+      msg(`🎒 mochila rescatada (${mochilas}/${mochilaCapacity()})`,1500);
+      burst(p.x,p.y,"#67b5ff",14);
+      if(navigator.vibrate) navigator.vibrate(18);
+    }
+  }
+  for(const o of items){
+    if(o.type==="vine"||o.taken)continue;
+    if(["banana","golden","student","apple","orange","humming"].includes(o.type)&&rect(player,o)){
+      o.taken=true;
+      if(o.type==="banana"){bananas++;heart=Math.min(100,heart+2);burst(o.x,o.y,"#ffd84d",7);playCollect();}
+      if(o.type==="apple"||o.type==="orange"){rareFruits++;heart=Math.min(100,heart+8);burst(o.x,o.y,o.type==="apple"?"#d84435":"#ff8a2a",12);playFanfare();}
+      if(o.type==="golden"){bananas+=3;heart=100;secrets.gold=true;setState("dance",1.7);burst(o.x,o.y,"#fff36a",18);playFanfare();}
+      if(o.type==="student"){
+        students++;
+        if(o.name && !rescuedStudents.includes(o.name)) rescuedStudents.push(o.name);
+        heart=Math.min(100,heart+12);
+        setState("hug",1.1);
+        followers.push({x:o.x,y:o.y,girl:o.girl,glasses:o.glasses,name:o.name,delay:followers.length*0.18});
+        burst(o.x,o.y,"#f08a8a",14);
+        const rescueMessages=[`✨ ¡Se suma ${o.name}!`,`✨ ¡${o.name} viaja con vos!`,`✨ ¡${o.name} se unió al grupo!`];
+        msg(rescueMessages[Math.floor(Math.random()*rescueMessages.length)],3400);
+        if(rescuedStudents.length===CLASS_ROSTER.length) msg("✨ ¡Toda la clase está junta!",3900);
+        playStudent();
+      }
+      if(o.type==="humming"){secrets.hum=true;heart=Math.min(100,heart+8);burst(o.x,o.y,"#4cc6e2",16);msg("🐦 el colibrí dejó una semillita",1500);playFanfare();}
+      }
+    if(o.type==="radio" && !o.played && rect(player,o)){triggerRadioDance(o);}
+    if(o.type==="ukulele" && !o.played && rect(player,o)){triggerUkuleleDance(o);}
+    if(o.type==="trumpet" && !o.played && rect(player,o)){triggerTrumpetDance(o);}
+    if(o.type==="rock"&&!o.hit&&rect(player,o)){o.hit=true;heart=Math.max(0,heart-6);noBumps=false;screenShake=5;player.vx=-player.facing*120;player.vy=-170;playBump();}
+  }
+}
+function secretsCheck(){
+  if(false&&!secrets.uke&&player.idle>18&&player.x>1400&&player.x<1750){secrets.uke=true;playUkulele();}
+  if(!secrets.rain&&player.idle>10&&world===2&&Math.random()<.01){secrets.rain=true;heart=Math.min(100,heart+5);msg("🌧️ lluvia sorpresa",1600);playRain();}
+  if(!secrets.butterfly&&secrets.uke&&player.x>1760){secrets.butterfly=true;addButterfly(player.x+160,player.y-80);}
+}
+function triggerRadioDance(o){
+  o.played=true;
+  secrets.radio=true;
+  radioDanceTimer=4.2;
+  radioBoostTimer=5.0;
+  radioEvent={active:true,x:o.x,y:o.y,t:5.0,kind:"radio"};
+  setState("dance",4.2);
+  heart=Math.min(100,heart+24);
+  msg("📻 la música acelera y recarga",1500);
+  playRadioJingle();
+  if(navigator.vibrate) navigator.vibrate([18,35,18]);
+  for(let i=0;i<16;i++){
+    particles.push({x:o.x+25,y:o.y+10,vx:(Math.random()-.5)*70,vy:-45-Math.random()*85,life:1.3+Math.random()*.5,color:i%2?"#ffd84d":"#fff1cf",type:"musicNote"});
+  }
+}
+function triggerUkuleleDance(o){
+  o.played=true;
+  secrets.uke=true;
+  radioDanceTimer=3.6;
+  radioBoostTimer=4.4;
+  radioEvent={active:true,x:o.x,y:o.y,t:4.4,kind:"ukulele"};
+  setState("dance",3.6);
+  heart=Math.min(100,heart+22);
+  msg("🎸 la melodía del aula recarga energía",1500);
+  playUkulele();
+  if(navigator.vibrate) navigator.vibrate([14,30,14]);
+  for(let i=0;i<14;i++){
+    particles.push({x:o.x+22,y:o.y+5,vx:(Math.random()-.5)*65,vy:-42-Math.random()*75,life:1.2+Math.random()*.45,color:i%2?"#ffb35c":"#fff1cf",type:"musicNote"});
+  }
+}
+function triggerTrumpetDance(o){
+  o.played=true;
+  trumpetFinale=true;
+  highTrumpetTriumph=true;
+  highTrumpetLevel=1;
+  radioDanceTimer=3.9;
+  radioBoostTimer=5.2;
+  radioEvent={active:true,x:o.x,y:o.y,t:5.2,kind:"trumpet"};
+  setState("dance",3.9);
+  heart=Math.min(100,heart+26);
+  msg("🎺 ¡gran salto! la trompeta levanta la selva",1700);
+  playTrumpetFanfare();
+  if(navigator.vibrate) navigator.vibrate([20,35,20,35,20]);
+  for(let i=0;i<20;i++){
+    particles.push({x:o.x+24,y:o.y,vx:(Math.random()-.5)*85,vy:-55-Math.random()*95,life:1.3+Math.random()*.55,color:i%2?"#ffd25b":"#fff1cf",type:"musicNote"});
+  }
+}
+
+function setState(s,t){player.state=s;player.stateTimer=t;}
+function respawn(){msg('🌿 probá otra vez',900);noBumps=false;screenShake=6;playBump();player.x=player.spawnX;player.y=player.spawnY;player.vx=0;player.vy=0;player.jumpCut=false;player.jumpHeldTime=0;}
+function rect(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
+function msg(t,ms){message=t;setTimeout(()=>{if(message===t)message=""},ms);}
+
+function burst(x,y,color,n){
+  for(let i=0;i<n;i++)particles.push({x:x+15,y:y+15,vx:(Math.random()-.5)*120,vy:(Math.random()-.9)*130,life:.8,color,type:"dot"});
+  if(n>=12){
+    for(let i=0;i<5;i++)particles.push({x:x+15,y:y+8,vx:(Math.random()-.5)*80,vy:-60-Math.random()*60,life:1.1,color:"#fff1cf",type:"spark"});
+  }
+}
+function addButterfly(x,y){particles.push({x,y,vx:40,vy:0,life:12,color:"#d96cff",type:"butterfly",baseY:y});}
+
+function spawnLifeDetails(dt){
+  lifeClock += dt;
+
+  // Hojas variadas: pocas, distintas, suaves.
+  if(Math.random()<0.014){
+    particles.push({
+      x:camX+Math.random()*W,
+      y:camY-25,
+      vx:-10-Math.random()*35,
+      vy:18+Math.random()*32,
+      life:4+Math.random()*3,
+      color:Math.random()>.5?"#5eb85a":"#7ccf62",
+      type:"leaf",
+      spin:Math.random()*6
+    });
+  }
+
+  // Mariposas curiosas: no vuelan recto.
+  if(Math.random()<0.003 && curiousButterflies.length<3){
+    curiousButterflies.push({
+      x:camX+W+40,
+      y:camY+120+Math.random()*250,
+      vx:-18-Math.random()*22,
+      baseY:camY+120+Math.random()*250,
+      life:10,
+      phase:Math.random()*6
+    });
+  }
+
+  // Pajaritos que se posan y salen volando si el profe se acerca.
+  if(Math.random()<0.0025 && ambientBirds.length<3){
+    const bx=camX+120+Math.random()*(W-240);
+    const by=camY+95+Math.random()*150;
+    ambientBirds.push({x:bx,y:by,vx:0,vy:0,life:12,scared:false});
+  }
+}
+
+function updateLifeDetails(dt){
+  curiousButterflies = curiousButterflies.filter(b=>b.life>0);
+  for(const b of curiousButterflies){
+    b.life-=dt;
+    b.x+=b.vx*dt;
+    b.y=b.baseY+Math.sin(elapsed*4+b.phase)*32+Math.sin(elapsed*9+b.phase)*7;
+  }
+
+  ambientBirds = ambientBirds.filter(b=>b.life>0);
+  for(const b of ambientBirds){
+    const dx=(player.x+player.w/2)-b.x;
+    const dy=(player.y+player.h/2)-b.y;
+    if(!b.scared && Math.abs(dx)<120 && Math.abs(dy)<120){
+      b.scared=true;
+      b.vx=dx<0?90:-90;
+      b.vy=-95;
+      msg("🐦",650);
+    }
+    if(b.scared){
+      b.x+=b.vx*dt;
+      b.y+=b.vy*dt;
+      b.vy+=20*dt;
+    }else{
+      b.y+=Math.sin(elapsed*3+b.x)*6*dt;
+    }
+    b.life-=dt;
+  }
+}
+
+function drawLifeDetails(){
+  // Mariposas
+  for(const b of curiousButterflies){
+    const a=sx(b.x), c=sy(b.y);
+    if(!drawAsset("butterflyLife",a,c,34,28)){
+      ctx.fillStyle="#f08ad8";ctx.font="18px Arial";ctx.fillText("🦋",a,c);
+    }
+  }
+  // Pajaritos
+  for(const bird of ambientBirds){
+    const a=sx(bird.x), c=sy(bird.y);
+    ctx.save();
+    if(bird.vx<0){ctx.translate(a+34,c);ctx.scale(-1,1);drawAsset("birdLife",0,0,34,26);}
+    else drawAsset("birdLife",a,c,34,26);
+    ctx.restore();
+  }
+}
+
+function updateParticles(dt){
+  if(Math.random()<0.018){
+    particles.push({x:camX+Math.random()*W,y:camY-20,vx:-15-Math.random()*25,vy:20+Math.random()*18,life:4+Math.random()*2,color:"#5eb85a",type:"leaf"});
+  }
+  if(Math.random()<0.004){
+    particles.push({x:camX+W+30,y:camY+80+Math.random()*220,vx:-25-Math.random()*20,vy:0,life:8,color:"#f08ad8",type:"butterflyTiny",baseY:camY+80+Math.random()*220});
+  }
+  particles=particles.filter(p=>p.life>0);
+  for(const p of particles){
+    p.life-=dt;
+    if(p.type==="butterfly"){p.x+=p.vx*dt;p.y=p.baseY+Math.sin(elapsed*5)*18;}
+    else if(p.type==="leaf"){p.x+=p.vx*dt+Math.sin(elapsed*4+p.x)*12*dt;p.y+=p.vy*dt;}
+    else if(p.type==="butterflyTiny"){p.x+=p.vx*dt;p.y+=Math.sin(elapsed*5+p.x)*18*dt;}
+    else if(p.type==="musicNote"){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=15*dt;}
+    else{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=180*dt;}
+  }
+}
+function updateFollowers(dt){
+  followers.forEach((f,i)=>{
+    const gap=62+i*38;
+    const rowOffset=(i%2)*8;
+    const targetX=player.x-(player.facing>=0?gap:-gap);
+    const danceHop=radioDanceTimer>0 ? Math.sin(elapsed*13+i)*8 : 0;
+    const targetY=player.y+32+rowOffset+Math.sin(elapsed*3+i)*4-danceHop;
+    f.x+=(targetX-f.x)*0.032;
+    f.y+=(targetY-f.y)*0.052;
+    f.face = targetX>f.x ? 1 : -1;
+  });
+}
+
+function hud(){
+  document.getElementById("worldName").textContent=worldNames[world];
+  document.getElementById("bananas").textContent=bananas;
+  document.getElementById("fruits").textContent=rareFruits;
+  document.getElementById("students").textContent=students+"/"+CLASS_ROSTER.length;
+  const mochilaHud=document.getElementById("mochilas"); if(mochilaHud) mochilaHud.textContent=mochilas+"/"+mochilaCapacity();
+  document.getElementById("heartFill").style.width=heart+"%";
+  let r=Math.max(0,Math.ceil(totalTime-elapsed));
+  document.getElementById("time").textContent=String(Math.floor(r/60)).padStart(2,"0")+":"+String(r%60).padStart(2,"0");
+  layers=heart>82?5:heart>60?4:heart>35?3:2;
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const shakeX=(Math.random()-.5)*screenShake;
+  const shakeY=(Math.random()-.5)*screenShake;
+  ctx.save();
+  ctx.translate(shakeX,shakeY);
+  drawSky();drawBackdrop();drawNaturalForest();drawContinuousGround();drawCaveAmbience();drawStoryProps();drawPlatforms();drawItems();drawFollowers();drawParticles();drawPlayer();drawForegroundBranches();drawMessage();
+  ctx.restore();
+}
+function sx(x){return Math.round(x-camX)}
+function sy(y){return Math.round(y-camY)}
+function px(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
+function circ(x,y,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.arc(Math.round(x),Math.round(y),r,0,Math.PI*2);ctx.fill()}
+function oval(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(Math.round(x),Math.round(y),rx,ry,0,0,Math.PI*2);ctx.fill()}
+
+function drawSky(){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#55b9e8");
+  g.addColorStop(.45,"#8ed7cb");
+  g.addColorStop(1,"#d7f1c9");
+  ctx.fillStyle=g;
+  ctx.fillRect(0,0,W,H);
+
+  // sol suave detrás de neblina
+  ctx.fillStyle="rgba(255,228,115,.25)";
+  ctx.beginPath();ctx.arc(785,78,62,0,Math.PI*2);ctx.fill();
+
+  // nubes más suaves
+  for(let i=0;i<9;i++)cloud(i*185-(camX*.13)%185,58+(i%3)*44);
+
+  // rayos de luz de selva escolar
+  ctx.strokeStyle="rgba(255,242,180,.16)";
+  ctx.lineWidth=28;
+  for(let i=0;i<6;i++){
+    ctx.beginPath();
+    ctx.moveTo(110+i*190,0);
+    ctx.lineTo(-35+i*190,540);
+    ctx.stroke();
+  }
+
+  // siluetas lejanas
+  ctx.fillStyle="rgba(45,115,89,.30)";
+  for(let i=0;i<8;i++){
+    let x=i*220-(camX*.08)%220;
+    ctx.beginPath();
+    ctx.moveTo(x,540);
+    ctx.lineTo(x+105,230+(i%3)*42);
+    ctx.lineTo(x+220,540);
+    ctx.fill();
+  }
+
+  if(secrets.rain){
+    ctx.strokeStyle="#5078b455";
+    ctx.lineWidth=1;
+    for(let i=0;i<100;i++){
+      let a=(i*37+elapsed*120)%W,b=(i*71+elapsed*170)%H;
+      ctx.beginPath();ctx.moveTo(a,b);ctx.lineTo(a-8,b+18);ctx.stroke();
+    }
+  }
+}
+
+function cloud(x,y){
+  if(drawAsset("cloud",x,y-14,128,64)) return;
+  px(x,y,70,16,"#ffffffe6");px(x+18,y-13,42,22,"#ffffffe6");px(x+52,y-7,35,18,"#ffffffe6");
+}
+
+function drawDistantBirds(){
+  ctx.strokeStyle="rgba(30,70,90,.45)";
+  ctx.lineWidth=2;
+  for(let i=0;i<5;i++){
+    let x=(i*260 + elapsed*18 - camX*.08)%1100-70;
+    let y=95+(i%3)*38+Math.sin(elapsed+i)*8;
+    if(!drawAsset("tiny_bird",x,y-12,36,28)){
+      ctx.beginPath();
+      ctx.moveTo(x,y);
+      ctx.quadraticCurveTo(x+8,y-8,x+16,y);
+      ctx.quadraticCurveTo(x+24,y-8,x+32,y);
+      ctx.stroke();
+    }
+  }
+}
+
+function drawNaturalForest(){
+  // Árboles de decoración: pertenecen al mundo, no a las plataformas.
+  const groundY = world===3 ? -1220 : 450;
+  const layerBack = [
+    {x:120,y:groundY,kind:"palm_a",s:1.15},
+    {x:520,y:groundY,kind:"small_tree",s:1.05},
+    {x:930,y:groundY,kind:"palm_b",s:1.05},
+    {x:1490,y:groundY,kind:"palm_c",s:1.12},
+    {x:2050,y:groundY,kind:"small_tree",s:1.0},
+    {x:2620,y:groundY,kind:"palm_a",s:1.08},
+    {x:3920,y:505,kind:"small_tree",s:1.05},
+    {x:5250,y:565,kind:"small_tree",s:1.0},
+    {x:7900,y:450,kind:"small_tree",s:.95},
+    {x:9700,y:-1308,kind:"small_tree",s:.88},
+  ];
+  for(const t of layerBack){
+    const a=sx(t.x), b=sy(t.y);
+    if(a<-180||a>W+180||b<-220||b>H+220) continue;
+    const w=(t.kind==="small_tree"?124:132)*t.s;
+    const h=(t.kind==="small_tree"?138:150)*t.s;
+    drawAsset(t.kind,a-w/2,b-h+8,w,h);
+  }
+
+  // Detalles de suelo, siempre pegados a tierra.
+  for(let i=0;i<18;i++){
+    const x=260+i*350;
+    const y=x>11000?-1220:450;
+    const a=sx(x), b=sy(y);
+    if(a<-80||a>W+80||b<-80||b>H+80) continue;
+    if(i%3===0) drawAsset("mushrooms",a,b-58,52,52);
+    if(i%3===1) drawAsset("bush",a-8,b-50,64,50);
+  }
+}
+
+function drawBackdrop(){
+  for(let i=0;i<9;i++){let x=i*280-(camX*.28)%280;ctx.fillStyle="#5aa084";ctx.beginPath();ctx.moveTo(x,H);ctx.lineTo(x+130,170+(i%2)*40-camY*.03);ctx.lineTo(x+270,H);ctx.fill();}
+  drawDistantBirds();
+  // Beta097: decorative trees are now handled by drawNaturalForest(), not attached to platforms.
+  if(camX>7600&&camX<10150){
+    const tx=sx(8950),ty=sy(-1260);
+    px(tx-190,ty,380,1700,"#4b2c17");px(tx-95,ty,190,1700,"#7a4b26");
+    // Copa del Gran Árbol: más ancha y alta para que se sienta como una entidad del mundo.
+    for(let i=0;i<18;i++)oval(tx-430+i*52+Math.sin(elapsed*1.2+i)*6,ty-150+(i%5)*42,120,42,"#2f8845");
+    for(let i=0;i<15;i++)oval(tx-360+i*56+Math.cos(elapsed+i)*5,ty-35+(i%4)*52,110,38,"#3b9b4b");
+    for(let yy=0;yy<1600;yy+=110){oval(tx-130+Math.sin(elapsed+yy)*3,ty+yy,105,24,"#346e34");oval(tx+140+Math.cos(elapsed+yy)*3,ty+yy+45,115,26,"#346e34");}
+    for(let i=0;i<14;i++)oval(tx-320+i*50+Math.sin(elapsed*1.2+i)*5,ty+130+(i%4)*75,100,32,"#2f8845");
+  }
+  for(let i=0;i<14;i++){let a=sx(i*330+120),b=sy(380-(i%4)*160);px(a,b,28,260,"#6b401f");px(a+8,b,12,260,"#8a5928");ctx.fillStyle="#2f8845";for(let j=0;j<7;j++){ctx.beginPath();ctx.ellipse(a+14+Math.cos(j)*45+Math.sin(elapsed+j+i)*4,b+10+Math.sin(j)*20,48,13,j,0,Math.PI*2);ctx.fill();}}
+  ctx.strokeStyle="#ffe67855";ctx.lineWidth=3;for(let i=0;i<9;i++){ctx.beginPath();ctx.moveTo(sx(6800+i*16),sy(-560));ctx.lineTo(sx(6930+i*12),sy(-370));ctx.stroke();}
+}
+
+function drawContinuousGround(){
+  // Beta 1.7: el piso visual ya no encierra todo; deja aire y vacío en los saltos.
+  drawGroundBand(0,3350,450,"#58a947","#5c3820");
+  drawGroundBand(4700,2550,555,"#4f8b45","#4a3020");
+  drawGroundBand(7800,900,450,"#58a947","#5c3820");
+  drawGroundBand(8580,1220,450,"#58a947","#5c3820");
+  drawGroundBand(11650,1650,-1390,"#58a947","#5c3820");
+}
+
+function drawGroundBand(worldX, width, groundY, grassColor, dirtColor){
+  const a=sx(worldX);
+  const b=sy(groundY);
+  if(a > W+900 || a+width < -900) return;
+
+  px(a,b,width,2200,dirtColor);
+  px(a,b,width,24,grassColor);
+  px(a,b+24,width,10,"#3f7f35");
+
+  for(let k=0;k<width;k+=32){
+    const tx=a+k;
+    if(tx<-60||tx>W+60) continue;
+    px(tx,b+45,20,12,"#7c4b24");
+    px(tx+12,b+72,20,12,"#3e2615");
+    px(tx+4,b+105,18,10,"#6a3f20");
+  }
+
+  for(let k=20;k<width;k+=150){
+    const tx=a+k;
+    if(tx<-60||tx>W+60) continue;
+    drawGrass(tx,b-8);
+    if(k%300===20) drawFlower(tx+42,b-10);
+  }
+}
+
+function drawPlatformAssetTiled(a,b,w,h){
+  const tileW=110;
+  for(let x=0;x<w;x+=tileW){
+    const drawW=Math.min(tileW,w-x);
+    if(!drawAsset("platform_grass",a+x,b-4,drawW+4,50)) return false;
+  }
+  return true;
+}
+
+function drawPlatforms(){
+  for(const p of platforms){
+    let a=sx(p.x),b=sy(p.y);
+    if(a<-1000||a>W+1000||b<-1200||b>H+1200)continue;
+
+    if(p.type==="ground"){
+      continue;
+    }else if(p.type==="cave"){
+      drawCavePlatform(a,b,p.w,p.h,p.x);
+    }else if(p.type==="radioBranch"){
+      drawBranchSupport(a,b,p.w,p.h,true,p.x);
+      if(!drawPlatformAssetTiled(a,b,p.w,p.h)){
+        px(a,b,p.w,p.h,"#6d4627");
+        px(a,b,p.w,12,"#79b957");
+        px(a+8,b+18,p.w-16,8,"#4f301c");
+      }
+      drawGrass(a+40,b-8);
+      drawGrass(a+150,b-8);
+      drawRoot(a+55,b+24,40);
+      drawRoot(a+180,b+24,32);
+    }else{
+      drawBranchSupport(a,b,p.w,p.h,false,p.x);
+      if(!drawPlatformAssetTiled(a,b,p.w,p.h)){
+        px(a,b,p.w,p.h,"#6d4627");
+        px(a,b,p.w,12,"#64ad52");
+        px(a+8,b+16,p.w-16,8,"#4f301c");
+      }
+      for(let kk=14;kk<p.w-10;kk+=26){oval(a+kk,b+25,11,8,"#5a351c");}
+      drawBranchBumps(a,b,p.w);
+      drawGrass(a+20,b-8);
+      if(p.w>180) drawFlower(a+p.w-45,b-10);
+      if(p.w>150){
+        drawRoot(a+35,b+24,28);
+        drawRoot(a+p.w-44,b+24,22);
+      }
+    }
+  }
+}
+
+function drawBranchSupport(a,b,w,h,isSun,worldX){
+  // Beta 0.97: las plataformas tienen raíces/ramas, no árboles enteros flotando.
+  const kind=Math.abs(Math.floor(worldX/70))%3;
+  if(kind===0){
+    // raíz colgante corta
+    for(let k=35;k<w;k+=75) drawRoot(a+k,b+h,22+(k%2)*10);
+  }else if(kind===1){
+    // rama lateral de apoyo, sin tronco completo
+    ctx.strokeStyle="#6b401f";
+    ctx.lineWidth=16;
+    ctx.beginPath();
+    ctx.moveTo(a-70,b+h+28);
+    ctx.quadraticCurveTo(a+w*.22,b+h+6,a+w*.52,b+h+8);
+    ctx.stroke();
+    ctx.strokeStyle="#8a5928";
+    ctx.lineWidth=6;
+    ctx.beginPath();
+    ctx.moveTo(a-64,b+h+25);
+    ctx.quadraticCurveTo(a+w*.22,b+h+3,a+w*.50,b+h+4);
+    ctx.stroke();
+  }else{
+    for(let k=30;k<w;k+=70) drawRoot(a+k,b+h,20+(k%2)*12);
+  }
+  if(isSun){
+    ctx.fillStyle="rgba(255,236,120,.12)";
+    ctx.beginPath();
+    ctx.ellipse(a+w/2,b-18,w*.35,24,0,0,Math.PI*2);
+    ctx.fill();
+  }
+}
+
+function drawBranchBumps(a,b,w){
+  for(let k=18;k<w;k+=58){
+    oval(a+k,b+17,10,4,"#84532b");
+  }
+}
+
+function drawGrass(x,y){px(x,y+5,7,12,"#2f8845");px(x+6,y+2,7,15,"#3b9b50");px(x+13,y+6,7,11,"#2f8845");}
+function drawFlower(x,y){
+  const breathe=Math.sin(elapsed*2+x*.03)*1.2;
+  if(drawAsset && drawAsset("flower",x-8,y-14+breathe,24,24)) return;
+  circ(x,y+breathe,3,"#fff1cf");circ(x+4,y+breathe,3,"#f08a8a");circ(x+2,y-3+breathe,3,"#ffd25b");px(x+2,y+4,3,10,"#2f8845");
+}
+function drawRoot(x,y,len){
+  ctx.strokeStyle="#3e2615";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+8,y+len*.45,x-3,y+len);ctx.stroke();
+}
+function drawShadow(x,y,w){ctx.fillStyle="rgba(0,0,0,.22)";ctx.beginPath();ctx.ellipse(x,y,w,7,0,0,Math.PI*2);ctx.fill();}
+
+function drawCaveAmbience(){
+  // Cueva visual: techo irregular y sombra suave. No colisiona, solo da identidad al Túnel de las Raíces.
+  const x0=3820, x1=7480, yTop=470;
+  const a0=sx(x0), a1=sx(x1), top=sy(yTop);
+  if(a1<-300||a0>W+300) return;
+  ctx.save();
+  ctx.fillStyle="rgba(35,23,16,.46)";
+  ctx.beginPath();
+  ctx.moveTo(a0, top+20);
+  for(let x=x0;x<=x1;x+=120){
+    const yy=yTop + Math.sin(x*.015)*28 + (Math.floor(x/240)%2)*22;
+    ctx.lineTo(sx(x), sy(yy));
+  }
+  ctx.lineTo(a1, H+400); ctx.lineTo(a0, H+400); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle="rgba(34,22,14,.62)"; ctx.lineWidth=16; ctx.lineCap="round";
+  ctx.beginPath();
+  for(let x=x0;x<=x1;x+=130){
+    const yy=yTop + Math.sin(x*.015)*28 + (Math.floor(x/240)%2)*22;
+    if(x===x0) ctx.moveTo(sx(x),sy(yy)); else ctx.lineTo(sx(x),sy(yy));
+  }
+  ctx.stroke();
+  // Piedritas, musgo y honguitos del túnel.
+  for(let x=x0+180;x<x1-120;x+=360){
+    const b=sy(610 + Math.sin(x*.01)*18);
+    const a=sx(x);
+    if(a<-80||a>W+80) continue;
+    oval(a,b+8,24,12,"rgba(42,34,30,.65)");
+    oval(a+30,b+5,12,8,"rgba(75,68,61,.75)");
+    px(a-4,b-6,38,6,"#315824");
+    if(Math.floor(x/360)%2===0) drawAsset("mushrooms",a+38,b-35,42,42);
+  }
+  // Gotitas muy sutiles.
+  ctx.strokeStyle="rgba(170,230,255,.42)"; ctx.lineWidth=2;
+  for(let i=0;i<7;i++){
+    const wx=x0+380+i*470;
+    const a=sx(wx), b=sy(yTop+60+(i%3)*30 + ((elapsed*35+i*47)%70));
+    if(a<-20||a>W+20) continue;
+    ctx.beginPath(); ctx.moveTo(a,b); ctx.lineTo(a-2,b+7); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawCavePlatform(a,b,w,h,worldX){
+  px(a,b,w,h,"#4a3020");
+  px(a,b,w,10,"#315824");
+  px(a,b+10,w,8,"#6a4a2b");
+  for(let k=18;k<w;k+=45){ oval(a+k,b+24,13,8,"#2f241d"); }
+  drawRoot(a+34,b-42,48); if(w>250) drawRoot(a+w-44,b-58,62);
+  if(w>300){ drawGrass(a+20,b-8); drawAsset("mushrooms",a+w-54,b-36,38,38); }
+}
+
+function drawCaveMouth(a,b,w,h){
+  ctx.save();
+  ctx.fillStyle="rgba(35,22,15,.78)";
+  ctx.beginPath();
+  ctx.ellipse(a+w/2,b+h*.62,w*.50,h*.58,0,Math.PI,0,true);
+  ctx.fill();
+  ctx.strokeStyle="#4a3020"; ctx.lineWidth=18;
+  ctx.beginPath(); ctx.ellipse(a+w/2,b+h*.62,w*.52,h*.60,0,Math.PI,0,true); ctx.stroke();
+  for(let i=0;i<5;i++) drawRoot(a+35+i*w/6,b+10,50+(i%2)*28);
+  ctx.restore();
+}
+function drawTreeBase(a,b,w,h){
+  ctx.save();
+  // Base pesada del Gran Árbol: raíces, piedras y flores para que no parezca flotando.
+  px(a,b+h*.62,w,42,"#4f301c");
+  px(a,b+h*.52,w,18,"#58a947");
+  for(let i=0;i<7;i++){
+    const rx=a+80+i*w/8;
+    ctx.strokeStyle=i%2?"#6b401f":"#7a4b26";
+    ctx.lineWidth=18-(i%3)*3;
+    ctx.lineCap="round";
+    ctx.beginPath();
+    ctx.moveTo(rx,b+10);
+    ctx.quadraticCurveTo(rx-60+i*16,b+h*.55,rx-120+i*42,b+h*.85);
+    ctx.stroke();
+  }
+  for(let i=0;i<8;i++){
+    const px0=a+40+i*w/9;
+    oval(px0,b+h*.73+(i%2)*8,42,18,i%2?"#5d4638":"#6b5140");
+    if(i%2===0) drawFlower(px0+22,b+h*.52);
+  }
+  ctx.restore();
+}
+
+function drawRootCurtain(a,b,w,h,seed){
+  ctx.save(); ctx.strokeStyle="#3e2615"; ctx.lineCap="round";
+  for(let i=0;i<7;i++){
+    const x=a+20+i*w/7+Math.sin(elapsed*1.3+seed+i)*4;
+    ctx.lineWidth=5+(i%3);
+    ctx.beginPath(); ctx.moveTo(x,b); ctx.quadraticCurveTo(x-25+i*7,b+h*.45,x+Math.sin(i)*18,b+h); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawDecorativeBranch(a,b,w,h,front){
+  ctx.save();
+  ctx.globalAlpha=front?.96:.72;
+  ctx.strokeStyle=front?"#5b351c":"#6b401f"; ctx.lineWidth=h*.36; ctx.lineCap="round";
+  ctx.beginPath(); ctx.moveTo(a,b+h*.55); ctx.bezierCurveTo(a+w*.28,b-h*.25,a+w*.62,b+h*1.2,a+w,b+h*.42); ctx.stroke();
+  ctx.strokeStyle=front?"#8a5928":"#9a6534"; ctx.lineWidth=h*.11;
+  ctx.beginPath(); ctx.moveTo(a+18,b+h*.45); ctx.bezierCurveTo(a+w*.30,b-h*.18,a+w*.60,b+h*.95,a+w-20,b+h*.34); ctx.stroke();
+  for(let i=0;i<8;i++) oval(a+w*(.12+i*.11), b+(i%2?0:18)+Math.sin(elapsed+i)*3, 42,14, front?"#2f8845":"#3b9b4b");
+  ctx.restore();
+}
+function drawForegroundBranches(){
+  for(const p of storyProps){
+    if(p.type!=="branchFront") continue;
+    const a=sx(p.x), b=sy(p.y);
+    if(a<-900||a>W+900||b<-500||b>H+500) continue;
+    drawDecorativeBranch(a,b,p.w,p.h,true);
+  }
+}
+
+
+function drawBrokenBus(a,b,w,h){
+  ctx.save();
+  // Colectivo escolar grande, parcialmente oculto por humo para que se entienda
+  // que está averiado sin competir visualmente con el Profe Gorial.
+  ctx.fillStyle="rgba(56,34,18,.30)";
+  ctx.beginPath(); ctx.ellipse(a+w*.48,b+h*.93,w*.48,h*.13,0,0,Math.PI*2); ctx.fill();
+
+  // carrocería principal
+  px(a+10,b+34,w-38,h-54,"#f6c54a");
+  px(a+36,b+13,w*.55,h*.25,"#f6c54a");
+  px(a+w*.64,b+30,w*.25,h*.35,"#f6c54a");
+  px(a+14,b+72,w-48,14,"#7a572b");
+  px(a+18,b+88,w-60,8,"#d99d2b");
+
+  // ventanas grandes
+  const winY=b+43;
+  const gap=w*.12;
+  for(let i=0;i<4;i++){
+    const wx=a+36+i*gap;
+    px(wx,winY,w*.085,26,"#8fd4ff");
+    px(wx+4,winY+4,w*.065,7,"#dff6ff");
+  }
+  px(a+w*.66,b+44,w*.17,26,"#8fd4ff");
+
+  // trompa golpeada y capó abierto
+  ctx.fillStyle="#f6c54a";
+  ctx.beginPath(); ctx.moveTo(a+w-46,b+58); ctx.lineTo(a+w+16,b+68); ctx.lineTo(a+w-48,b+84); ctx.fill();
+  ctx.strokeStyle="#5b361d"; ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(a+w-22,b+49); ctx.lineTo(a+w+34,b+24); ctx.stroke();
+
+  // ruedas grandes
+  circ(a+82,b+h-18,26,"#1f1f24"); circ(a+82,b+h-18,11,"#7d8792");
+  circ(a+w-100,b+h-18,26,"#1f1f24"); circ(a+w-100,b+h-18,11,"#7d8792");
+
+  // humo animado: tapa parte del colectivo y lo hace ver más grande/averiado
+  const smoke=[
+    [w*.76,8,34,.75],[w*.86,-4,42,.65],[w*.95,18,38,.70],[w*.69,30,28,.55],
+    [w*.84,42,50,.42],[w*.99,50,46,.40],[w*.73,64,36,.35]
+  ];
+  for(let i=0;i<smoke.length;i++){
+    const [ox,oy,r,al]=smoke[i];
+    ctx.globalAlpha=al;
+    circ(a+ox+Math.sin(elapsed*1.4+i)*5,b+oy+Math.cos(elapsed*1.1+i)*3,r,"#d9dde3");
+  }
+  ctx.globalAlpha=1;
+  ctx.fillStyle="#5b361d"; ctx.font="900 18px Arial"; ctx.textAlign="center";
+  ctx.fillText("BUS ESCOLAR",a+w*.43,b+98);
+  ctx.font="26px Arial"; ctx.fillText("🔧",a+w-22,b+112);
+  ctx.restore();
+}
+
+function drawStoryProps(){
+  for(const p of storyProps){
+    const a=sx(p.x), b=sy(p.y);
+    if(a<-160||a>W+160||b<-160||b>H+160) continue;
+    if(["schoolSign","treeSign","welcomeSign","routeSign","tunnelSign","branchRouteSign","adrenalineSign"].includes(p.type)){
+      drawAsset("storySign",a,b,p.w,p.h);
+      drawSignLabel(p.type,a,b,p.w,p.h);
+    }
+    else if(p.type==="warning") { /* retirado: confundía como peligro real */ }
+    else if(p.type==="caveMouth") drawCaveMouth(a,b,p.w,p.h);
+    else if(p.type==="rootCurtain") drawRootCurtain(a,b,p.w,p.h,p.bob);
+    else if(p.type==="treeBase") drawTreeBase(a,b,p.w,p.h);
+    else if(p.type==="brokenBus") drawBrokenBus(a,b,p.w,p.h);
+    else if(p.type==="branchBack") drawDecorativeBranch(a,b,p.w,p.h,false);
+    else if(p.type==="branchFront") { /* se dibuja delante del jugador */ }
+    else if(p.type==="pit") drawAsset("pit",a,b,p.w,p.h);
+    else if(p.type==="backpack" && !p.collected) drawAsset("backpackCarry",a,b+Math.sin(elapsed*3+p.bob)*1,p.w,p.h);
+  }
+}
+
+function drawSignLabel(type,a,b,w,h){
+  ctx.save();
+  ctx.fillStyle="#3b2514";
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.font="900 13px Arial";
+  let lines=[];
+  if(type==="welcomeSign"){ lines=["Selva del","Gran Árbol"]; ctx.font="900 15px Arial"; }
+  if(type==="routeSign"){ lines=["Ruta Alta ↑","Túnel ↓"]; ctx.font="900 12px Arial"; }
+  if(type==="tunnelSign"){ lines=["Túnel de","las Raíces"]; ctx.font="900 11px Arial"; }
+  if(type==="treeSign"){ lines=["GRAN","ÁRBOL"]; ctx.font="900 16px Arial"; }
+  if(type==="schoolSign"){ lines=["Escuela del","Gran Árbol →"]; ctx.font="900 15px Arial"; }
+  if(type==="branchRouteSign"){ lines=["Ruta de","Ramas →"]; ctx.font="900 12px Arial"; }
+  if(type==="adrenalineSign"){ lines=["Gran","Salto ↑"]; ctx.font="900 14px Arial"; }
+  const step= type==="schoolSign" ? 17 : (type==="welcomeSign" ? 16 : 15);
+  const cy=b+h*.42-(lines.length-1)*step/2;
+  ctx.lineJoin="round";
+  ctx.strokeStyle="rgba(255,241,207,.92)";
+  ctx.lineWidth=3.2;
+  for(let i=0;i<lines.length;i++){
+    ctx.strokeText(lines[i],a+w/2,cy+i*step);
+    ctx.fillText(lines[i],a+w/2,cy+i*step);
+  }
+  ctx.restore();
+}
+
+function drawItems(){
+  // Engine 1.1: las lianas se dibujan primero y con margen enorme.
+  for(const o of items){
+    if(o.taken || o.type!=="vine")continue;
+    let a=sx(o.x),b=sy(o.y);
+    if(a<-1200||a>W+1200||b<-1800||b>H+1800)continue;
+    vine(a,b,o.h,o.bob);
+  }
+
+  for(const o of items){
+    if(o.taken || o.type==="vine")continue;
+    let a=sx(o.x),b=sy(o.y);
+    if(a<-900||a>W+900||b<-1200||b>H+1200)continue;
+
+    const bob=Math.sin(elapsed*2.2+o.bob)*4;
+    if(["banana","golden","apple","orange","student","rock","humming","radio","ukulele","trumpet"].includes(o.type)){
+      drawShadow(a+o.w/2,b+o.h+4,Math.max(10,o.w*.45));
+    }
+    if(o.type==="banana")banana(a,b+bob,false);
+    if(o.type==="golden")banana(a,b+bob,true);
+    if(o.type==="apple")apple(a,b+bob);
+    if(o.type==="orange")orange(a,b+bob);
+    if(o.type==="student")student(a,b+Math.sin(elapsed*1.6+o.bob)*2,o.girl,o.glasses);
+    if(o.type==="rock")rock(a,b,o.hit);
+    if(o.type==="radio")radio(a,b,o.played);
+    if(o.type==="ukulele")ukuleleItem(a,b,o.played);
+    if(o.type==="trumpet")trumpetItem(a,b,o.played);
+    if(o.type==="humming")humming(a,b+Math.sin(elapsed*5)*8);
+    if(o.type==="school")school(a,b);
+  }
+}
+
+function banana(a,b,g){
+  if(drawAsset(g?"golden":"banana",a-8,b-8,g?48:42,g?48:42)) return;
+  ctx.save();ctx.translate(a+16,b+17);ctx.rotate(Math.sin(elapsed*2+a*.01)*0.12);ctx.lineCap="round";ctx.strokeStyle=g?"#fff36a":"#ffd84d";ctx.lineWidth=13;ctx.beginPath();ctx.arc(0,0,22,.35*Math.PI,1.12*Math.PI);ctx.stroke();ctx.restore();
+}
+function apple(a,b){
+  if(drawAsset("apple",a-4,b-5,40,40)) return;
+  circ(a+15,b+17,14,"#d84435");px(a+14,b+1,4,10,"#5b361d");oval(a+23,b+5,9,5,"#5eb85a");
+}
+function orange(a,b){
+  if(drawAsset("orange",a-4,b-5,40,40)) return;
+  circ(a+15,b+17,14,"#ff8a2a");px(a+10,b+8,8,4,"#ffd25b");
+}
+function student(a,b,girl,glasses){
+  const wave=Math.sin(elapsed*5+a*.01)>0.35 ? -3 : 0;
+  oval(a+21,b+31,18,21,"#9a5b24");
+  circ(a+21,b+16,19,"#b87634");
+  circ(a+3,b+18,8,"#b87634");
+  circ(a+39,b+18,8,"#b87634");
+  if(girl){
+    px(a-7,b+22,6,21,"#6b3d1b");
+    px(a+43,b+22,6,21,"#6b3d1b");
+    circ(a-4,b+43,5,"#f2c94c");
+    circ(a+46,b+43,5,"#f2c94c");
+  }
+  circ(a+14,b+15,3,"#111");
+  circ(a+28,b+15,3,"#111");
+  if(glasses){
+    // Anteojos visibles pero amables: detalle de identidad, no caricatura.
+    ctx.fillStyle="rgba(235,248,255,.48)";
+    ctx.fillRect(a+9,b+9,9,8);
+    ctx.fillRect(a+24,b+9,9,8);
+    ctx.strokeStyle="#eaf6ff";
+    ctx.lineWidth=2.5;
+    ctx.strokeRect(a+8,b+8,11,10);
+    ctx.strokeRect(a+23,b+8,11,10);
+    ctx.strokeStyle="#1a243d";
+    ctx.lineWidth=1.5;
+    ctx.strokeRect(a+8,b+8,11,10);
+    ctx.strokeRect(a+23,b+8,11,10);
+    ctx.beginPath();ctx.moveTo(a+19,b+13);ctx.lineTo(a+23,b+13);ctx.stroke();
+    ctx.strokeStyle="rgba(255,255,255,.85)";ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(a+10,b+10);ctx.lineTo(a+13,b+10);ctx.moveTo(a+25,b+10);ctx.lineTo(a+29,b+10);ctx.stroke();
+  }
+  oval(a+21,b+25,9,4,"#f3cf99");
+  px(a-5,b+25,10,20,girl?"#b455b6":"#315c99");
+  px(a+30,b+27+wave,14,12,"#2f8f55");
+  // mochila/libro
+  px(a+32,b+31+Math.sin(elapsed*3+a*.02)*1,11,14,girl?"#ec78a7":"#3c77c6");
+  px(a+10,b+47,8,7,"#4a2a14");
+  px(a+25,b+47,8,7,"#4a2a14");
+}
+function rock(a,b,h){
+  if(drawAsset("rock",a-8,b-8,58,44)) return;
+  px(a,b+12,45,22,h?"#555":"#8a93a0");px(a+8,b+2,25,18,h?"#444":"#a9b1bb");
+}
+function vine(a,b,h,seed){
+  const sway=Math.sin(elapsed*1.4+seed)*5;
+  px(a-4+sway,b,20,h,"rgba(0,0,0,.12)");
+  ctx.strokeStyle="#1f5f2d";ctx.lineWidth=15;ctx.lineCap="round";
+  ctx.beginPath();
+  ctx.moveTo(a+5+sway,b);
+  for(let yy=0;yy<h;yy+=80){
+    ctx.quadraticCurveTo(a+18+sway*Math.sin(yy),b+yy+40,a+5+sway,b+yy+80);
+  }
+  ctx.stroke();
+  ctx.strokeStyle="#4fb354";ctx.lineWidth=6;
+  ctx.beginPath();
+  ctx.moveTo(a+7+sway,b);
+  ctx.lineTo(a+7+sway,b+h);
+  ctx.stroke();
+  for(let yy=0;yy<h;yy+=50){
+    oval(a-8+sway,b+yy+12,10,5,"#75c95f");
+    oval(a+21+sway,b+yy+22,10,5,"#75c95f");
+  }
+}
+function radio(a,b,played){
+  const tilt=played?Math.sin(elapsed*8)*0.035:-0.08;
+  ctx.save();
+  ctx.translate(a+31,b+26);
+  ctx.rotate(tilt);
+  ctx.translate(-31,-26);
+  drawShadow(31,48,24);
+  px(8,14,46,29,"#5b361d");
+  px(11,17,40,23,"#8a5928");
+  px(15,21,16,14,"#1f2937");
+  ctx.strokeStyle="#d9b56c";ctx.lineWidth=2;
+  for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(17,24+i*4);ctx.lineTo(29,24+i*4);ctx.stroke();}
+  circ(40,28,7,"#2b1a10");circ(40,28,3,"#ffd25b");
+  px(20,8,24,5,"#3e2615");
+  ctx.strokeStyle="#3e2615";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(49,15);ctx.lineTo(58,2);ctx.stroke();
+  px(13,40,8,5,"#3e2615");px(42,40,8,5,"#3e2615");
+  if(played){
+    ctx.fillStyle="#fff1cf";ctx.font="bold 15px Arial";ctx.fillText("♪",52,16);
+  }
+  ctx.restore();
+}
+function ukuleleItem(a,b,played){
+  const tilt=played?Math.sin(elapsed*7)*0.04:0.10;
+  ctx.save();
+  ctx.translate(a+29,b+18);
+  ctx.rotate(tilt);
+  ctx.translate(-29,-18);
+  drawShadow(29,34,22);
+  oval(16,18,15,13,"#9a5b24");
+  oval(29,18,14,12,"#b87634");
+  circ(22,18,4,"#3e2615");
+  px(35,14,24,7,"#6b401f");
+  px(56,12,8,11,"#4a2a14");
+  ctx.strokeStyle="#fff1cf";ctx.lineWidth=1;
+  for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(21,b-b+14+i*2);ctx.lineTo(61,13+i*2);ctx.stroke();}
+  if(played){ctx.fillStyle="#fff1cf";ctx.font="bold 15px Arial";ctx.fillText("♫",44,8);}
+  ctx.restore();
+}
+
+function trumpetItem(a,b,played){
+  const shine=played?Math.sin(elapsed*8)*2:0;
+  ctx.save();
+  ctx.translate(a+28,b+14);
+  ctx.rotate(played?Math.sin(elapsed*7)*0.05:-0.04);
+  ctx.translate(-28,-14);
+  drawShadow(28,29,22);
+  px(6,12,32,8,"#d99a28");
+  px(35,10,12,12,"#ffd25b");
+  ctx.beginPath();ctx.fillStyle="#ffd25b";ctx.moveTo(46,7);ctx.lineTo(60,2);ctx.lineTo(60,26);ctx.lineTo(46,21);ctx.fill();
+  px(11,7,4,7,"#fff1a8");px(18,7,4,7,"#fff1a8");px(25,7,4,7,"#fff1a8");
+  ctx.strokeStyle="#8a5928";ctx.lineWidth=3;ctx.beginPath();ctx.arc(10,20,8,0,Math.PI*1.4);ctx.stroke();
+  if(played){ctx.fillStyle="#fff1cf";ctx.font="bold 15px Arial";ctx.fillText("♪",50,2+shine);}
+  ctx.restore();
+}
+
+function humming(a,b){
+  oval(a+20,b+18,15,8,"#2c9c96");
+  oval(a+9,b+12,15,7,"rgba(76,198,226,.75)");
+  oval(a+17,b+27,15,6,"rgba(138,209,94,.75)");
+  px(a+30,b+16,18,4,"#234");
+  circ(a+23,b+14,2,"#111");
+  px(a+34,b+5,10,14,"#8b5a00");
+}
+function school(a,b){
+  // Escuela del Gran Árbol más grande y legible, integrada entre ramas.
+  px(a-18,b+58,260,118,"#e5c06d");
+  px(a+80,b+104,54,72,"#26465f");
+  px(a+10,b+92,44,44,"#2d5b8f");
+  px(a+168,b+92,44,44,"#2d5b8f");
+  px(a+62,b+92,34,34,"#2d5b8f");
+  px(a+135,b+92,34,34,"#2d5b8f");
+  ctx.fillStyle="#b94e2f";
+  ctx.beginPath();ctx.moveTo(a-32,b+62);ctx.lineTo(a+112,b-10);ctx.lineTo(a+258,b+62);ctx.fill();
+  px(a+36,b+66,152,28,"#5b361d");
+  ctx.fillStyle="#fff0bd";ctx.font="900 25px Arial";ctx.fillText("ESCUELA",a+56,b+88);
+  ctx.font="900 13px Arial";ctx.fillText("DEL GRAN ÁRBOL",a+58,b+105);
+  circ(a+112,b+48,21,"#fff1cf");ctx.strokeStyle="#5b361d";ctx.lineWidth=3;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(a+112,b+48);ctx.lineTo(a+112,b+34);ctx.moveTo(a+112,b+48);ctx.lineTo(a+123,b+48);ctx.stroke();
+  px(a-10,b+171,248,10,"#7a572b");
+}
+
+
+function drawFollowers(){
+  followers.forEach((f,i)=>{
+    const hop=radioDanceTimer>0 ? Math.sin(elapsed*12+i)*6 : (Math.sin(elapsed*5+i)>0.75?-3:0);
+    const a=sx(f.x),b=sy(f.y+Math.sin(elapsed*4+i)*2+hop);
+    drawShadow(a+22,b+52-hop,14);
+    ctx.save();
+    if(f.face<0){ctx.translate(a+44,b);ctx.scale(-1,1);student(0,0,f.girl,f.glasses);}
+    else student(a,b,f.girl,f.glasses);
+    ctx.restore();
+  });
+}
+function drawParticles(){
+  for(const p of particles){
+    let a=sx(p.x),b=sy(p.y);
+    if(p.type==="butterfly"){ctx.fillStyle=p.color;ctx.font="24px Arial";ctx.fillText("🦋",a,b);}
+    else if(p.type==="butterflyTiny"){ctx.fillStyle=p.color;ctx.font="15px Arial";ctx.fillText("🦋",a,b);}
+    else if(p.type==="leaf"){if(!drawAsset("leaf",a-8,b-8,18,18)) oval(a,b,6,3,p.color);}
+    else if(p.type==="spark"){ if(!drawAsset("star",a-7,b-7,16,16)){ctx.fillStyle=p.color;ctx.font="14px Arial";ctx.fillText("✦",a,b);} }
+    else if(p.type==="musicNote"){ if(!drawAsset("musicNotesLife",a,b,30,24)){ctx.fillStyle=p.color;ctx.font="18px Arial";ctx.fillText("♪",a,b);} }
+    else circ(a,b,3,p.color);
+  }
+}
+
+
+function drawCarriedBackpacks(a,b){
+  if(!mochilas) return;
+  const count=Math.min(mochilas,3);
+  for(let i=0;i<count;i++){
+    const ox=player.facing>=0 ? 50+i*7 : -2-i*7;
+    const oy=42+i*8;
+    drawAsset("backpackCarry",a+ox,b+oy,24,24);
+  }
+  if(mochilas>3){
+    ctx.fillStyle="#fff1cf";
+    ctx.font="bold 12px Arial";
+    ctx.fillText("+"+(mochilas-3),a+(player.facing>=0?76:-14),b+74);
+  }
+}
+
+function drawPlayer(){
+  let a=sx(player.x),b=sy(player.y),bounce=player.state==="dance"?Math.sin(elapsed*18)*5:0;
+  drawShadow(a+32,b+84, player.onGround?25:18);
+
+  const fr=spriteFrameName();
+  if(fr && drawProfeSprite(fr,a,b+bounce,player.facing<0)){
+    if(player.state==="hug"){
+      ctx.fillStyle="#f08a8a";
+      ctx.font="28px Arial";
+      ctx.fillText("❤",a+62,b+16);
+    }
+    if(player.state==="dance"&&Math.floor(elapsed*8)%2===0){
+      ctx.fillStyle="#ffd84d";
+      ctx.font="26px Arial";
+      ctx.fillText(radioEvent.kind==="ukulele"?"♫":"♪",a+64,b+5);
+    }
+    if(player.state==="dance" && radioEvent.kind==="ukulele"){
+      drawUkulele(a+(player.facing<0?6:43), b+48+bounce);
+    }
+    drawCarriedBackpacks(a,b+bounce);
+    return;
+  }
+
+  drawProfe(a,b+bounce);
+  if(player.state==="dance" && radioEvent.kind==="ukulele"){
+    drawUkulele(a+(player.facing<0?6:43), b+48+bounce);
+  }
+  drawCarriedBackpacks(a,b+bounce);
+}
+
+function drawProfe(a,b){
+  const moving=Math.abs(player.vx)>25&&player.onGround;
+  const walk=moving?Math.sin(elapsed*14)*4:0;
+  const breathe=!moving && player.onGround ? Math.sin(elapsed*2.2)*1.5 : 0;
+  const blink=(player.blink%4.2)>4.05;
+  const squash=player.landTimer>0 ? Math.sin((player.landTimer/.16)*Math.PI)*3 : 0;
+  const airborne=!player.onGround&&!player.onVine;
+  const stretch=airborne ? Math.max(-2,Math.min(3,-player.vy/260)) : 0;
+
+  ctx.save();
+  if(player.facing<0){
+    ctx.translate(a+72,b);
+    ctx.scale(-1,1);
+    a=0;b=0;
+  }
+
+  // Pies y piernas
+  oval(a+21,b+83+walk,12,8,"#111827");
+  oval(a+50,b+83-walk,12,8,"#111827");
+  px(a+15,b+66+walk,15,18,"#172033");
+  px(a+41,b+66-walk,15,18,"#172033");
+
+  // Brazos fuertes
+  oval(a+8,b+53+breathe+walk,12,27,"#1d1d1d");
+  oval(a+64,b+53+breathe-walk,12,27,"#1d1d1d");
+  circ(a+6,b+72+breathe+walk,8,"#1d1d1d");
+  circ(a+66,b+72+breathe-walk,8,"#1d1d1d");
+
+  // Cuerpo
+  oval(a+37,b+53+breathe+squash,33+Math.max(0,squash*.8),32-stretch*.6,"#1d1d1d");
+
+  // Chomba / remera blanca escolar
+  ctx.fillStyle="#f6f2e8";
+  ctx.beginPath();
+  ctx.roundRect(a+13,b+38+breathe+squash,48,35-stretch*.4,9);
+  ctx.fill();
+
+  // Sombras del uniforme
+  px(a+14,b+64+breathe+squash,46,7,"rgba(185,178,165,.35)");
+  px(a+31,b+39+breathe+squash,6,30,"#d7d1c4");
+  px(a+18,b+38+breathe+squash,31,6,"#ffffff");
+
+  // Cuello tipo chomba
+  ctx.fillStyle="#ffffff";
+  ctx.beginPath();
+  ctx.moveTo(a+24,b+39+breathe);
+  ctx.lineTo(a+34,b+49+breathe);
+  ctx.lineTo(a+18,b+47+breathe);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(a+47,b+39+breathe);
+  ctx.lineTo(a+37,b+49+breathe);
+  ctx.lineTo(a+54,b+47+breathe);
+  ctx.fill();
+
+  // Escudito escolar
+  circ(a+49,b+53+breathe,5,"#2d5b8f");
+  ctx.fillStyle="#ffd25b";
+  ctx.font="bold 7px Arial";
+  ctx.fillText("PG",a+44,b+56+breathe);
+
+  // Cabeza y orejas
+  circ(a+37,b+25+breathe+stretch*.6,29,"#1d1d1d");
+  circ(a+8,b+28+breathe,10,"#1d1d1d");
+  circ(a+66,b+28+breathe,10,"#1d1d1d");
+  circ(a+8,b+28+breathe,5,"#c18a52");
+  circ(a+66,b+28+breathe,5,"#c18a52");
+
+  // Cara cálida
+  oval(a+37,b+31+breathe,20,15,"#c18a52");
+  oval(a+37,b+39+breathe,17,8,"#d39a60");
+
+  // Ojos SIN anteojos
+  if(blink){
+    px(a+26,b+26+breathe,8,2,"#111");
+    px(a+42,b+26+breathe,8,2,"#111");
+  } else {
+    circ(a+29,b+26+breathe,3,"#111");
+    circ(a+45,b+26+breathe,3,"#111");
+    circ(a+30,b+25+breathe,1,"#fff");
+    circ(a+46,b+25+breathe,1,"#fff");
+  }
+
+  // Sonrisa
+  ctx.strokeStyle="#4a230c";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.arc(a+38,b+35+breathe,10,0.1,Math.PI-0.1);
+  ctx.stroke();
+  px(a+30,b+36+breathe,15,2,"#fff1cf");
+
+  // Pelo
+  px(a+24,b+1+breathe,7,11,"#0d0d0d");
+  px(a+33,b-2+breathe,8,14,"#0d0d0d");
+  px(a+42,b+2+breathe,7,10,"#0d0d0d");
+  px(a+20,b+6+breathe,6,8,"#0d0d0d");
+
+  // Brillos
+  px(a+19,b+43+breathe,18,3,"rgba(255,255,255,.48)");
+  px(a+30,b+14+breathe,16,3,"rgba(255,255,255,.10)");
+
+  ctx.restore();
+}
+
+function drawUkulele(a,b){
+  oval(a+10,b+8,11,9,"#9a5b24");
+  oval(a+21,b+8,10,8,"#9a5b24");
+  px(a+22,b+5,28,5,"#6b401f");
+  circ(a+14,b+8,4,"#4a2a14");
+  ctx.strokeStyle="#f7d28a";
+  ctx.lineWidth=1;
+  for(let i=0;i<3;i++){
+    ctx.beginPath();
+    ctx.moveTo(a+13,b+5+i*2);
+    ctx.lineTo(a+49,b+4+i*2);
+    ctx.stroke();
+  }
+}
+
+function notes(a,b){ctx.fillStyle="#4f7cff";ctx.font="24px Arial";ctx.fillText("♪",a,b);ctx.fillStyle="#ff8a2a";ctx.fillText("♫",a+25,b+18)}
+
+function drawVersionTag(){}
+
+function drawMessage(){if(message){px(250,18,460,42,"#141c32dd");ctx.fillStyle="#fff1cf";ctx.font="bold 23px Arial";ctx.textAlign="center";ctx.fillText(message,480,47);ctx.textAlign="left";}}
+
+// Música procedural basada en la partitura jazzjungla.
+// Music Pass: la misma melodía se interpreta distinto según la zona.
+let audioCtx=null,master=null,compressor=null,musicTimer=null,step=0;
+const NOTE_FREQ={
+  C2:65.41,Cs2:69.30,D2:73.42,Ds2:77.78,E2:82.41,F2:87.31,Fs2:92.50,G2:98.00,Gs2:103.83,A2:110.00,As2:116.54,B2:123.47,
+  C3:130.81,Cs3:138.59,D3:146.83,Ds3:155.56,E3:164.81,F3:174.61,Fs3:185.00,G3:196.00,Gs3:207.65,A3:220.00,As3:233.08,B3:246.94,
+  C4:261.63,Cs4:277.18,D4:293.66,Ds4:311.13,E4:329.63,F4:349.23,Fs4:369.99,G4:392.00,Gs4:415.30,A4:440.00,As4:466.16,B4:493.88,
+  C5:523.25,Cs5:554.37,D5:587.33,Ds5:622.25,E5:659.25,F5:698.46,Fs5:739.99,G5:783.99,Gs5:830.61,A5:880.00,As5:932.33,B5:987.77,
+  C6:1046.50,D6:1174.66,E6:1318.51,F6:1396.91,G6:1567.98,A6:1760.00
+};
+function f(n){return typeof n==='number'?n:NOTE_FREQ[n]||0;}
+const JAZZJUNGLA={
+  // A: camino horizontal. Ostinato caminante de guitarra + motivo de trompeta.
+  guitarA:['G3','D4','G3','A4','G3','B4','A4','G4','G3','D4','G3','A4','G3','C5','B4','A4',
+           'G3','D4','G3','A4','G3','B4','A4','G4','F3','C4','F3','A4','F3','Bb4','A4','F4'],
+  bassA:['G2',0,'D3',0,'G2',0,'D3',0,'G2',0,'D3',0,'C3',0,'D3',0],
+  trumpetA:[0,0,0,'D5','E5',0,'D5',0,0,'C5','D5',0,'E5','F5','E5',0,
+            0,0,'G4','A4',0,'C5','D5',0,0,'D5','E5',0,'G5','A5','G5',0],
+  // B: Gran Árbol. La misma idea se abre hacia arriba para que la selva “florezca”.
+  guitarB:['G3','B4','D5','B4','G4','D5','B4','G4','F3','C5','Eb5','C5','A4','Eb5','C5','A4'],
+  bassB:['G2',0,'G2',0,'C3',0,'D3',0,'G2',0,'F2',0,'C3',0,'D3',0],
+  trumpetB:['G4','A4','B4','D5','E5','D5','B4','A4','C5','D5','Eb5','D5','C5','A4','G4',0]
+};
+function ensureAudio(){
+  if(audioCtx)return;
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  master=audioCtx.createGain();
+  compressor=audioCtx.createDynamicsCompressor();
+  compressor.threshold.value=-18; compressor.knee.value=24; compressor.ratio.value=6; compressor.attack.value=.004; compressor.release.value=.18;
+  master.gain.value=.72;
+  master.connect(compressor); compressor.connect(audioCtx.destination);
+}
+function tone(fq,d,type="sine",vol=.04,delay=0,cutoff=0){
+  if(!audioCtx||!fq)return;
+  const t=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();
+  o.type=type;o.frequency.setValueAtTime(fq,t);
+  let node=o;
+  if(cutoff){const lp=audioCtx.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(cutoff,t);node.connect(lp);node=lp;}
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(Math.max(vol,.0002),t+.018);
+  g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  node.connect(g);g.connect(master);o.start(t);o.stop(t+d+.06);
+}
+function currentMusicZone(){
+  if(radioBoostTimer>0) return radioEvent.kind||"radio";
+  if(player.x>11800 || world===3) return "school";
+  if(trumpetFinale) return "trumpet";
+  if(player.x>8250 || player.y<-420) return "tree";
+  if(player.x>4200 && player.x<7600 && player.y>390) return "tunnel";
+  return "path";
+}
+function musicStepMs(){
+  const z=currentMusicZone();
+  const bpm=(z==="radio"||z==="trumpet") ? 100 : 80;
+  return 60000/bpm/2;
+}
+function scheduleMusic(){ if(!musicOn||!running) return; musicTimer=setTimeout(()=>{musicTick();scheduleMusic();}, musicStepMs()); }
+function startAudio(){ensureAudio();if(audioCtx.state==="suspended")audioCtx.resume();stopAudio();step=0;scheduleMusic();}
+function stopAudio(){if(musicTimer){clearTimeout(musicTimer);musicTimer=null;}}
+function scoreAt(arr,i){return f(arr[i%arr.length]);}
+function pluck(note,vol=.06,delay=0){ tone(note,.23,'triangle',vol,delay,2600); tone(note*2,.08,'triangle',vol*.22,delay+.015,3200); }
+function uke(note,vol=.06,delay=0){ tone(note,.26,'triangle',vol,delay,1800); tone(note*1.5,.08,'triangle',vol*.18,delay+.055,2200); }
+function trumpet(note,vol=.05,delay=0){ tone(note,.30,'sawtooth',vol,delay,3200); tone(note*2,.12,'square',vol*.20,delay+.015,4200); }
+function softDrum(kind,delay=0){
+  if(kind==='kick') tone(82,.10,'sine',.060,delay,900);
+  if(kind==='snare'){ tone(180,.07,'triangle',.042,delay,1600); tone(1120,.035,'square',.016,delay+.006,1800); }
+  if(kind==='hat') tone(2400,.035,'square',.013,delay,4200);
+}
+function musicTick(){
+  const zone=currentMusicZone();
+  const i=step;
+  const bSection=(zone==="tree"||zone==="school"||zone==="trumpet") && !((i/16|0)%2===0);
+  const guitar=bSection?JAZZJUNGLA.guitarB:JAZZJUNGLA.guitarA;
+  const bass=bSection?JAZZJUNGLA.bassB:JAZZJUNGLA.bassA;
+  const lead=bSection?JAZZJUNGLA.trumpetB:JAZZJUNGLA.trumpetA;
+  const g=scoreAt(guitar,i), bs=scoreAt(bass,i), ld=scoreAt(lead,i);
+  const tunnel=(zone==="tunnel"||zone==="ukulele"), radio=(zone==="radio"), tree=(zone==="tree"||zone==="school"), trPrize=(zone==="trumpet");
+  const highLayer = Math.max(0, Math.min(1, highTrumpetLevel));
+
+  // Sendero y ruta alta: guitarra/bajo con marcha amable, basada en el ostinato de la partitura.
+  if(!tunnel){
+    pluck(g, radio?.078:.066);
+    if(bs && i%2===0) tone(bs,.30,'sine',radio?.073:.058,.01,1100);
+    if(i%4===0) softDrum('kick',.005);
+    if(i%4===2) softDrum('snare',.012);
+    if(radio && i%2===1) softDrum('hat',.02);
+  }
+
+  // Túnel: la melodía pasa al ukelele. Menos marcha, más intimidad.
+  if(tunnel){
+    const m=ld || scoreAt(lead,i+1) || g*1.5;
+    uke(m,.083,.01);
+    if(i%2===0) uke(g*1.5,.040,.09);
+    if(bs && i%4===0) tone(bs,.24,'sine',.035,.02,800);
+  }
+
+  // Gran Árbol: no cambia la canción; florece con trompeta y brillo.
+  if(tree && ld && !tunnel){
+    trumpet(ld,.050 + highLayer*.020,.02);
+    if(i%8===0) tone(ld*2,.18,'sine',.020 + highLayer*.010,.12,5000);
+  }
+
+  // Ruta Alta: la trompeta entra como recompensa emocional por mantener la altura.
+  // Si el jugador cae, highTrumpetLevel baja y la capa desaparece suavemente.
+  if(highLayer>0.02 && ld && !tunnel && !radio){
+    const hm = ld || scoreAt(lead,i+1) || g*1.5;
+    trumpet(hm, .018 + highLayer*.045, .035);
+    if(i%8===0) tone(hm*2,.14,'sine',.008 + highLayer*.030,.13,5200);
+  }
+
+  // Radio: la misma partitura a 100 BPM, más movimiento y alegría.
+  if(radio){
+    const m=ld || scoreAt(lead,i+1) || g*1.5;
+    trumpet(m,.050,.025);
+    if(i%2===0) tone(m*2,.11,'triangle',.034,.08,4500);
+  }
+
+  // Trompeta del Gran Salto: premio musical claro, sin cambiar de tema.
+  if(trPrize){
+    const m=ld || scoreAt(lead,i+1) || g*1.5;
+    trumpet(m,.078,.01);
+    if(i%4===0) tone(m*2,.18,'sine',.040,.10,5200);
+    if(i%2===0) softDrum('hat',.04);
+  }
+  step++;
+}
+function toggleMusic(){musicOn=!musicOn;document.getElementById("musicLabel").textContent=musicOn?"suave":"apagada";if(!musicOn)stopAudio();else if(running)startAudio();}
+function playCollect(){ensureAudio();tone(880,.10,"triangle",.115);tone(1175,.11,"triangle",.082,.06);tone(1568,.08,"sine",.040,.13)}
+function playStudent(){ensureAudio();tone(660,.12,"sine",.070);tone(880,.12,"sine",.090,.09);tone(1320,.16,"sine",.070,.18)}
+function playJump(){ensureAudio();tone(330,.09,"square",.040);tone(440,.09,"square",.032,.06)}
+function playBump(){ensureAudio();tone(120,.18,"sawtooth",.050)}
+function playFanfare(){ensureAudio();tone(523,.12,"sine",.075);tone(659,.12,"sine",.075,.12);tone(784,.18,"sine",.075,.24)}
+function playUkulele(){ensureAudio();['D5','E5','D5','C5','D5','E5','F5','E5'].forEach((n,i)=>uke(f(n),.074,i*.11))}
+function playRain(){ensureAudio();for(let i=0;i<8;i++)tone(900+Math.random()*400,.08,"sine",.014,i*.08)}
+function playRadioJingle(){ensureAudio();['G4','C5','E5','G5','E5','C5'].forEach((n,i)=>tone(f(n),.16,i%2?"triangle":"sine",.078,i*.08));}
+function playTrumpetFanfare(){ensureAudio();['C5','D5','E5','G5','A5','G5','C6'].forEach((n,i)=>trumpet(f(n),.080,i*.09));}
+function playSchoolBell(){
+  ensureAudio();
+  [0,.18,.55,.73,1.10,1.28].forEach((d,i)=>tone(i%2?1568:1318,.16,"sine",.092,d));
+  [0,.55,1.10].forEach(d=>tone(659,.22,"triangle",.040,d));
+}
+
+window.addEventListener("keydown",e=>{if(e.code==="ArrowLeft")keys.left=true;if(e.code==="ArrowRight")keys.right=true;if(e.code==="Space"||e.code==="ArrowUp")keys.jump=true;if(e.code==="ArrowDown")keys.down=true;if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Space"].includes(e.code))e.preventDefault();});
+window.addEventListener("keyup",e=>{if(e.code==="ArrowLeft")keys.left=false;if(e.code==="ArrowRight")keys.right=false;if(e.code==="Space"||e.code==="ArrowUp")keys.jump=false;if(e.code==="ArrowDown")keys.down=false;});
+function bind(id,k){
+  const e=document.getElementById(id);
+  const down=ev=>{
+    ev.preventDefault();
+    ev.stopPropagation();
+    keys[k]=true;
+    e.classList.add("pressed");
+    softVibrate(12);
+    try{ e.setPointerCapture(ev.pointerId); }catch(_){}
+  };
+  const up=ev=>{
+    ev.preventDefault();
+    ev.stopPropagation();
+    keys[k]=false;
+    e.classList.remove("pressed");
+    try{ e.releasePointerCapture(ev.pointerId); }catch(_){}
+  };
+  e.addEventListener("pointerdown",down,{passive:false});
+  e.addEventListener("pointerup",up,{passive:false});
+  e.addEventListener("pointerleave",up,{passive:false});
+  e.addEventListener("pointercancel",up,{passive:false});
+  e.addEventListener("touchstart",ev=>ev.preventDefault(),{passive:false});
+  e.addEventListener("touchmove",ev=>ev.preventDefault(),{passive:false});
+}
+bind("leftBtn","left");bind("rightBtn","right");bind("jumpBtn","jump");bind("downBtn","down");
+
+// Beta 0.91: bloqueo extra de gestos molestos en móvil.
+document.body.addEventListener("touchmove", e => {
+  if(e.target.closest(".controls") || e.target.tagName === "CANVAS") e.preventDefault();
+}, {passive:false});
+document.addEventListener("visibilitychange", ()=>{ if(document.hidden){ keys.left=false; keys.right=false; keys.jump=false; keys.down=false; document.querySelectorAll(".controlBtn").forEach(b=>b.classList.remove("pressed")); }});
+window.addEventListener("blur", ()=>{
+  keys.left=false; keys.right=false; keys.jump=false; keys.down=false;
+  document.querySelectorAll(".controlBtn").forEach(b=>b.classList.remove("pressed"));
+});
+
+
+function goFullscreen(){
+  const el=document.documentElement;
+  if(el.requestFullscreen) el.requestFullscreen().catch(()=>{});
+  else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+}
+function softVibrate(ms=18){
+  if(navigator.vibrate) navigator.vibrate(ms);
+}
+
+buildLevel();draw();
