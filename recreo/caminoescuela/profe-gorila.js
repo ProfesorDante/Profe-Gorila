@@ -1,4 +1,4 @@
-const PROFE_SHEET_SRC = "assets/sprites/profe-gorila/profe-sheet.png";
+const PROFE_SHEET_SRC = "imyso/profe-sheet.png";
 const PROFE_FRAME = 64;
 const PROFE_COLS = 6;
 const PROFE_FRAME_MAP = {'idle1': 0, 'idle2': 1, 'idle3': 2, 'idle4': 3, 'walk1': 4, 'walk2': 5, 'walk3': 6, 'walk4': 7, 'walk5': 8, 'walk6': 9, 'jump': 10, 'fall': 11, 'climb1': 12, 'climb2': 13, 'hug': 14, 'dance1': 15, 'dance2': 16};
