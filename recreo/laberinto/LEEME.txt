@@ -1,0 +1,15 @@
+NITO Y EL LABERINTO — actualización musical
+
+Cambios incluidos:
+- Portada inicial con botón transparente sobre “JUGAR AHORA”.
+- Fondo exterior de bosque suave.
+- Guardianes y mecánicas actualizados.
+- Nueva música generada en tiempo real: blues-jazz con forma tradicional de 12 compases, inspirada en una pequeña banda de Nueva Orleans de los años treinta.
+- Volumen musical general aumentado aproximadamente al doble.
+- No se incluye ninguna grabación ni arreglo musical externo.
+
+RUTA DE LA PORTADA
+El juego busca la imagen en:
+../../img/portadalaberinto.png
+
+Conservá portadalaberinto.png en la carpeta general img del repositorio.
