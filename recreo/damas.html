@@ -122,6 +122,32 @@ small.note{color:#5b704e;line-height:1.35}
   .mobileGameBar button{width:36px;height:36px;font-size:16px}
 }
 
+
+/* Portada inicial: la imagen vive en ../img/damas.png porque este HTML se guarda dentro de recreo. */
+.coverOverlay{
+  position:fixed;inset:0;z-index:100;background:#102418;
+  display:flex;align-items:center;justify-content:center;padding:0;
+}
+.coverStage{
+  position:relative;width:min(100vw,calc(100vh * 1.5));aspect-ratio:3/2;
+  max-height:100vh;overflow:hidden;background:#102418;
+}
+.coverStage img{display:block;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+.coverStart{
+  position:absolute;left:29.4%;top:83.2%;width:41.5%;height:12.3%;
+  padding:0;border:0;background:transparent;box-shadow:none;border-radius:18px;
+  cursor:pointer;
+}
+.coverStart:hover{background:rgba(255,255,255,.06);filter:drop-shadow(0 0 10px rgba(255,255,180,.5))}
+.coverStart:active{transform:scale(.985);box-shadow:none}
+.teamGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.teamChoice{padding:16px 12px;font-size:18px}
+.teamChoice small{display:block;margin-top:5px;font-size:13px;font-weight:700;opacity:.9}
+@media(max-width:560px){
+  .teamGrid{grid-template-columns:1fr}
+  .coverStage{width:100vw;height:auto}
+}
+
 </style>
 </head>
 <body>
@@ -129,7 +155,7 @@ small.note{color:#5b704e;line-height:1.35}
 <header>
   <div class="title">🐒 DAMAS DEL GRAN ÁRBOL</div>
   <div class="hud">
-    <div class="pill">Turno: <span id="turnLabel">Equipo Hoja</span></div>
+    <div class="pill">Turno: <span id="turnLabel">Nito · Equipo Hoja</span></div>
     <div class="pill">🍃 <span id="greenCount">12</span></div>
     <div class="pill">🍂 <span id="goldCount">12</span></div>
   </div>
@@ -161,12 +187,32 @@ small.note{color:#5b704e;line-height:1.35}
 <div class="footer">Sencillo, nunca simple. Cada detalle está hecho con amor.</div>
 </div>
 
-<div class="overlay" id="menuOverlay">
+
+<div class="coverOverlay" id="coverOverlay">
+  <div class="coverStage">
+    <img src="../img/damas.png" alt="Portada de Damas del Gran Árbol con Nito y Tina">
+    <button class="coverStart" onclick="enterFromCover()" aria-label="Jugar ahora" title="Jugar ahora"></button>
+  </div>
+</div>
+
+<div class="overlay" id="teamOverlay" style="display:none">
+  <div class="card">
+    <h2>Elegí tu equipo</h2>
+    <p>Las reglas son las mismas: solo cambia el personaje de tus fichas.</p>
+    <div class="teamGrid">
+      <button class="teamChoice" onclick="chooseTeam('nito')">🐒 Nito<small>Equipo Hoja</small></button>
+      <button class="teamChoice secondary" onclick="chooseTeam('tina')">🎀 Tina<small>Equipo Dorado</small></button>
+    </div>
+    <div class="voiceRow"><button class="soft" onclick="cancelTeamChoice()">Volver</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="menuOverlay" style="display:none">
   <div class="card">
     <h1>🌳 Damas del Gran Árbol</h1>
     <p>Dos equipos de monitos se encuentran para jugar una partida tranquila bajo las ramas del Gran Árbol.</p>
     <div class="menuGrid">
-      <button onclick="startPvp()">👥 Dos jugadores</button>
+      <button onclick="prepareTeamChoice('pvp')">👥 Dos jugadores</button>
       <button class="secondary" onclick="showAiLevels()">🤖 Contra la computadora</button>
       <button class="soft" onclick="showTeacher()">🦍 Reglas</button>
       <button class="soft" onclick="toggleMusic()">🎵 <span id="menuMusicText">Música activada</span></button>
@@ -178,9 +224,9 @@ small.note{color:#5b704e;line-height:1.35}
   <div class="card">
     <h2>Elegí la dificultad</h2>
     <div class="modeRow">
-      <button onclick="startAi('easy')">Fácil</button>
-      <button class="secondary" onclick="startAi('medium')">Medio</button>
-      <button class="warn" onclick="startAi('hard')">Difícil</button>
+      <button onclick="prepareTeamChoice('ai','easy')">Fácil</button>
+      <button class="secondary" onclick="prepareTeamChoice('ai','medium')">Medio</button>
+      <button class="warn" onclick="prepareTeamChoice('ai','hard')">Difícil</button>
     </div>
     <div class="voiceRow"><button class="soft" onclick="hideAi()">Volver</button></div>
   </div>
@@ -230,6 +276,7 @@ const EMPTY=0, GREEN=1, GOLD=2, GREEN_K=3, GOLD_K=4;
 let board=[], turn=GREEN, selected=null, legalMoves=[], mustContinue=null;
 let pendingPromotion=null, drag=null, promotionFx=null;
 let mode='pvp', aiLevel='easy', gameOver=false;
+let humanPlayer=GREEN, aiPlayer=GOLD, pendingMode='pvp', pendingAiLevel='easy';
 let musicOn=true, audioCtx=null, musicTimer=null, currentModeSnapshot={mode:'pvp',aiLevel:'easy'};
 let nextStarter=GREEN;
 
@@ -374,7 +421,7 @@ function makeMove(m,fromAi=false){
     legalMoves=follow;
     setStatus('La captura continúa.');
     updateAll();
-    if(mode==='ai'&&turn===GOLD) setTimeout(aiTurn,300+Math.random()*300);
+    if(mode==='ai'&&turn===aiPlayer) setTimeout(aiTurn,300+Math.random()*300);
     return;
   }
 
@@ -397,7 +444,7 @@ function makeMove(m,fromAi=false){
   updateAll();
   checkEnd();
 
-  if(!gameOver&&mode==='ai'&&turn===GOLD&&!fromAi){
+  if(!gameOver&&mode==='ai'&&turn===aiPlayer&&!fromAi){
     setStatus('La computadora está pensando...');
     setTimeout(aiTurn,300+Math.random()*300);
   }
@@ -409,9 +456,9 @@ function checkEnd(){
   if(g===0||y===0||moves.length===0){
     gameOver=true;
     let winner;
-    if(g===0) winner='Equipo Dorado';
-    else if(y===0) winner='Equipo Hoja';
-    else winner=turn===GREEN?'Equipo Dorado':'Equipo Hoja';
+    if(g===0) winner='Tina · Equipo Dorado';
+    else if(y===0) winner='Nito · Equipo Hoja';
+    else winner=turn===GREEN?'Tina · Equipo Dorado':'Nito · Equipo Hoja';
     document.getElementById('endTitle').textContent='🌿 ¡Partida terminada!';
     document.getElementById('endText').textContent=`Ganó ${winner}.`;
     document.getElementById('endOverlay').style.display='flex';
@@ -430,7 +477,7 @@ function countPieces(player){
 
 function selectCell(r,c){
   if(gameOver) return;
-  if(mode==='ai'&&turn===GOLD) return;
+  if(mode==='ai'&&turn===aiPlayer) return;
 
   const clickedMove=legalMoves.find(m=>m.to.r===r&&m.to.c===c);
   if(clickedMove){makeMove(clickedMove);return;}
@@ -449,8 +496,8 @@ function selectCell(r,c){
 }
 
 function aiTurn(){
-  if(gameOver||turn!==GOLD) return;
-  const moves=allMovesFor(GOLD);
+  if(gameOver||turn!==aiPlayer) return;
+  const moves=allMovesFor(aiPlayer);
   if(!moves.length){checkEnd();return;}
   let move;
   if(aiLevel==='easy'){
@@ -477,10 +524,10 @@ function moveScore(m,b){
   let s=0;
   if(m.capture) s+=8;
   const p=b[m.from.r][m.from.c];
-  if(!isKing(p)&&m.to.r===7) s+=12;
+  if(!isKing(p)&&((p===GOLD&&m.to.r===7)||(p===GREEN&&m.to.r===0))) s+=12;
   if(m.to.c>=2&&m.to.c<=5) s+=2;
   const nb=applyMoveToBoard(b,m);
-  const opp=allMovesFor(GREEN,nb);
+  const opp=allMovesFor(humanPlayer,nb);
   s-=opp.filter(x=>x.capture).length*3;
   return s+Math.random()*.5;
 }
@@ -496,8 +543,8 @@ function chooseHard(moves){
 }
 
 function minimax(b,depth,maximizing,alpha,beta){
-  if(depth===0) return evaluate(b);
-  const player=maximizing?GOLD:GREEN;
+  if(depth===0) return evaluateForAi(b);
+  const player=maximizing?aiPlayer:humanPlayer;
   const moves=allMovesFor(player,b);
   if(!moves.length) return maximizing?-999:999;
   if(maximizing){
@@ -517,23 +564,27 @@ function minimax(b,depth,maximizing,alpha,beta){
   }
 }
 
-function evaluate(b){
+function rawTeamScore(b,player){
   let s=0;
   for(let r=0;r<8;r++) for(let c=0;c<8;c++){
     const p=b[r][c];
-    if(p===GOLD)s+=5+r*.15;
-    if(p===GOLD_K)s+=9;
-    if(p===GREEN)s-=5+(7-r)*.15;
-    if(p===GREEN_K)s-=9;
+    if(player===GOLD){
+      if(p===GOLD)s+=5+r*.15;
+      if(p===GOLD_K)s+=9;
+    }else{
+      if(p===GREEN)s+=5+(7-r)*.15;
+      if(p===GREEN_K)s+=9;
+    }
   }
   return s;
 }
+function evaluateForAi(b){return rawTeamScore(b,aiPlayer)-rawTeamScore(b,humanPlayer)}
 
 
 function updateAll(){
   greenCount.textContent=countPieces(GREEN);
   goldCount.textContent=countPieces(GOLD);
-  turnLabel.textContent=turn===GREEN?'Equipo Hoja':'Equipo Dorado';
+  turnLabel.textContent=turn===GREEN?'Nito · Equipo Hoja':'Tina · Equipo Dorado';
 
   const moves=allMovesFor(turn);
   const captureRequired=moves.some(m=>m.capture);
@@ -543,7 +594,7 @@ function updateAll(){
   }else if(captureRequired){
     setStatus('¡Captura obligatoria! Elegí una ficha que brilla.');
   }else{
-    setStatus(turn===GREEN?'Turno del Equipo Hoja.':'Turno del Equipo Dorado.');
+    setStatus(turn===GREEN?'Turno de Nito · Equipo Hoja.':'Turno de Tina · Equipo Dorado.');
   }
   draw();
 }
@@ -656,18 +707,32 @@ function drawPiece(p,x,y,size){
   ctx.fillStyle='#1d2a23';
   ctx.beginPath();ctx.arc(-r*.14,-r*.12,r*.035,0,Math.PI*2);ctx.arc(r*.14,-r*.12,r*.035,0,Math.PI*2);ctx.fill();
 
-  // Expresiones apenas diferentes para no depender solamente del color.
+  // Nito (Equipo Hoja) y Tina (Equipo Dorado) se distinguen por rasgos, no solo por color.
   ctx.strokeStyle='#5b3424';
   ctx.lineWidth=Math.max(1.5,size*.022);
   ctx.lineCap='round';
   ctx.beginPath();
-  if(brownTeam){
-    ctx.arc(0,r*.10,r*.13,.20,Math.PI-.20);
-  }else{
-    ctx.arc(0,r*.12,r*.12,.05,Math.PI-.05);
-    ctx.moveTo(r*.22,r*.03);ctx.lineTo(r*.27,r*.08);
-  }
+  ctx.arc(0,r*.10,r*.13,.20,Math.PI-.20);
   ctx.stroke();
+
+  if(brownTeam){
+    // Nito: pequeño mechón.
+    ctx.fillStyle='#4b2c21';
+    ctx.beginPath();
+    ctx.moveTo(-r*.16,-r*.50);ctx.lineTo(-r*.03,-r*.72);ctx.lineTo(r*.05,-r*.49);
+    ctx.lineTo(r*.18,-r*.68);ctx.lineTo(r*.20,-r*.44);ctx.closePath();ctx.fill();
+  }else{
+    // Tina: pestañas y moño.
+    ctx.lineWidth=Math.max(1.2,size*.018);
+    ctx.beginPath();
+    ctx.moveTo(-r*.20,-r*.20);ctx.lineTo(-r*.29,-r*.29);
+    ctx.moveTo(r*.20,-r*.20);ctx.lineTo(r*.29,-r*.29);
+    ctx.stroke();
+    ctx.fillStyle='#e85b7f';ctx.strokeStyle='#8f2f4e';
+    ctx.beginPath();ctx.ellipse(-r*.16,-r*.62,r*.18,r*.12,-.35,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.ellipse(r*.16,-r*.62,r*.18,r*.12,.35,0,Math.PI*2);ctx.fill();ctx.stroke();
+    ctx.beginPath();ctx.arc(0,-r*.61,r*.09,0,Math.PI*2);ctx.fill();ctx.stroke();
+  }
 
   // Corona de hojas más clara para las damas.
   if(isKing(p)){
@@ -701,7 +766,7 @@ function pointerBoardPosition(e){
 }
 
 canvas.addEventListener('pointerdown',e=>{
-  if(gameOver||(mode==='ai'&&turn===GOLD)) return;
+  if(gameOver||(mode==='ai'&&turn===aiPlayer)) return;
   const pos=pointerBoardPosition(e);
   if(!inBounds(pos.r,pos.c)) return;
 
@@ -748,16 +813,50 @@ function beginNewMatch(){
   const starter=nextStarter;
   nextStarter=nextStarter===GREEN?GOLD:GREEN;
   initBoard(starter);
-  setStatus(starter===GREEN?'Comienza el Equipo Hoja.':'Comienza el Equipo Dorado.');
-  if(mode==='ai'&&starter===GOLD) setTimeout(aiTurn,450+Math.random()*250);
+  setStatus(starter===GREEN?'Comienza Nito · Equipo Hoja.':'Comienza Tina · Equipo Dorado.');
+  if(mode==='ai'&&starter===aiPlayer) setTimeout(aiTurn,450+Math.random()*250);
 }
-function startPvp(){mode='pvp';currentModeSnapshot={mode,aiLevel};hideMenus();beginNewMatch();startMusic()}
+function enterFromCover(){
+  document.getElementById('coverOverlay').style.display='none';
+  document.getElementById('menuOverlay').style.display='flex';
+  if(musicOn) startMusic();
+}
+function prepareTeamChoice(nextMode,level='easy'){
+  pendingMode=nextMode;
+  pendingAiLevel=level;
+  document.getElementById('menuOverlay').style.display='none';
+  document.getElementById('aiOverlay').style.display='none';
+  document.getElementById('teamOverlay').style.display='flex';
+}
+function cancelTeamChoice(){
+  document.getElementById('teamOverlay').style.display='none';
+  if(pendingMode==='ai') document.getElementById('aiOverlay').style.display='flex';
+  else document.getElementById('menuOverlay').style.display='flex';
+}
+function chooseTeam(character){
+  mode=pendingMode;
+  aiLevel=pendingAiLevel;
+  humanPlayer=character==='nito'?GREEN:GOLD;
+  aiPlayer=humanPlayer===GREEN?GOLD:GREEN;
+  currentModeSnapshot={mode,aiLevel,humanPlayer};
+  hideMenus();
+  beginNewMatch();
+  startMusic();
+}
 function showAiLevels(){document.getElementById('menuOverlay').style.display='none';document.getElementById('aiOverlay').style.display='flex'}
 function hideAi(){document.getElementById('aiOverlay').style.display='none';document.getElementById('menuOverlay').style.display='flex'}
-function startAi(level){mode='ai';aiLevel=level;currentModeSnapshot={mode,aiLevel};hideMenus();beginNewMatch();startMusic()}
 function restartCurrent(){document.getElementById('endOverlay').style.display='none';beginNewMatch()}
-function hideMenus(){document.getElementById('menuOverlay').style.display='none';document.getElementById('aiOverlay').style.display='none'}
-function showMenu(){document.getElementById('endOverlay').style.display='none';document.getElementById('menuOverlay').style.display='flex'}
+function hideMenus(){
+  document.getElementById('menuOverlay').style.display='none';
+  document.getElementById('aiOverlay').style.display='none';
+  document.getElementById('teamOverlay').style.display='none';
+}
+function showMenu(){
+  document.getElementById('endOverlay').style.display='none';
+  document.getElementById('teamOverlay').style.display='none';
+  document.getElementById('aiOverlay').style.display='none';
+  document.getElementById('menuOverlay').style.display='flex';
+}
 function showTeacher(){document.getElementById('teacherOverlay').style.display='flex'}
 function hideTeacher(){document.getElementById('teacherOverlay').style.display='none';stopSpeaking()}
 
