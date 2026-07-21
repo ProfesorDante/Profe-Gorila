@@ -81,9 +81,35 @@ button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}button.soft{backgro
   .levels{grid-template-columns:repeat(3,1fr)}
 }
 
+/* Portada inicial del juego */
+.cover-overlay{
+  position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:#10291f;padding:0;transition:opacity .35s ease,visibility .35s ease
+}
+.cover-overlay.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
+.cover-stage{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.cover-image{display:block;width:100%;height:100%;object-fit:contain;background:#fff8df}
+.cover-play-button{
+  position:absolute;left:27%;top:79%;width:46%;height:14%;
+  border:0;background:transparent;cursor:pointer;border-radius:22px;
+  -webkit-tap-highlight-color:transparent
+}
+.cover-play-button:focus-visible{outline:5px solid rgba(255,255,255,.95);outline-offset:4px}
+.cover-play-button:hover{filter:drop-shadow(0 0 10px rgba(255,255,255,.45))}
+@media(max-width:700px){
+  .cover-play-button{left:24%;top:77%;width:52%;height:16%}
+}
+
 </style>
 </head>
 <body>
+<div id="coverOverlay" class="cover-overlay" aria-label="Portada de Ta-Te-Ti">
+  <div class="cover-stage">
+    <img class="cover-image" src="../img/tateti.png" alt="Portada de Ta-Te-Ti del Gran Árbol">
+    <button id="coverPlayButton" class="cover-play-button" type="button" aria-label="Jugar ahora"></button>
+  </div>
+</div>
+
 <div class="app">
 <header><div class="title">🐒 TA-TE-TI DEL GRAN ÁRBOL</div><div class="hud"><div class="pill">Turno: <span id="turnLabel">Monito Marrón</span></div><div class="pill">Marcador: <span id="scoreLabel">0 - 0</span></div></div></header>
 <main>
@@ -101,7 +127,7 @@ button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}button.soft{backgro
 const boardEl=document.getElementById('board'),statusEl=document.getElementById('status'),turnLabel=document.getElementById('turnLabel'),scoreLabel=document.getElementById('scoreLabel');
 const X='X',O='O',wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 let board=Array(9).fill(''),turn=X,mode='pvp',aiLevel='easy',roundOver=false,scores={X:0,O:0},musicOn=true,audioCtx=null,musicTimer=null,musicStep=0,nextAiStarter=X,aiTurnToken=0;
-const MASTER_VOLUME=1.8;
+const MASTER_VOLUME=3.6;
 
 function monkeySVG(team){
  const brown=team===X,ring=brown?'#8b5434':'#e0ad42',head=brown?'#5e3827':'#8b572d',face=brown?'#e4b77d':'#f1c983';
@@ -155,7 +181,7 @@ function tone(f,d,t='sine',v=.03,delay=0){
  const now=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();
  o.type=t;o.frequency.value=f;
  g.gain.setValueAtTime(0,now);
- g.gain.linearRampToValueAtTime(Math.min(.22,v*MASTER_VOLUME),now+.018);
+ g.gain.linearRampToValueAtTime(Math.min(.38,v*MASTER_VOLUME),now+.018);
  g.gain.exponentialRampToValueAtTime(.0001,now+d);
  o.connect(g).connect(audioCtx.destination);o.start(now);o.stop(now+d+.05);
 }
@@ -166,7 +192,7 @@ function brass(note,dur=.34,vol=.022,delay=0){
  const t=audioCtx.currentTime+delay;
  const master=audioCtx.createGain(),filter=audioCtx.createBiquadFilter();
  filter.type='lowpass';filter.frequency.setValueAtTime(1250,t);filter.frequency.linearRampToValueAtTime(2200,t+.07);
- master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(Math.min(.22,vol*MASTER_VOLUME),t+.025);
+ master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(Math.min(.38,vol*MASTER_VOLUME),t+.025);
  master.gain.exponentialRampToValueAtTime(.0001,t+dur);
  [0,-7].forEach((det,i)=>{
   const o=audioCtx.createOscillator(),g=audioCtx.createGain();
@@ -249,6 +275,17 @@ function toggleMusic(){
 function pluck(){tone(660,.1,'triangle',.04);tone(880,.12,'triangle',.03,.06)}
 function winSound(){tone(523,.15,'triangle',.05);tone(659,.15,'triangle',.05,.12);tone(784,.25,'triangle',.06,.24)}
 function drawSound(){tone(392,.18,'sine',.04);tone(349.23,.22,'sine',.035,.16)}
+const coverOverlay=document.getElementById('coverOverlay');
+const coverPlayButton=document.getElementById('coverPlayButton');
+function openGameFromCover(){
+  if(coverOverlay.classList.contains('is-hidden')) return;
+  coverOverlay.classList.add('is-hidden');
+  setTimeout(()=>{coverOverlay.style.display='none'},380);
+  if(musicOn){initAudio();}
+}
+coverPlayButton.addEventListener('click',openGameFromCover);
+coverPlayButton.addEventListener('pointerup',e=>{e.preventDefault();openGameFromCover()});
+
 render();
 </script>
 </body>
