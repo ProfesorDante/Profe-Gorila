@@ -87,17 +87,63 @@ button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}button.soft{backgro
   background:#10291f;padding:0;transition:opacity .35s ease,visibility .35s ease
 }
 .cover-overlay.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
-.cover-stage{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.cover-image{display:block;width:100%;height:100%;object-fit:contain;background:#fff8df}
-.cover-play-button{
-  position:absolute;left:27%;top:79%;width:46%;height:14%;
-  border:0;background:transparent;cursor:pointer;border-radius:22px;
-  -webkit-tap-highlight-color:transparent
+
+/* Mantiene la portada completa y hace que el área del botón siempre coincida
+   con el botón dibujado, incluso en pantallas verticales o panorámicas. */
+.cover-stage{
+  position:relative;
+  width:min(100vw,calc(100vh * 1.5));
+  aspect-ratio:3 / 2;
+  max-height:100vh;
+  overflow:hidden;
 }
-.cover-play-button:focus-visible{outline:5px solid rgba(255,255,255,.95);outline-offset:4px}
-.cover-play-button:hover{filter:drop-shadow(0 0 10px rgba(255,255,255,.45))}
-@media(max-width:700px){
-  .cover-play-button{left:24%;top:77%;width:52%;height:16%}
+.cover-image{display:block;width:100%;height:100%;object-fit:contain;background:#fff8df}
+
+.cover-play-button{
+  position:absolute;
+  left:29.7%;top:80.1%;width:41.2%;height:16.2%;
+  border:0;background:rgba(255,255,255,0);cursor:pointer;border-radius:24px;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .18s ease,background .18s ease,box-shadow .18s ease,filter .18s ease;
+  animation:coverButtonBreath 2.3s ease-in-out infinite;
+  overflow:hidden;
+}
+.cover-play-button::before{
+  content:"";position:absolute;inset:5%;border-radius:18px;
+  border:3px solid rgba(255,255,210,0);
+  box-shadow:0 0 0 rgba(255,255,255,0),inset 0 0 0 rgba(255,255,255,0);
+  transition:border-color .18s ease,box-shadow .18s ease
+}
+.cover-play-button::after{
+  content:"";position:absolute;top:-35%;bottom:-35%;left:-32%;width:24%;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.72),transparent);
+  transform:skewX(-18deg);opacity:0;pointer-events:none
+}
+.cover-play-button:hover{
+  background:rgba(255,255,255,.11);
+  box-shadow:0 0 20px rgba(255,255,255,.72),0 0 42px rgba(181,255,84,.58),inset 0 0 25px rgba(255,255,255,.25);
+  filter:brightness(1.08);
+  transform:scale(1.035);
+  animation-play-state:paused
+}
+.cover-play-button:hover::before{
+  border-color:rgba(255,255,220,.72);
+  box-shadow:0 0 15px rgba(255,255,255,.7),inset 0 0 16px rgba(255,255,255,.24)
+}
+.cover-play-button:hover::after{opacity:1;animation:coverButtonShine .85s ease-out}
+.cover-play-button:active{transform:scale(.97);filter:brightness(.94)}
+.cover-play-button:focus-visible{
+  outline:5px solid rgba(255,255,255,.98);outline-offset:4px;
+  box-shadow:0 0 25px rgba(255,255,255,.85),0 0 45px rgba(181,255,84,.65)
+}
+@keyframes coverButtonBreath{
+  0%,100%{filter:brightness(1);transform:scale(1)}
+  50%{filter:brightness(1.08);transform:scale(1.012)}
+}
+@keyframes coverButtonShine{from{left:-32%}to{left:112%}}
+@media(prefers-reduced-motion:reduce){
+  .cover-play-button{animation:none;transition:none}
+  .cover-play-button:hover::after{animation:none;opacity:0}
 }
 
 </style>
@@ -105,7 +151,7 @@ button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}button.soft{backgro
 <body>
 <div id="coverOverlay" class="cover-overlay" aria-label="Portada de Ta-Te-Ti">
   <div class="cover-stage">
-    <img class="cover-image" src="../img/tateti.png" alt="Portada de Ta-Te-Ti del Gran Árbol">
+    <img class="cover-image" src="img/tateti.png" alt="Portada de Ta-Te-Ti del Gran Árbol">
     <button id="coverPlayButton" class="cover-play-button" type="button" aria-label="Jugar ahora"></button>
   </div>
 </div>
