@@ -27,6 +27,8 @@ let noiseBuffer = null;
 let player, bots = [], guardians = [], traps = [], bananas = [], objects = [], obstacles = [];
 let flag, homeFlag, enemyBase, homeBase, particles = [], shake = 0;
 let levelElapsed = 0;
+let director = null;
+let lastActionAt = 0;
 let stats = {jumpsUsed:0,hits:0,bananas:0};
 let camera = {x:0,y:0};
 let progression = {jumpCap:1,recharge:5,jumpDistance:145};
@@ -62,7 +64,7 @@ function updateUpgradeHud(){
 
 function resetLevel(n = level){
   level = n;
-  mapScale = 1 + Math.floor((level - 1) / 3) * 0.05;
+  mapScale = Math.pow(1.15, Math.floor((level - 1) / 3));
   WORLD_W = Math.round(BASE_WORLD_W * mapScale);
   WORLD_H = Math.round(BASE_WORLD_H * mapScale);
   recalcProgression(level);
@@ -73,6 +75,8 @@ function resetLevel(n = level){
   missionText.textContent = 'Tomá la bandera rival y defendé la tuya.';
   timeLeft = 125 - Math.min(level * .8, 14);
   levelElapsed = 0;
+  lastActionAt = 0;
+  director = makeDirector();
   stats = {jumpsUsed:0,hits:0,bananas:0};
   running = false;
 
@@ -127,6 +131,14 @@ function makeOrganicMaze(){
     add(690,390,95,80,'rock'); add(1320,690,95,80,'rock'); add(920,210,180,65); add(1050,910,180,65);
   }
   add(900,85,220,82,'flowers'); add(880,1030,250,78,'flowers');
+  // Los laterales crecen junto al mapa, pero nunca se convierten en autopistas vacías.
+  const edgeDensity=2+design+variant;
+  for(let i=0;i<edgeDensity;i++){
+    const x=360+i*(1260/Math.max(1,edgeDensity-1));
+    const wobble=(i%2)*70;
+    add(x,82+wobble,92,68,'rock',false,true);
+    add(x+55,BASE_WORLD_H-150-wobble,104,72,'rock',false,true);
+  }
   return raw.map(o=>({...o,x:o.x*mapScale,y:o.y*mapScale,w:o.w*mapScale,h:o.h*mapScale}));
 }
 
@@ -144,20 +156,33 @@ function findSafePoint(x,y,r){
   return {x:enemyBase.x-55*mapScale,y:WORLD_H/2};
 }
 
+function botPersonalityFor(levelNumber,index,botCount){
+  if(levelNumber===1)return 'tutorial';
+  if(levelNumber===2)return 'standard';
+  if(levelNumber===3)return 'strategist';
+  if(levelNumber===4)return 'offensive';
+  if(botCount===2){
+    const lead=['standard','strategist','offensive','prankster'][(levelNumber-5)%4];
+    return index===0?lead:'defensive';
+  }
+  // Con tres rivales siempre hay al menos uno ofensivo y uno defensivo.
+  return ['offensive','defensive',levelNumber%2?'strategist':'prankster'][index]||'standard';
+}
+
 function makeBot(i){
   const ys=[350,590,830].map(v=>v*mapScale);
   const botCount = level <= 4 ? 1 : level <= 12 ? 2 : 3;
-  const jumpCap = botCount===1 ? 1 : botCount===2 ? 1 : 2;
-  const jumpRecharge = botCount===1 ? 5 : 3;
+  const jumpCap = progression.jumpCap>=3 ? 2 : 1;
+  const jumpRecharge = progression.recharge<=3 ? 4 : 5;
   const spawn=findSafePoint(WORLD_W-(315+i*54)*mapScale,ys[i%3],20);
-  const personalities=['offensive','defensive','strategist','opportunist'];
   return {
-    id:'bot'+i,name:CLASSMATES[(level-1+i)%CLASSMATES.length],personality:personalities[(level-1+i)%4],
+    id:'bot'+i,name:CLASSMATES[(level-1+i)%CLASSMATES.length],personality:botPersonalityFor(level,i,botCount),
     x:spawn.x,y:spawn.y,spawnX:spawn.x,spawnY:spawn.y,r:20,speed:148+level*3.1,
     stun:0,inv:0,bananas:0,dirTimer:0,roamX:WORLD_W-450*mapScale,roamY:ys[i%3],
     navPath:[],navTimer:0,stuckTime:0,lastX:spawn.x,lastY:spawn.y,
     jumps:jumpCap,jumpCap,jumpRecharge,jumpCharge:0,jump:null,vx:-1,vy:0,
-    carrying:null,flagHP:0,flagMaxHP:6,state:'neutral',decisionTimer:0,recoveryTimer:0
+    carrying:null,flagHP:0,flagMaxHP:6,state:'neutral',decisionTimer:0,recoveryTimer:0,
+    observedPlayerTrouble:0
   };
 }
 
@@ -175,7 +200,7 @@ function makeGuardians(){
     return {
       ...spec,x:safe.x,y:safe.y,spawnX:safe.x,spawnY:safe.y,
       target:null,targetCheck:0,lock:0,navPath:[],navTimer:0,
-      jump:null,jumpCharge:0,phase:i*1.7,
+      jump:null,jumpCharge:0,jumpCap:progression.jumpCap>=3?2:1,jumps:progression.jumpCap>=3?2:1,jumpRecharge:progression.recharge<=3?4:5,phase:i*1.7,
       stuckTime:0,lastX:safe.x,lastY:safe.y,recoveryTimer:0
     };
   });
@@ -236,6 +261,7 @@ function update(dt){
   updatePlayer(dt);
   updateBots(dt);
   updateGuardians(dt);
+  updateDirector(dt);
   updateParticles(dt);
   updateCamera(dt);
   checkWorld();
@@ -271,7 +297,9 @@ function updatePlayer(dt){
     let speed=player.speed;
     if(player.slow>0){player.slow-=dt;speed*=.5;}
     if(player.speedBoost>0){player.speedBoost-=dt;speed*=1.28;}
+    const px=player.x,py=player.y;
     moveWithSliding(player,input.x*speed*dt,input.y*speed*dt,false);
+    if(input.len>.2 && Math.hypot(player.x-px,player.y-py)<speed*dt*.18) registerAction('wall');
   }
 
   if(player.inv>0) player.inv-=dt;
@@ -315,7 +343,7 @@ function jump(){
   const distance=progression.jumpDistance;
   const target=findJumpLanding(player.x,player.y,dx,dy,distance);
   player.jump={sx:player.x,sy:player.y,ex:target.x,ey:target.y,elapsed:0,duration:.34,height:0};
-  player.jumps--;player.recharge=0;player.inv=.45;stats.jumpsUsed++;
+  player.jumps--;player.recharge=0;player.inv=.45;stats.jumpsUsed++;registerAction('jump');
   burst(player.x,player.y,'#e8f7d0');tone(360,.1,'square',.04);updateJumpUI();
 }
 
@@ -389,27 +417,62 @@ function chooseBotGoal(b,dt){
   const losing=player.carrying==='enemy';
   const winning=bots.some(x=>x.carrying==='home');
   b.state=losing?'losing':winning?'winning':'neutral';
-  if(b.carrying==='home') return {x:enemyBase.x+enemyBase.w/2,y:WORLD_H/2,speed:b.state==='winning'?.92:1.12};
-  if(losing) return {x:player.x,y:player.y,speed:1.24};
-  if(homeFlag.dropped) return {x:homeFlag.x,y:homeFlag.y,speed:1.18};
-  const conservative=winning?.78:1;
-  if(b.personality==='offensive') return {x:homeFlag.x,y:homeFlag.y,speed:1.12*conservative};
-  if(b.personality==='defensive'){
-    if(player.x>WORLD_W*.56)return {x:player.x,y:player.y,speed:1.08};
-    return {x:enemyBase.x-180*mapScale,y:WORLD_H/2+(Number(b.id.slice(-1))-1)*150*mapScale,speed:.82};
+  const safeLane=nearestQuietLane(b);
+
+  if(b.carrying==='home'){
+    if(b.personality==='offensive'&&winning)return {x:enemyBase.x+enemyBase.w/2,y:WORLD_H/2,speed:1.28};
+    return {x:enemyBase.x+enemyBase.w/2,y:safeLane,speed:winning?.92:1.18};
+  }
+  if(homeFlag.dropped)return {x:homeFlag.x,y:homeFlag.y,speed:1.22};
+
+  if(b.personality==='tutorial'){
+    if(levelElapsed<15){
+      const a=levelElapsed*.42+Number(b.id.slice(-1))*2;
+      return {x:WORLD_W*.55+Math.cos(a)*210*mapScale,y:WORLD_H*.5+Math.sin(a)*250*mapScale,speed:.7};
+    }
+    return {x:homeFlag.x,y:homeFlag.y,speed:.9};
+  }
+  if(b.personality==='standard'){
+    if(losing)return {x:homeFlag.x,y:homeFlag.y,speed:1.28};
+    return {x:homeFlag.x,y:homeFlag.y,speed:1.02};
   }
   if(b.personality==='strategist'){
-    const lane=(Number(b.id.slice(-1))%2?280:900)*mapScale;
-    return {x:homeFlag.x-120*mapScale,y:lane,speed:1.02*conservative};
+    const trouble=player.stun>0||player.slow>0||dist(player,guardians.reduce((a,g)=>dist(player,g)<dist(player,a)?g:a,guardians[0]))<125*mapScale;
+    if(trouble||levelElapsed>22)return {x:homeFlag.x,y:homeFlag.y,speed:1.25};
+    if(losing){const g=nearestGuardianTo(player);return {x:g?g.x:g?.x||player.x,y:g?g.y:player.y,speed:1.16};}
+    return {x:WORLD_W*.52,y:safeLane,speed:.88};
   }
-  // oportunista: espera una apertura, pero no se queda inmóvil.
-  if(levelElapsed<10&&!flag.dropped)return {x:WORLD_W*.68,y:(350+Number(b.id.slice(-1))*240)*mapScale,speed:.82};
-  return {x:homeFlag.x,y:homeFlag.y,speed:1.08*conservative};
+  if(b.personality==='offensive'){
+    if(winning)return {x:homeFlag.x,y:WORLD_H/2,speed:1.32};
+    return {x:player.x,y:player.y,speed:losing?1.38:1.2};
+  }
+  if(b.personality==='defensive'){
+    if(losing)return {x:enemyBase.x-340*mapScale,y:player.y,speed:1.0};
+    if(winning)return {x:enemyBase.x-110*mapScale,y:WORLD_H/2,speed:.76};
+    if(player.x>WORLD_W*.57)return {x:player.x,y:player.y,speed:1.05};
+    return {x:enemyBase.x-180*mapScale,y:WORLD_H/2,speed:.78};
+  }
+  if(b.personality==='prankster'){
+    if(losing)return {x:homeFlag.x,y:homeFlag.y,speed:1.22};
+    const g=nearestGuardianTo(player);
+    if(winning)return {x:player.x+player.vx*70,y:player.y+player.vy*70,speed:1.26};
+    return g?{x:(player.x+g.x)/2,y:(player.y+g.y)/2,speed:1.12}:{x:player.x,y:player.y,speed:1.08};
+  }
+  return {x:homeFlag.x,y:homeFlag.y,speed:1};
 }
+
+function nearestQuietLane(b){
+  const lanes=[280,590,900].map(v=>v*mapScale);
+  return lanes.reduce((best,y)=>{
+    const danger=guardians.reduce((sum,g)=>sum+1/Math.max(40,Math.abs(g.y-y)),0)+(Math.abs(player.y-y)<150*mapScale?0.01:0);
+    return danger<best.danger?{y,danger}:best;
+  },{y:lanes[0],danger:Infinity}).y;
+}
+function nearestGuardianTo(e){return guardians.length?guardians.reduce((a,g)=>dist(e,g)<dist(e,a)?g:a,guardians[0]):null;}
 
 function handleBotFlags(b){
   if(!b.carrying && !homeFlag.carrier && dist(b,homeFlag)<b.r+homeFlag.r){
-    b.carrying='home';b.flagHP=b.flagMaxHP||6;homeFlag.carrier=b;homeFlag.dropped=false;tone(392,.1,'triangle',.035);
+    registerAction('flag');b.carrying='home';b.flagHP=b.flagMaxHP||6;homeFlag.carrier=b;homeFlag.dropped=false;tone(392,.1,'triangle',.035);
   }
   if(b.carrying==='home'){
     homeFlag.x=b.x;homeFlag.y=b.y-30-(b.jump?b.jump.height*.2:0);
@@ -423,7 +486,7 @@ function startBotJump(b,tx,ty){
   let dx=tx-b.x,dy=ty-b.y;
   if(Math.hypot(dx,dy)<.1){dx=b.vx||-1;dy=b.vy||0;}
   const l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
-  const distance=(125+(b.jumpCap-1)*35)*mapScale;
+  const distance=progression.jumpDistance;
   const target=findEntityJumpLanding(b.x,b.y,dx,dy,distance,b.r);
   if(Math.hypot(target.x-b.x,target.y-b.y)<38*mapScale)return;
   b.jump={sx:b.x,sy:b.y,ex:target.x,ey:target.y,elapsed:0,duration:.34,height:0};
@@ -591,14 +654,15 @@ function patrolGuardian(g,dt){
 }
 
 function maybeGorillaJump(g,target,dt){
-  g.jumpCharge=(g.jumpCharge||0)+dt;
-  if(g.jumpCharge<5||g.jump)return;
+  if(g.jumps<g.jumpCap){g.jumpCharge+=dt;if(g.jumpCharge>=g.jumpRecharge){g.jumpCharge=0;g.jumps++;}}
+  if(g.jumps<=0||g.jump)return;
   if(!lineClear(g,target,g.r,false)||dist(g,target)>230*mapScale){
     let dx=target.x-g.x,dy=target.y-g.y,l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
-    const landing=findEntityJumpLanding(g.x,g.y,dx,dy,170*mapScale,g.r);
-    g.jump={sx:g.x,sy:g.y,ex:landing.x,ey:landing.y,elapsed:0,duration:.36,height:0};g.jumpCharge=0;g.inv=.5;
+    const landing=findEntityJumpLanding(g.x,g.y,dx,dy,progression.jumpDistance,g.r);
+    g.jump={sx:g.x,sy:g.y,ex:landing.x,ey:landing.y,elapsed:0,duration:.36,height:0};g.jumps--;g.jumpCharge=0;g.inv=.5;
   }
 }
+
 function updateGuardianJump(g,dt){const j=g.jump;j.elapsed+=dt;const t=Math.min(1,j.elapsed/j.duration);g.x=j.sx+(j.ex-j.sx)*t;g.y=j.sy+(j.ey-j.sy)*t;j.height=Math.sin(Math.PI*t)*48;if(t>=1)g.jump=null;}
 
 function updateElephantFury(g,dt){
@@ -627,6 +691,7 @@ function guardianContacts(g){
 }
 
 function guardianHitBot(g,b){
+  registerAction('guardian-bot');
   const damage=guardianDamage(g.type);
   if(b.carrying)damageCarrier(b,damage);
   knockbackFrom(b,g,g.type==='elephant'?145:g.type==='turtle'?105:80);
@@ -634,6 +699,7 @@ function guardianHitBot(g,b){
 }
 
 function collidePlayerBot(b){
+  registerAction('player-bot');
   const dx=player.x-b.x,dy=player.y-b.y,l=Math.hypot(dx,dy)||1;
   moveWithSliding(player,dx/l*58,dy/l*58,false);moveWithSliding(b,-dx/l*42,-dy/l*42,false);
   player.inv=.85;b.inv=.85;b.stun=.35;shake=8;
@@ -644,6 +710,7 @@ function collidePlayerBot(b){
 }
 
 function guardianHit(g){
+  registerAction('guardian-player');
   const damage=guardianDamage(g.type);
   if(player.carrying)damageCarrier(player,damage);
   knockbackFrom(player,g,g.type==='elephant'?160:g.type==='turtle'?120:85);
@@ -656,6 +723,7 @@ function damageCarrier(e,amount){
   if(e.flagHP<=0)dropCarriedFlag(e);
 }
 function dropCarriedFlag(e){
+  registerAction('flag-drop');
   const kind=e.carrying;if(!kind)return;const f=kind==='enemy'?flag:homeFlag;e.carrying=null;e.flagHP=0;f.carrier=null;f.dropped=true;f.x=e.x;f.y=e.y;burst(f.x,f.y,'#fff1a3');
 }
 
@@ -663,7 +731,7 @@ function checkWorld(){
   for(const b of bananas)if(!b.got&&dist(player,b)<player.r+b.r){b.got=true;player.bananas+=b.value;stats.bananas=player.bananas;burst(b.x,b.y,'#ffd72d');tone(880,.08,'triangle',.035);}
   for(const o of objects)if(!o.got&&dist(player,o)<player.r+o.r){o.got=true;applyObject(o.type);}
   if(!player.jump)for(const tr of traps)if(dist(player,tr)<player.r+tr.r){if(tr.type==='mud')player.slow=.35;if(tr.type==='log')moveWithSliding(player,-player.vx*28,-player.vy*28,false);if(tr.type==='vine'&&Math.random()<.08)player.slow=.8;}
-  if(!player.carrying&&!flag.carrier&&dist(player,flag)<player.r+flag.r){player.carrying='enemy';player.flagHP=player.flagMaxHP||6;flag.carrier=player;flag.dropped=false;tone(523,.12,'triangle',.05);tone(659,.12,'triangle',.04,.08);}
+  if(!player.carrying&&!flag.carrier&&dist(player,flag)<player.r+flag.r){registerAction('flag');player.carrying='enemy';player.flagHP=player.flagMaxHP||6;flag.carrier=player;flag.dropped=false;tone(523,.12,'triangle',.05);tone(659,.12,'triangle',.04,.08);}
   if(player.carrying==='enemy'){flag.x=player.x;flag.y=player.y-32-(player.jump?player.jump.height*.2:0);if(rectCircle(homeBase,player))winLevel();}
   if(homeFlag.dropped&&!homeFlag.carrier&&dist(player,homeFlag)<player.r+homeFlag.r)returnFlag(homeFlag);
 }
@@ -957,6 +1025,50 @@ resultLevels.onclick=()=>{hide('result');show('levels');};
 playAgainFinal.onclick=()=>{hideFinalVictory();level=1;startLevel(1);};
 levelsFinal.onclick=()=>{hideFinalVictory();show('levels');};
 
+
+function makeDirector(){
+  const base=level===1?Infinity:level<=6?60:level<=12?40:30;
+  return {base,remaining:base,warningPlayed:false,wave:0};
+}
+function registerAction(){
+  lastActionAt=levelElapsed;
+  if(director&&level>1)director.remaining=director.base;
+}
+function isMatchContested(){
+  if(player.carrying||bots.some(b=>b.carrying)||flag.dropped||homeFlag.dropped)return true;
+  return bots.some(b=>dist(player,b)<240*mapScale)||guardians.some(g=>dist(player,g)<210*mapScale);
+}
+function elephantWarning(){
+  // Señal sonora añadida sobre la música existente; no reemplaza ninguna capa musical.
+  tone(116,.42,'sawtooth',.055);tone(92,.55,'sawtooth',.04,.16);noiseHit(.05,.025,.35,500);
+}
+function updateDirector(dt){
+  if(!director)return;
+  if(level===1){
+    if(!director.warningPlayed&&levelElapsed>=20){director.warningPlayed=true;elephantWarning();}
+    return;
+  }
+  // Si la partida está reñida, el Director es más paciente.
+  director.remaining-=dt*(isMatchContested()?.55:1);
+  if(director.remaining>0)return;
+  elephantWarning();
+  setTimeout(()=>{if(running)spawnDirectorElephant();},1800);
+  director.wave++;
+  director.remaining=Math.max(5,director.base/Math.pow(2,director.wave));
+}
+function spawnDirectorElephant(){
+  const fromLeft=Math.random()<.5;
+  const lane=(Math.random()<.5?250:930)*mapScale;
+  const x=fromLeft?90*mapScale:WORLD_W-90*mapScale;
+  const safe=findSafePoint(x,lane,34);
+  guardians.push({
+    type:'elephant',directorElephant:true,x:safe.x,y:safe.y,spawnX:safe.x,spawnY:safe.y,r:31,
+    v:(165+level*3)*Math.pow(1.04,Math.floor((level-1)/3)),dir:fromLeft?1:-1,
+    target:null,targetCheck:0,lock:0,navPath:[],navTimer:0,jump:null,jumpCharge:0,phase:0,
+    stuckTime:0,lastX:safe.x,lastY:safe.y,recoveryTimer:0,fury:true,furyLane:lane,furyDir:fromLeft?1:-1
+  });
+  burst(safe.x,safe.y,'#ffb36b');shake=14;registerAction('director-elephant');
+}
 function initAudio(){if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();}
 function tone(f,d,type='sine',v=.025,delay=0){
   if(!musicOn)return;initAudio();

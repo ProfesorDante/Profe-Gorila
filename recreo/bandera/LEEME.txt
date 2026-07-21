@@ -53,3 +53,12 @@ La victoria final se carga y descarga desde: ../../img/banderafinal.png
 Al completar el nivel 18 aparece la imagen final, un cierre musical,
 las estadísticas del último nivel y los botones para descargar el PNG,
 volver a jugar o elegir un nivel.
+
+ACTUALIZACIÓN DE BALANCE — v8
+- Nivel 1: IA de aprendizaje; explora durante 15 segundos antes de buscar la bandera. Solo se oye la trompeta lejana del elefante.
+- Desde nivel 2: IA estándar, estratega, ofensiva, defensiva y bromista según nivel y equipo.
+- Con tres bots siempre hay al menos uno ofensivo y uno defensivo.
+- Mapas: crecimiento acumulativo del 15 % cada bloque de tres niveles y más obstáculos en los bordes superior e inferior.
+- Saltos: bots y gorila escalan detrás de Tina; igualan la distancia, llegan a 2 cargas cuando Tina tiene 3 y reducen una vez la recarga cuando Tina ya la redujo dos veces.
+- Director IA: puede liberar elefantes destructores cuando la partida queda sin acción. Ventana inicial: 60 s (niveles 2–6), 40 s (7–12), 30 s (13–18). Cada nueva intervención reduce a la mitad la espera; si la partida está reñida, el reloj avanza más lentamente.
+- Música: se conservó íntegra. Solo se agregó la señal sonora lejana del elefante.
