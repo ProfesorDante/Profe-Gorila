@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+  <title>Tina y la Bandera del Gran Árbol</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="cover" class="cover" aria-label="Portada del juego">
+    <div class="coverStage">
+      <img src="../../img/bandera.png" alt="Toma la bandera">
+      <button id="coverPlay" aria-label="Jugar ahora"></button>
+    </div>
+  </div>
+
+  <div class="app">
+    <header>
+      <div class="brand">🐵 TINA Y LA BANDERA</div>
+      <div class="hud">
+        <span>Nivel <b id="levelLabel">1</b>/18</span>
+        <span>🍌 <b id="bananaLabel">0</b></span>
+        <span>🏳️ <b id="flagLabel">En su base</b></span>
+      </div>
+    </header>
+
+    <main>
+      <div class="gameShell">
+        <canvas id="game" width="1440" height="810" aria-label="Juego toma la bandera"></canvas>
+        <div id="toast" class="toast"></div>
+        <div class="mobileControls">
+          <div id="joystick" class="joystick" aria-label="Joystick virtual">
+            <div class="joyRing"></div><div id="joyKnob" class="joyKnob"></div>
+          </div>
+          <button id="jumpBtn" class="jumpBtn" aria-label="Saltar">
+            <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="jumpBg"/><circle id="jumpProgress" cx="50" cy="50" r="41" class="jumpProgress"/><text id="jumpCount" x="50" y="59">1</text></svg>
+            <small>SALTAR</small>
+          </button>
+        </div>
+      </div>
+      <aside>
+        <h2 id="missionTitle">Misión</h2>
+        <p id="missionText">Robá la bandera rival y regresá a tu base.</p>
+        <div class="statGrid">
+          <div>Saltos <b id="jumpCapLabel">1</b></div>
+          <div>Recarga <b id="rechargeLabel">5 s</b></div>
+          <div>Distancia <b id="distanceLabel">Corta</b></div>
+        </div>
+        <button id="startBtn">▶ Empezar nivel</button>
+        <button id="levelsBtn" class="secondary">🗺 Elegir nivel</button>
+        <button id="musicBtn" class="soft">🎵 Música: sí</button>
+        <button id="helpBtn" class="soft">❔ Cómo jugar</button>
+        <p class="tip">PC: WASD o flechas · Espacio para saltar.<br>Celular/tablet: joystick de 360° y botón SALTAR.</p>
+      </aside>
+    </main>
+  </div>
+
+  <div id="menu" class="overlay show">
+    <section class="card">
+      <h1>🌳 Tina y la Bandera del Gran Árbol</h1>
+      <p>Explorá un mapa grande con senderos que se cruzan: el centro es corto y peligroso; los costados son más largos y esconden bananas y trampas.</p>
+      <button id="menuPlay">Jugar</button>
+      <button id="menuLevels" class="secondary">Elegir nivel</button>
+    </section>
+  </div>
+
+  <div id="levels" class="overlay">
+    <section class="card wide">
+      <h2>Elegí un nivel</h2>
+      <div id="levelGrid" class="levelGrid"></div>
+      <button id="closeLevels" class="soft">Volver</button>
+    </section>
+  </div>
+
+  <div id="result" class="overlay">
+    <section class="card">
+      <h2 id="resultTitle">¡Lo hiciste genial!</h2>
+      <p id="resultText"></p>
+      <div id="upgradeBox" class="upgradeBox"></div>
+      <button id="nextBtn">Siguiente nivel</button>
+      <button id="retryBtn" class="secondary">Jugar otra vez</button>
+      <button id="resultLevels" class="soft">Elegir nivel</button>
+    </section>
+  </div>
+
+  <div id="help" class="overlay">
+    <section class="card wide">
+      <h2>Cómo jugar</h2>
+      <p>Tomá la bandera rival y volvé a la base de Tina. El bosque ahora es más grande y tiene caminos inspirados en un laberinto, pero con espacios amplios para esquivar. Si chocás con un rival mientras llevás la bandera, ambos rebotan y la bandera cae. El salto es animado y permite atravesar obstáculos bajos.</p>
+      <ul>
+        <li>Centro: ruta corta, con tres guardianes y más recompensas.</li>
+        <li>Arriba y abajo: rutas largas, sin guardianes, con trampas y bananas.</li>
+        <li>Si el tiempo termina, gana quien tenga más bananas. En empate total, gana Tina.</li>
+      </ul>
+      <button id="closeHelp">Entendido</button>
+    </section>
+  </div>
+
+  <div id="finalVictory" class="finalVictory" aria-hidden="true">
+    <div class="finalVictoryShade"></div>
+    <section class="finalVictoryCard">
+      <img id="finalVictoryImage" src="../../img/banderafinal.png" alt="Victoria de Tina en Toma la Bandera">
+      <div class="finalVictoryStats">
+        <h2>¡LO HICISTE GENIAL!</h2>
+        <p id="finalVictoryText"></p>
+        <div class="finalVictoryActions">
+          <a id="downloadVictory" class="victoryButton" href="../../img/banderafinal.png" download="banderafinal.png">⬇ Descargar recuerdo</a>
+          <button id="playAgainFinal" class="victoryButton victorySecondary">▶ Jugar otra vez</button>
+          <button id="levelsFinal" class="victoryButton victorySoft">🗺 Elegir nivel</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

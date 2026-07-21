@@ -1,0 +1,38 @@
+:root{--ink:#173326;--deep:#173f2b;--leaf:#3f8f51;--cream:#fff6d8;--wood:#7d4a24;--gold:#ffcf38}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:#0d2c1e;color:var(--ink)}body{overflow:hidden}
+.app{height:100dvh;display:flex;flex-direction:column;background:linear-gradient(#cceff3,#b6dc91)}
+header{height:58px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;background:linear-gradient(#315f3c,#1f452d);color:#fff8df;border-bottom:3px solid #153822}.brand{font-size:21px;font-weight:900;text-shadow:0 2px #102619}.hud{display:flex;gap:8px;flex-wrap:wrap}.hud span{background:#fff7da;color:#25442f;border:2px solid #d0ad45;border-radius:999px;padding:6px 10px;font-weight:900}
+main{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:10px;flex:1;min-height:0;padding:10px;background:linear-gradient(#b7d78a,#82b365)}.gameShell{position:relative;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center}canvas{display:block;max-width:100%;max-height:100%;width:auto;height:auto;border:4px solid #4b6b3d;border-radius:18px;background:#70a95c;box-shadow:0 10px 28px #0005;touch-action:none}
+aside{background:#fff6d8;border:3px solid #8b5a2b;border-radius:18px;padding:14px;box-shadow:0 6px #5b371d;overflow:auto}aside h2{margin:0 0 6px;color:#2c5f39}aside p{line-height:1.35}.statGrid{display:grid;grid-template-columns:1fr;gap:7px;margin:10px 0}.statGrid div{background:#eef6df;border:2px solid #9cb879;border-radius:12px;padding:8px;font-weight:800}button{width:100%;border:0;border-radius:14px;padding:11px 12px;margin:5px 0;font-size:15px;font-weight:900;color:#fff;background:#3f8f51;box-shadow:0 5px #245d35;cursor:pointer}button:active{transform:translateY(3px);box-shadow:0 2px #222}.secondary{background:#477aa8;box-shadow:0 5px #2e506f}.soft{background:#846344;box-shadow:0 5px #5d452f}.tip{font-size:12px;color:#576d4d}
+.overlay{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:16px;background:#0d281dcc}.overlay.show{display:flex}.card{width:min(640px,96vw);max-height:92dvh;overflow:auto;background:#fff6d8;border:4px solid #8b5a2b;border-radius:22px;padding:22px;text-align:center;box-shadow:0 10px #57351d}.card.wide{width:min(900px,96vw)}.card h1,.card h2{margin:0 0 10px;color:#2b5b39}.card p,.card li{font-size:16px;line-height:1.42}.card ul{text-align:left}.levelGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:14px 0}.levelGrid button{aspect-ratio:1;margin:0;padding:4px}.levelGrid button.locked{filter:grayscale(1);opacity:.45}.upgradeBox{margin:12px 0;padding:10px;border:2px solid #d5aa34;border-radius:14px;background:#fff2b3;font-weight:900}
+.cover{position:fixed;inset:0;z-index:50;background:#071b13;display:flex;align-items:center;justify-content:center}.cover.hide{opacity:0;pointer-events:none;transition:opacity .35s}.coverStage{position:relative;width:min(100vw,1536px);aspect-ratio:3/2}.coverStage img{width:100%;height:100%;object-fit:contain;display:block}.coverStage button{position:absolute;left:28%;top:81%;width:44%;height:14%;margin:0;background:transparent;box-shadow:none;border-radius:20px}.coverStage button:hover{outline:4px solid #fff7;filter:drop-shadow(0 0 12px #fff)}
+.toast{position:absolute;top:16px;left:50%;transform:translateX(-50%);padding:10px 16px;border-radius:999px;background:#183326dd;color:#fff;font-weight:900;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}.mobileControls{display:none}.joystick{position:absolute;left:18px;bottom:18px;width:132px;height:132px;border-radius:50%;touch-action:none}.joyRing{position:absolute;inset:0;border-radius:50%;background:#ffffff38;border:4px solid #fff9;box-shadow:0 5px 20px #0005}.joyKnob{position:absolute;left:38px;top:38px;width:56px;height:56px;border-radius:50%;background:#3f8f51dd;border:4px solid #fff;box-shadow:0 5px 10px #0005}.jumpBtn{position:absolute;right:22px;bottom:22px;width:106px;height:118px;background:transparent!important;box-shadow:none!important;padding:0;margin:0}.jumpBtn svg{width:100%;height:100px;filter:drop-shadow(0 5px 5px #0005)}.jumpBg{fill:#d98a2e;stroke:#fff;stroke-width:5}.jumpProgress{fill:none;stroke:#ffe65a;stroke-width:7;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;stroke-dasharray:258;stroke-dashoffset:0}.jumpBtn text{font-size:38px;font-weight:900;fill:#fff;text-anchor:middle}.jumpBtn small{display:block;margin-top:-10px;color:#fff;font-weight:900;text-shadow:0 2px #000}
+@media(max-width:900px){header{height:auto;padding:5px 7px}.brand{font-size:14px}.hud span{font-size:10px;padding:4px 6px}main{display:block;padding:2px}.gameShell{height:calc(100dvh - 50px)}aside{display:none}canvas{border-width:2px;border-radius:9px}.mobileControls{display:block}.levelGrid{grid-template-columns:repeat(4,1fr)}.card{padding:14px}.card p,.card li{font-size:14px}}
+@media(max-width:520px){.brand{width:100%;text-align:center}.hud{margin:auto}.joystick{width:112px;height:112px;left:10px;bottom:10px}.joyKnob{left:32px;top:32px;width:48px;height:48px}.jumpBtn{right:10px;bottom:8px;width:92px}.levelGrid{grid-template-columns:repeat(3,1fr)}}
+
+/* Versión 5: durante la partida, solo se ve el bosque y los controles. */
+header, aside{display:none!important}
+main{display:block;padding:0;background:#0d2c1e}
+.gameShell{width:100vw;height:100dvh;min-height:0}
+canvas{width:100vw;height:100dvh;max-width:none;max-height:none;border:0;border-radius:0;box-shadow:none;object-fit:contain;background:#173f2b}
+.toast{display:none!important}
+@media(min-width:901px){.gameShell{height:100dvh}}
+
+
+/* Final de la aventura */
+.finalVictory{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.finalVictory.show{display:flex}
+.finalVictoryShade{position:absolute;inset:0;background:#071b13;opacity:0;animation:victoryShade .65s ease forwards}
+.finalVictoryCard{position:relative;width:min(1000px,96vw);max-height:96dvh;overflow:auto;border:4px solid #8b5a2b;border-radius:24px;background:#fff6d8;box-shadow:0 18px 60px #000a;transform:scale(.78);opacity:0;animation:victoryZoom .7s .18s cubic-bezier(.2,.85,.2,1.15) forwards}
+.finalVictoryCard img{display:block;width:100%;height:auto;max-height:68dvh;object-fit:contain;background:#112d20;border-radius:19px 19px 0 0}
+.finalVictoryStats{padding:16px 18px 20px;text-align:center}
+.finalVictoryStats h2{margin:0 0 8px;color:#2b5b39;font-size:clamp(24px,4vw,42px)}
+.finalVictoryStats p{margin:0 0 12px;font-size:clamp(14px,2vw,18px);line-height:1.45;font-weight:800}
+.finalVictoryActions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.victoryButton{display:flex;align-items:center;justify-content:center;min-height:52px;margin:0;padding:12px 14px;border:0;border-radius:14px;text-decoration:none;font:900 16px Arial,Helvetica,sans-serif;color:#fff;background:#3f8f51;box-shadow:0 5px #245d35;cursor:pointer}
+.victoryButton:active{transform:translateY(3px);box-shadow:0 2px #222}
+.victorySecondary{background:#477aa8;box-shadow:0 5px #2e506f}
+.victorySoft{background:#846344;box-shadow:0 5px #5d452f}
+@keyframes victoryShade{to{opacity:.94}}
+@keyframes victoryZoom{to{transform:scale(1);opacity:1}}
+@media(max-width:700px){.finalVictory{padding:7px}.finalVictoryCard{width:100%;max-height:98dvh}.finalVictoryCard img{max-height:55dvh}.finalVictoryStats{padding:10px}.finalVictoryActions{grid-template-columns:1fr}.victoryButton{min-height:44px;font-size:14px}}

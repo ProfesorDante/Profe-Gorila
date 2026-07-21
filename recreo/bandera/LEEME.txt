@@ -1,0 +1,55 @@
+TINA Y LA BANDERA DEL GRAN ÁRBOL — VERSIÓN 5
+
+Contenido de la carpeta:
+- index.html
+- style.css
+- game.js
+- LEEME.txt
+
+Ubicación sugerida en GitHub:
+AulaVirtual/recreo/bandera/
+
+La portada se carga desde:
+../../img/bandera.png
+
+Cambios de esta versión:
+- Guardianes eligen objetivo por proximidad con revisión periódica, compromiso mínimo e histéresis.
+- Corazones de bandera: 3 corazones, visibles solo sobre el portador.
+- Daño: gorila/tortuga 1 corazón; elefante 2; loro/perezoso medio corazón.
+- Choque Tina-bot: pierde medio corazón cada portador involucrado; sin favoritismos.
+- Dos banderas reales: Tina y los bots pueden robar y devolver banderas.
+- Bots con IA ofensiva, defensiva, estratega y oportunista.
+- Los bots se vuelven más agresivos si van perdiendo y más conservadores si van ganando.
+- Gorila con un salto cada 5 segundos.
+- Elefante entra en furia a los 20 segundos y abre una ruta superior o inferior destruyendo obstáculos.
+- Loro devuelve banderas caídas a su base correspondiente.
+- Perezoso busca puntos de paso y se duerme allí.
+- Seis diseños de bosque; cada diseño tiene tres variantes: inicial, media y difícil.
+- Pantalla de juego limpia: sin tiempo, bananas, textos ni minimapa durante la partida.
+- Estadísticas mostradas al finalizar.
+- El mensaje final siempre es positivo.
+
+Controles:
+- PC: WASD o flechas. Espacio para saltar.
+- Celular/tablet: joystick y botón de salto.
+
+
+CAMBIOS V6
+- Corregido el error visual al tomar una bandera: los corazones ya no dejan el lienzo recortado ni duplicado.
+- Tina tiene 3 corazones con 1 bot, 4 corazones con 2 bots y 5 corazones con 3 bots.
+- Los bots mantienen 3 corazones.
+
+VERSIÓN 7
+- Guardianes ubicados siempre en puntos libres y con recuperación automática si quedan trabados.
+- Bots con desvío lateral, recálculo de ruta y salto de emergencia cuando chocan repetidamente con una roca.
+- Música de jazz Nueva Orleans más animada y progresiva: suma capas e instrumentos cada tres niveles.
+
+IMÁGENES EXTERNAS (estructura de GitHub)
+---------------------------------------
+Este proyecto debe quedar en: /recreo/bandera/
+La portada se carga desde: ../../img/bandera.png
+La victoria final se carga y descarga desde: ../../img/banderafinal.png
+
+Al completar el nivel 18 aparece la imagen final, un cierre musical,
+las estadísticas del último nivel y los botones para descargar el PNG,
+volver a jugar o elegir un nivel.
