@@ -71,3 +71,9 @@ VERSIÓN 9 — BALANCE Y GRAN DUELO
 - Objetos: casco, patineta y zapatos de salto largo.
 - Nivel final desbloqueable: EL DUELO, Tina contra Nito, una sola bandera y mejor de tres.
 - La imagen ../../img/banderafinal.png aparece únicamente después de ganar El Duelo.
+
+
+AJUSTE GRAN DUELO (v9.1)
+- Cada choque durante El Gran Duelo quita 1 corazón completo al portador.
+- La imagen banderafinal.png aparece únicamente si Tina gana el mejor de tres.
+- El Gran Duelo usa una banda sonora exclusiva de deathmatch, más rápida, tensa y percusiva.

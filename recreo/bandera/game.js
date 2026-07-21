@@ -731,9 +731,11 @@ function collidePlayerBot(b){
   const dx=player.x-b.x,dy=player.y-b.y,l=Math.hypot(dx,dy)||1;
   moveWithSliding(player,dx/l*58,dy/l*58,false);moveWithSliding(b,-dx/l*42,-dy/l*42,false);
   player.inv=.85;b.inv=.85;b.stun=.35;player.speedBoost=0;b.speedBoost=0;shake=8;
-  // Choque justo: solo pierde medio corazón quien lleve una bandera; si ambos llevan, ambos pierden.
-  if(player.carrying)damageCarrier(player,1);
-  if(b.carrying)damageCarrier(b,1);
+  // En El Gran Duelo cada choque es decisivo: quita UN corazón completo.
+  // En los niveles normales se conserva el daño anterior de medio corazón.
+  const collisionDamage=duelMode?2:1;
+  if(player.carrying)damageCarrier(player,collisionDamage);
+  if(b.carrying)damageCarrier(b,collisionDamage);
   burst((player.x+b.x)/2,(player.y+b.y)/2,'#ffe16b');tone(120,.12,'square',.06);
 }
 
@@ -1215,8 +1217,40 @@ function kick(delay=0,volume=.035){
 const jazzLead=[67,69,72,74,72,69,67,64,65,67,69,72,70,67,65,62];
 const jazzBass=[36,43,41,43,36,43,38,45];
 const jazzChords=[[60,64,67],[65,69,72],[62,65,69],[67,71,74]];
+// Banda sonora exclusiva del duelo: percusión constante, bajo urgente y llamadas
+// cortas en modo menor. No se usa en los 18 niveles normales.
+const duelLead=[76,79,81,79,76,74,72,74,76,79,83,81,79,76,74,71];
+const duelBass=[40,40,43,38,40,40,47,38];
+function duelMusicTick(){
+  if(!musicOn)return;
+  const step=musicStep%16;
+  const beat=step%4;
+  const lead=duelLead[step];
+
+  // Pulso de combate: bombo en negras y redoblante seco en contratiempos.
+  kick(0,beat===0?.052:.041);
+  if(beat===1||beat===3)noiseHit(.015,.028,.075,2100);
+  if(step%2===1)noiseHit(.08,.013,.035,4300);
+
+  // Bajo insistente y oscuro, como una cuenta regresiva que no se detiene.
+  tone(midi(duelBass[Math.floor(step/2)%duelBass.length]),.19,'sawtooth',.016);
+  tone(midi(duelBass[Math.floor(step/2)%duelBass.length]-12),.23,'sine',.021);
+
+  // Metales de deathmatch: frases breves, tensas y con respuesta aguda.
+  tone(midi(lead),.13,'square',.013,step%4===2?.025:0);
+  if(step%2===0)tone(midi(lead+12),.09,'sawtooth',.009,.075);
+  if(step===3||step===7||step===11||step===15){
+    tone(midi(52),.18,'triangle',.014,.02);
+    tone(midi(55),.18,'triangle',.012,.035);
+    tone(midi(59),.18,'triangle',.011,.05);
+  }
+  if(step===15)noiseHit(.1,.032,.22,5200);
+
+  musicStep++;if(step===15)musicBar++;
+}
 function musicTick(){
   if(!musicOn)return;
+  if(duelMode){duelMusicTick();return;}
   const tier=Math.floor((level-1)/3); // cada nuevo tipo de mapa suma capas
   const step=musicStep%16,beat=step%4,bar=Math.floor(step/4);
   const lead=jazzLead[step];
@@ -1248,7 +1282,8 @@ function musicTick(){
 }
 function startMusic(){
   stopMusic();if(!musicOn)return;initAudio();musicStep=0;musicBar=0;musicTick();
-  const interval=Math.max(250,330-Math.floor((level-1)/3)*8);
+  // El duelo acelera claramente el pulso para anunciar que ya no es un nivel normal.
+  const interval=duelMode?185:Math.max(250,330-Math.floor((level-1)/3)*8);
   musicTimer=setInterval(musicTick,interval);
 }
 function stopMusic(){if(musicTimer){clearInterval(musicTimer);musicTimer=null;}}
