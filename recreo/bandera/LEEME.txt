@@ -62,3 +62,12 @@ ACTUALIZACIÓN DE BALANCE — v8
 - Saltos: bots y gorila escalan detrás de Tina; igualan la distancia, llegan a 2 cargas cuando Tina tiene 3 y reducen una vez la recarga cuando Tina ya la redujo dos veces.
 - Director IA: puede liberar elefantes destructores cuando la partida queda sin acción. Ventana inicial: 60 s (niveles 2–6), 40 s (7–12), 30 s (13–18). Cada nueva intervención reduce a la mitad la espera; si la partida está reñida, el reloj avanza más lentamente.
 - Música: se conservó íntegra. Solo se agregó la señal sonora lejana del elefante.
+
+VERSIÓN 9 — BALANCE Y GRAN DUELO
+- Guardianes: 3 en niveles 1-6, 4 en 7-12 y 5 en 13-18.
+- Máximo dos guardianes persiguen al mismo objetivo.
+- La IA estratega mantiene su decisión varios segundos y deja de titubear.
+- Bananas y cocos aceleran la recarga del salto para Tina y los bots.
+- Objetos: casco, patineta y zapatos de salto largo.
+- Nivel final desbloqueable: EL DUELO, Tina contra Nito, una sola bandera y mejor de tres.
+- La imagen ../../img/banderafinal.png aparece únicamente después de ganar El Duelo.

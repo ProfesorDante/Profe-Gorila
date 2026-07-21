@@ -32,6 +32,8 @@ let lastActionAt = 0;
 let stats = {jumpsUsed:0,hits:0,bananas:0};
 let camera = {x:0,y:0};
 let progression = {jumpCap:1,recharge:5,jumpDistance:145};
+let duelMode=false, duelScore={tina:0,nito:0}, duelRound=1, duelRoundReset=0;
+let duelCountdownTimer=null;
 
 const upgrades = [
   {at:2,type:'cap',text:'¡Ahora podés guardar 2 saltos!'},
@@ -63,6 +65,7 @@ function updateUpgradeHud(){
 }
 
 function resetLevel(n = level){
+  duelMode=false;
   level = n;
   mapScale = Math.pow(1.15, Math.floor((level - 1) / 3));
   WORLD_W = Math.round(BASE_WORLD_W * mapScale);
@@ -187,21 +190,21 @@ function makeBot(i){
 }
 
 function makeGuardians(){
-  const attack = level%2 ? 'gorilla' : 'elephant';
-  const support = level%2 ? 'sloth' : 'parrot';
-  const growth = Math.pow(1.05, Math.floor((level-1)/3));
-  const specs = [
-    {type:attack,x:720*mapScale,y:560*mapScale,r:29,v:(132+level*2.8)*growth,dir:1},
-    {type:'turtle',x:1060*mapScale,y:640*mapScale,r:27,v:(114+level*2.4)*growth,dir:-1},
-    {type:support,x:1390*mapScale,y:545*mapScale,r:25,v:(101+level*2.0)*growth,dir:1,sleeping:false,perchIndex:0}
-  ];
-  return specs.map((spec,i)=>{
-    const safe=findSafePoint(spec.x,spec.y,spec.r+8);
+  const count=level<=6?3:level<=12?4:5;
+  const roster=['gorilla','turtle','elephant','parrot','sloth'];
+  const growth=Math.pow(1.05,Math.floor((level-1)/3));
+  const positions=[[720,520],[930,670],[1160,510],[1370,670],[1510,500]];
+  return roster.slice(0,count).map((type,i)=>{
+    const [px,py]=positions[i];
+    const r=type==='elephant'?31:type==='gorilla'?29:type==='turtle'?27:25;
+    const baseV=type==='elephant'?128:type==='gorilla'?138:type==='turtle'?116:type==='parrot'?108:98;
+    const safe=findSafePoint(px*mapScale,py*mapScale,r+9);
     return {
-      ...spec,x:safe.x,y:safe.y,spawnX:safe.x,spawnY:safe.y,
+      type,x:safe.x,y:safe.y,spawnX:safe.x,spawnY:safe.y,r,v:(baseV+level*2.5)*growth,dir:i%2? -1:1,
       target:null,targetCheck:0,lock:0,navPath:[],navTimer:0,
-      jump:null,jumpCharge:0,jumpCap:progression.jumpCap>=3?2:1,jumps:progression.jumpCap>=3?2:1,jumpRecharge:progression.recharge<=3?4:5,phase:i*1.7,
-      stuckTime:0,lastX:safe.x,lastY:safe.y,recoveryTimer:0
+      jump:null,jumpCharge:0,jumpCap:progression.jumpCap>=3?2:1,jumps:progression.jumpCap>=3?2:1,
+      jumpRecharge:progression.recharge<=3?4:5,phase:i*1.7,stuckTime:0,lastX:safe.x,lastY:safe.y,
+      recoveryTimer:0,sleeping:false,perchIndex:0
     };
   });
 }
@@ -229,16 +232,18 @@ function makeBananas(){
 }
 
 function makeObjects(){
-  return [
-    {x:720*mapScale,y:215*mapScale,r:16,type:'flower',got:false},
-    {x:1180*mapScale,y:860*mapScale,r:16,type:'leaf',got:false},
-    {x:1510*mapScale,y:600*mapScale,r:16,type:'coconut',got:false}
+  const pts=[
+    [720,215,'helmet'],[1180,860,'skateboard'],[1510,600,'shoes'],
+    [930,585,'coconut'],[1320,320,'helmet'],[510,900,'skateboard']
   ];
+  return pts.map(([x,y,type])=>({x:x*mapScale,y:y*mapScale,r:17,type,got:false}));
 }
 
 function startLevel(n=level){
-  resetLevel(n);
+  level=n;
   hideAllOverlays();
+  if(n===19){startDuel();return;}
+  resetLevel(n);
   running=true;
   last=performance.now();
   startMusic();
@@ -255,6 +260,7 @@ function loop(t){
 }
 
 function update(dt){
+  if(duelMode&&duelRoundReset>0){duelRoundReset-=dt;if(duelRoundReset<=0)resetDuelRound();}
   timeLeft -= dt;
   levelElapsed += dt;
   if(timeLeft<=0){finishByTime();return;}
@@ -340,7 +346,8 @@ function jump(){
   let dx=player.vx,dy=player.vy;
   if(Math.hypot(dx,dy)<.1){dx=1;dy=0;}
   const l=Math.hypot(dx,dy);dx/=l;dy/=l;
-  const distance=progression.jumpDistance;
+  const distance=progression.jumpDistance*(player.jumpShoes?1.5:1);
+  player.jumpShoes=false;
   const target=findJumpLanding(player.x,player.y,dx,dy,distance);
   player.jump={sx:player.x,sy:player.y,ex:target.x,ey:target.y,elapsed:0,duration:.34,height:0};
   player.jumps--;player.recharge=0;player.inv=.45;stats.jumpsUsed++;registerAction('jump');
@@ -371,7 +378,8 @@ function updateBots(dt){
       if(b.stun>0){b.stun-=dt;continue;}
       const goal=chooseBotGoal(b,dt);
       const oldX=b.x,oldY=b.y;
-      navigateEntity(b,goal.x,goal.y,b.speed*goal.speed,dt,false);
+      navigateEntity(b,goal.x,goal.y,b.speed*goal.speed*(b.speedBoost>0?1.35:1),dt,false);
+      if(b.speedBoost>0)b.speedBoost-=dt;
       const dx=b.x-oldX,dy=b.y-oldY;if(Math.hypot(dx,dy)>.1){b.vx=dx;b.vy=dy;}
       const moved=Math.hypot(b.x-b.lastX,b.y-b.lastY);
       if(moved<1.35)b.stuckTime+=dt;else b.stuckTime=Math.max(0,b.stuckTime-dt*2.5);
@@ -414,6 +422,11 @@ function recoverBotFromObstacle(b,goal){
 }
 
 function chooseBotGoal(b,dt){
+  if(duelMode){
+    if(b.carrying==='duel')return {x:enemyBase.x+enemyBase.w/2,y:enemyBase.y+enemyBase.h/2,speed:1.15};
+    if(player.carrying==='duel')return {x:player.x,y:player.y,speed:1.22};
+    return {x:flag.x,y:flag.y,speed:1.08};
+  }
   const losing=player.carrying==='enemy';
   const winning=bots.some(x=>x.carrying==='home');
   b.state=losing?'losing':winning?'winning':'neutral';
@@ -437,10 +450,16 @@ function chooseBotGoal(b,dt){
     return {x:homeFlag.x,y:homeFlag.y,speed:1.02};
   }
   if(b.personality==='strategist'){
-    const trouble=player.stun>0||player.slow>0||dist(player,guardians.reduce((a,g)=>dist(player,g)<dist(player,a)?g:a,guardians[0]))<125*mapScale;
-    if(trouble||levelElapsed>22)return {x:homeFlag.x,y:homeFlag.y,speed:1.25};
-    if(losing){const g=nearestGuardianTo(player);return {x:g?g.x:g?.x||player.x,y:g?g.y:player.y,speed:1.16};}
-    return {x:WORLD_W*.52,y:safeLane,speed:.88};
+    b.commitTimer=(b.commitTimer||0)-dt;
+    const nearestG=nearestGuardianTo(player);
+    const trouble=player.stun>0||player.slow>0||(nearestG&&dist(player,nearestG)<125*mapScale);
+    if(b.commitTimer<=0||!b.commitGoal||trouble||losing){
+      if(trouble||levelElapsed>22)b.commitGoal={x:homeFlag.x,y:homeFlag.y,speed:1.25};
+      else if(losing){const g=nearestG;b.commitGoal={x:g?g.x:player.x,y:g?g.y:player.y,speed:1.16};}
+      else b.commitGoal={x:WORLD_W*.52,y:safeLane,speed:.9};
+      b.commitTimer=3.6+Math.random()*1.2;
+    }
+    return b.commitGoal;
   }
   if(b.personality==='offensive'){
     if(winning)return {x:homeFlag.x,y:WORLD_H/2,speed:1.32};
@@ -471,6 +490,11 @@ function nearestQuietLane(b){
 function nearestGuardianTo(e){return guardians.length?guardians.reduce((a,g)=>dist(e,g)<dist(e,a)?g:a,guardians[0]):null;}
 
 function handleBotFlags(b){
+  if(duelMode){
+    if(!b.carrying&&!flag.carrier&&dist(b,flag)<b.r+flag.r){b.carrying='duel';b.flagHP=b.flagMaxHP;flag.carrier=b;flag.dropped=false;tone(392,.1,'triangle',.035);}
+    if(b.carrying==='duel'){flag.x=b.x;flag.y=b.y-30-(b.jump?b.jump.height*.2:0);if(rectCircle(enemyBase,b))scoreDuel('nito');}
+    return;
+  }
   if(!b.carrying && !homeFlag.carrier && dist(b,homeFlag)<b.r+homeFlag.r){
     registerAction('flag');b.carrying='home';b.flagHP=b.flagMaxHP||6;homeFlag.carrier=b;homeFlag.dropped=false;tone(392,.1,'triangle',.035);
   }
@@ -640,8 +664,11 @@ function chooseGuardianTarget(g,dt){
   if(!candidates.length){g.target=null;return null;}
   if(g.targetCheck<=0){
     g.targetCheck=1.05+Math.random()*.35;
-    const nearest=candidates.reduce((a,b)=>dist(g,b)<dist(g,a)?b:a,candidates[0]);
-    if(!g.target||!candidates.includes(g.target)||g.lock<=0||dist(g,nearest)<dist(g,g.target)*.75){g.target=nearest;g.lock=1.8;}
+    const load=e=>guardians.filter(x=>x!==g&&x.target===e).length;
+    const eligible=candidates.filter(e=>load(e)<2);
+    if(!eligible.length){g.target=null;g.lock=0;return null;}
+    const nearest=eligible.reduce((a,b)=>dist(g,b)<dist(g,a)?b:a,eligible[0]);
+    if(!g.target||!eligible.includes(g.target)||g.lock<=0||dist(g,nearest)<dist(g,g.target)*.75){g.target=nearest;g.lock=1.8;}
   }
   return g.target;
 }
@@ -693,7 +720,8 @@ function guardianContacts(g){
 function guardianHitBot(g,b){
   registerAction('guardian-bot');
   const damage=guardianDamage(g.type);
-  if(b.carrying)damageCarrier(b,damage);
+  if(b.helmet){b.helmet=false;}else if(b.carrying)damageCarrier(b,damage);
+  b.speedBoost=0;
   knockbackFrom(b,g,g.type==='elephant'?145:g.type==='turtle'?105:80);
   b.stun=g.type==='sloth'?1.2:.45;b.inv=1;shake=6;burst(b.x,b.y,'#bfe8ff');
 }
@@ -702,7 +730,7 @@ function collidePlayerBot(b){
   registerAction('player-bot');
   const dx=player.x-b.x,dy=player.y-b.y,l=Math.hypot(dx,dy)||1;
   moveWithSliding(player,dx/l*58,dy/l*58,false);moveWithSliding(b,-dx/l*42,-dy/l*42,false);
-  player.inv=.85;b.inv=.85;b.stun=.35;shake=8;
+  player.inv=.85;b.inv=.85;b.stun=.35;player.speedBoost=0;b.speedBoost=0;shake=8;
   // Choque justo: solo pierde medio corazón quien lleve una bandera; si ambos llevan, ambos pierden.
   if(player.carrying)damageCarrier(player,1);
   if(b.carrying)damageCarrier(b,1);
@@ -712,7 +740,8 @@ function collidePlayerBot(b){
 function guardianHit(g){
   registerAction('guardian-player');
   const damage=guardianDamage(g.type);
-  if(player.carrying)damageCarrier(player,damage);
+  if(player.helmet){player.helmet=false;}else if(player.carrying)damageCarrier(player,damage);
+  player.speedBoost=0;
   knockbackFrom(player,g,g.type==='elephant'?160:g.type==='turtle'?120:85);
   player.stun=g.type==='sloth'?1.1:.25;player.inv=1;stats.hits++;shake=8;burst(player.x,player.y,'#ffd2e6');
 }
@@ -724,24 +753,43 @@ function damageCarrier(e,amount){
 }
 function dropCarriedFlag(e){
   registerAction('flag-drop');
-  const kind=e.carrying;if(!kind)return;const f=kind==='enemy'?flag:homeFlag;e.carrying=null;e.flagHP=0;f.carrier=null;f.dropped=true;f.x=e.x;f.y=e.y;burst(f.x,f.y,'#fff1a3');
+  const kind=e.carrying;if(!kind)return;const f=(kind==='enemy'||kind==='duel')?flag:homeFlag;e.carrying=null;e.flagHP=0;f.carrier=null;f.dropped=true;f.x=e.x;f.y=e.y;burst(f.x,f.y,'#fff1a3');
 }
 
 function checkWorld(){
-  for(const b of bananas)if(!b.got&&dist(player,b)<player.r+b.r){b.got=true;player.bananas+=b.value;stats.bananas=player.bananas;burst(b.x,b.y,'#ffd72d');tone(880,.08,'triangle',.035);}
-  for(const o of objects)if(!o.got&&dist(player,o)<player.r+o.r){o.got=true;applyObject(o.type);}
+  for(const b of bananas)if(!b.got&&dist(player,b)<player.r+b.r){
+    b.got=true;player.bananas+=b.value;stats.bananas=player.bananas;
+    player.recharge=Math.min(progression.recharge,player.recharge+(b.value>1?1.5:.55));
+    burst(b.x,b.y,'#ffd72d');tone(880,.08,'triangle',.035);
+  }
+  for(const b of bots){
+    for(const banana of bananas)if(!banana.got&&dist(b,banana)<b.r+banana.r){banana.got=true;b.bananas+=banana.value;b.jumpCharge=Math.min(b.jumpRecharge,b.jumpCharge+(banana.value>1?1.5:.55));}
+    for(const o of objects)if(!o.got&&dist(b,o)<b.r+o.r){o.got=true;applyObjectTo(b,o.type);}
+  }
+  for(const o of objects)if(!o.got&&dist(player,o)<player.r+o.r){o.got=true;applyObjectTo(player,o.type);}
   if(!player.jump)for(const tr of traps)if(dist(player,tr)<player.r+tr.r){if(tr.type==='mud')player.slow=.35;if(tr.type==='log')moveWithSliding(player,-player.vx*28,-player.vy*28,false);if(tr.type==='vine'&&Math.random()<.08)player.slow=.8;}
+  if(duelMode){
+    if(!player.carrying&&!flag.carrier&&dist(player,flag)<player.r+flag.r){player.carrying='duel';player.flagHP=player.flagMaxHP;flag.carrier=player;flag.dropped=false;tone(523,.12,'triangle',.05);}
+    if(player.carrying==='duel'){flag.x=player.x;flag.y=player.y-32-(player.jump?player.jump.height*.2:0);if(rectCircle(homeBase,player))scoreDuel('tina');}
+    return;
+  }
   if(!player.carrying&&!flag.carrier&&dist(player,flag)<player.r+flag.r){registerAction('flag');player.carrying='enemy';player.flagHP=player.flagMaxHP||6;flag.carrier=player;flag.dropped=false;tone(523,.12,'triangle',.05);tone(659,.12,'triangle',.04,.08);}
   if(player.carrying==='enemy'){flag.x=player.x;flag.y=player.y-32-(player.jump?player.jump.height*.2:0);if(rectCircle(homeBase,player))winLevel();}
   if(homeFlag.dropped&&!homeFlag.carrier&&dist(player,homeFlag)<player.r+homeFlag.r)returnFlag(homeFlag);
 }
 
-function applyObject(t){
-  if(t==='flower'){player.speedBoost=4;toast('🌺 Velocidad extra');}
-  if(t==='leaf'){player.inv=3;toast('🍃 Nadie puede tocarte por 3 segundos');}
-  if(t==='coconut'){for(const b of bots)b.stun=2;toast('🥥 Rivales aturdidos');}
+function applyObject(t){applyObjectTo(player,t);}
+function applyObjectTo(e,t){
+  if(t==='helmet')e.helmet=true;
+  if(t==='skateboard')e.speedBoost=8;
+  if(t==='shoes')e.jumpShoes=true;
+  if(t==='coconut'){
+    if(e===player)e.recharge=Math.min(progression.recharge,e.recharge+1.8);
+    else e.jumpCharge=Math.min(e.jumpRecharge,e.jumpCharge+1.8);
+  }
   tone(1046,.12,'sine',.04);
 }
+
 function dropFlag(){dropCarriedFlag(player);}
 function returnFlag(f=flag){f.x=f.homeX;f.y=f.homeY;f.dropped=false;f.carrier=null;}
 function botWins(b){
@@ -753,9 +801,8 @@ function botWins(b){
 
 function winLevel(){
   running=false;stopMusic();
-  unlocked=Math.max(unlocked,Math.min(18,level+1));localStorage.setItem('tinaFlagUnlocked',unlocked);
+  unlocked=Math.max(unlocked,Math.min(19,level+1));localStorage.setItem('tinaFlagUnlocked',unlocked);
   buildLevelGrid();
-  if(level===18){showFinalVictory();return;}
   const u=upgrades.find(x=>x.at===level);
   resultTitle.textContent='🌟 ¡Lo hiciste genial!';
   resultText.innerHTML=`Superaste a <b>${CLASSMATES[level-1]}</b> y volviste con la bandera.<br>Tiempo: <b>${formatTime(levelElapsed)}</b> · Bananas: <b>${player.bananas}</b><br>Saltos usados: <b>${stats.jumpsUsed}</b> · Golpes recibidos: <b>${stats.hits}</b><br><br><b>¡Aventura brillante!</b>`;
@@ -766,7 +813,7 @@ function showFinalVictory(){
   hideAllOverlays();
   const finalVictory=document.getElementById('finalVictory');
   const finalText=document.getElementById('finalVictoryText');
-  finalText.innerHTML=`Completaste los 18 desafíos.<br>Tiempo del último nivel: <b>${formatTime(levelElapsed)}</b> · Bananas: <b>${player.bananas}</b> · Saltos: <b>${stats.jumpsUsed}</b> · Golpes: <b>${stats.hits}</b>`;
+  finalText.innerHTML=`Superaste los 18 desafíos y venciste a Nito en El Gran Duelo.<br>Tiempo del último nivel: <b>${formatTime(levelElapsed)}</b> · Bananas: <b>${player.bananas}</b> · Saltos: <b>${stats.jumpsUsed}</b> · Golpes: <b>${stats.hits}</b>`;
   finalVictory.classList.add('show');
   finalVictory.setAttribute('aria-hidden','false');
   victoryFanfare();
@@ -795,7 +842,6 @@ function finishByTime(){
     resultTitle.textContent='🌟 ¡Lo hiciste genial!';
     resultText.innerHTML=`El tiempo terminó, pero Tina reunió <b>${player.bananas}</b> bananas y ganó el desempate.<br><b>Rango: ¡Gran estratega!</b>`;
     unlocked=Math.max(unlocked,Math.min(18,level+1));localStorage.setItem('tinaFlagUnlocked',unlocked);
-    if(level===18){buildLevelGrid();showFinalVictory();return;}
     nextBtn.style.display='block';
   }else{
     resultTitle.textContent='💚 ¡Jugaste genial!';
@@ -820,6 +866,7 @@ function draw(){
   ctx.save();ctx.translate(-camera.x,-camera.y);
   drawWorld();drawEntities();
   ctx.restore();
+  if(duelMode)drawDuelScore();
   // Sin HUD: toda la pantalla pertenece al bosque.
   ctx.restore();
   updateJumpUI();
@@ -832,7 +879,7 @@ function drawWorld(){
   drawPaths();
   for(const o of obstacles) drawObstacle(o);
   drawBase(homeBase,'#f4cf4f','TINA');
-  drawBase(enemyBase,'#db6c57',CLASSMATES[level-1]);
+  drawBase(enemyBase,'#db6c57',duelMode?'NITO':CLASSMATES[level-1]);
 }
 
 function drawGroundTexture(){
@@ -880,14 +927,21 @@ function drawBase(r,color,label){
 function drawEntities(){
   for(const tr of traps)drawTrap(tr);for(const b of bananas)if(!b.got)drawBanana(b);for(const o of objects)if(!o.got)drawObject(o);
   for(const g of guardians){drawGuardian(g);if(g.carryingFlag)drawFlag(g.carryingFlag.x,g.carryingFlag.y,g.carryingFlag.kind);}
-  for(const b of bots){const bh=b.jump?b.jump.height:0;drawMonkey(b.x,b.y-bh,b.r,'#4d80c7',b.name[0],bh);drawBotJumpDots(b,b.x,b.y-bh);if(b.carrying)drawCarrierHearts(b,b.x,b.y-bh-48);}
+  for(const b of bots){const bh=b.jump?b.jump.height:0;drawMonkey(b.x,b.y-bh,b.r,'#4d80c7',b.name[0],bh);drawBotJumpDots(b,b.x,b.y-bh);if(b.carrying)drawCarrierHearts(b,b.x,b.y-bh-48);drawBuffIcons(b,b.x,b.y-bh-68);}
   if(!flag.carrier)drawFlag(flag.x,flag.y,'enemy');
-  if(!homeFlag.carrier)drawFlag(homeFlag.x,homeFlag.y,'home');
+  if(!duelMode&&!homeFlag.carrier)drawFlag(homeFlag.x,homeFlag.y,'home');
   const jumpHeight=player.jump?player.jump.height:0;drawMonkey(player.x,player.y-jumpHeight,player.r,'#e95d9b','T',jumpHeight);drawPlayerIndicators(player.x,player.y-jumpHeight);
   if(player.carrying)drawCarrierHearts(player,player.x,player.y-jumpHeight-50);
-  if(player.carrying==='enemy')drawFlag(flag.x,flag.y-jumpHeight*.35,'enemy');
-  for(const b of bots)if(b.carrying==='home')drawFlag(homeFlag.x,homeFlag.y-(b.jump?b.jump.height*.35:0),'home');
+  if(player.carrying==='enemy'||player.carrying==='duel')drawFlag(flag.x,flag.y-jumpHeight*.35,'enemy');
+  drawBuffIcons(player,player.x,player.y-jumpHeight-68);
+  for(const b of bots){if(b.carrying==='home')drawFlag(homeFlag.x,homeFlag.y-(b.jump?b.jump.height*.35:0),'home');if(b.carrying==='duel')drawFlag(flag.x,flag.y-(b.jump?b.jump.height*.35:0),'enemy');}
   for(const p of particles){ctx.globalAlpha=p.life;ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,5,5);}ctx.globalAlpha=1;
+}
+
+
+function drawBuffIcons(e,x,y){
+  const icons=[];if(e.helmet)icons.push('🪖');if(e.speedBoost>0)icons.push('🛹');if(e.jumpShoes)icons.push('👟');
+  if(!icons.length)return;ctx.save();ctx.font='17px serif';ctx.textAlign='center';icons.forEach((ic,i)=>ctx.fillText(ic,x+(i-(icons.length-1)/2)*19,y));ctx.restore();
 }
 
 function drawCarrierHearts(e,x,y){
@@ -960,7 +1014,7 @@ function drawPlayerIndicators(x,y){
 function drawGuardian(g){const gh=g.jump?g.jump.height:0;const icons={elephant:'🐘',gorilla:'🦍',turtle:'🐢',parrot:'🦜',sloth:'🦥'};ctx.font='46px serif';ctx.textAlign='center';ctx.fillText(icons[g.type],g.x,g.y+15-gh);}
 function drawTrap(t){ctx.font='31px serif';ctx.textAlign='center';ctx.fillText(t.type==='mud'?'🟤':t.type==='log'?'🪵':'➰',t.x,t.y+10);}
 function drawBanana(b){ctx.font=b.value>1?'32px serif':'25px serif';ctx.textAlign='center';ctx.fillText('🍌',b.x,b.y+8);}
-function drawObject(o){const m={flower:'🌺',leaf:'🍃',coconut:'🥥'};ctx.font='30px serif';ctx.textAlign='center';ctx.fillText(m[o.type],o.x,o.y+8);}
+function drawObject(o){const m={helmet:'🪖',skateboard:'🛹',shoes:'👟',coconut:'🥥'};ctx.font='30px serif';ctx.textAlign='center';ctx.fillText(m[o.type],o.x,o.y+8);}
 function drawFlag(x,y,kind='enemy'){ctx.save();ctx.translate(x,y);ctx.strokeStyle='#633b1f';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-8,20);ctx.lineTo(-8,-26);ctx.stroke();ctx.fillStyle=kind==='home'?'#ff8fc5':'#ffd329';ctx.beginPath();ctx.moveTo(-8,-26);ctx.lineTo(34,-18);ctx.lineTo(-8,-4);ctx.closePath();ctx.fill();ctx.font='18px serif';ctx.fillText('🍌',5,-9);ctx.restore();}
 
 function drawTopHud(){}
@@ -990,8 +1044,8 @@ function hideAllOverlays(){['menu','levels','result','help'].forEach(hide);}
 function toast(t){}
 function buildLevelGrid(){
   levelGrid.innerHTML='';
-  for(let i=1;i<=18;i++){
-    const b=document.createElement('button');b.textContent=i+'\n'+CLASSMATES[i-1];
+  for(let i=1;i<=19;i++){
+    const b=document.createElement('button');b.textContent=i===19?'★ EL DUELO':i+'\n'+CLASSMATES[i-1];
     if(i>unlocked)b.classList.add('locked');b.disabled=i>unlocked;
     b.onclick=()=>{level=i;hide('levels');startLevel(i);};levelGrid.appendChild(b);
   }
@@ -1019,12 +1073,75 @@ startBtn.onclick=()=>startLevel(level);
 musicBtn.onclick=toggleMusic;
 helpBtn.onclick=()=>show('help');
 closeHelp.onclick=()=>hide('help');
-nextBtn.onclick=()=>startLevel(Math.min(18,level+1));
+nextBtn.onclick=()=>startLevel(Math.min(19,level+1));
 retryBtn.onclick=()=>startLevel(level);
 resultLevels.onclick=()=>{hide('result');show('levels');};
 playAgainFinal.onclick=()=>{hideFinalVictory();level=1;startLevel(1);};
 levelsFinal.onclick=()=>{hideFinalVictory();show('levels');};
 
+
+
+function startDuel(){
+  duelMode=true;duelScore={tina:0,nito:0};duelRound=1;running=false;stopMusic();
+  resetDuelWorld();
+  const overlay=document.getElementById('duelCountdown');
+  const title=document.getElementById('duelCountdownTitle');
+  const num=document.getElementById('duelCountdownNumber');
+  overlay.classList.add('show');title.textContent='¿ESTÁS PREPARADO?';num.textContent='';
+  let n=5;
+  clearInterval(duelCountdownTimer);
+  setTimeout(()=>{num.textContent=n;tone(110,.12,'square',.04);duelCountdownTimer=setInterval(()=>{
+    n--;if(n>0){num.textContent=n;tone(110+n*10,.12,'square',.04);}else{clearInterval(duelCountdownTimer);overlay.classList.remove('show');beginDuelRound();}
+  },850);},900);
+}
+function resetDuelWorld(){
+  level=19;mapScale=1.18;WORLD_W=Math.round(1850*mapScale);WORLD_H=Math.round(980*mapScale);recalcProgression(19);
+  homeBase={x:90*mapScale,y:WORLD_H/2-115*mapScale,w:150*mapScale,h:230*mapScale};
+  enemyBase={x:WORLD_W-240*mapScale,y:WORLD_H/2-115*mapScale,w:150*mapScale,h:230*mapScale};
+  player={id:'tina',x:280*mapScale,y:WORLD_H/2,r:22,vx:1,vy:0,speed:240,jumps:progression.jumpCap,recharge:0,jump:null,inv:0,stun:0,bananas:0,carrying:null,flagHP:0,flagMaxHP:10,slow:0,speedBoost:0};
+  const nitoSpawn={x:WORLD_W-280*mapScale,y:WORLD_H/2};
+  bots=[{id:'nito',name:'Nito',personality:'duelist',x:nitoSpawn.x,y:nitoSpawn.y,spawnX:nitoSpawn.x,spawnY:nitoSpawn.y,r:22,speed:240,stun:0,inv:0,bananas:0,navPath:[],navTimer:0,stuckTime:0,lastX:nitoSpawn.x,lastY:nitoSpawn.y,jumps:progression.jumpCap,jumpCap:progression.jumpCap,jumpRecharge:progression.recharge,jumpCharge:0,jump:null,vx:-1,vy:0,carrying:null,flagHP:0,flagMaxHP:10,state:'neutral',decisionTimer:0,recoveryTimer:0}];
+  guardians=[];traps=[];bananas=[];objects=[];homeFlag={kind:'home',x:-9999,y:-9999,homeX:-9999,homeY:-9999,r:1,carrier:null,dropped:false};
+  flag={kind:'enemy',x:WORLD_W/2,y:WORLD_H/2,homeX:WORLD_W/2,homeY:WORLD_H/2,r:20,carrier:null,dropped:false};
+  obstacles=makeDuelArena();particles=[];stats={jumpsUsed:0,hits:0,bananas:0};timeLeft=9999;levelElapsed=0;director=null;
+  camera.x=clamp(WORLD_W/2-VIEW_W/2,0,WORLD_W-VIEW_W);camera.y=clamp(WORLD_H/2-VIEW_H/2,0,WORLD_H-VIEW_H);draw();
+}
+function makeDuelArena(){
+  const a=[];const add=(x,y,w,h,type='hedge',low=false,breakable=false)=>a.push({x:x*mapScale,y:y*mapScale,w:w*mapScale,h:h*mapScale,type,low,breakable});
+  add(0,0,1850,48,'trees');add(0,932,1850,48,'trees');add(0,0,48,980,'trees');add(1802,0,48,980,'trees');
+  // Arena completamente simétrica: diagonales y cuatro decisiones alrededor del centro.
+  [[410,180,250,62],[1190,180,250,62],[410,738,250,62],[1190,738,250,62],[680,330,90,150,'rock'],[1080,330,90,150,'rock'],[680,500,90,150,'rock'],[1080,500,90,150,'rock'],[870,180,110,90,'flowers'],[870,710,110,90,'flowers']].forEach(x=>add(...x));
+  return a;
+}
+function beginDuelRound(){
+  running=true;last=performance.now();startMusic();requestAnimationFrame(loop);
+}
+function resetDuelRound(){
+  player.x=280*mapScale;player.y=WORLD_H/2;player.carrying=null;player.flagHP=0;player.jump=null;player.jumps=progression.jumpCap;player.recharge=0;player.inv=1;
+  const n=bots[0];n.x=WORLD_W-280*mapScale;n.y=WORLD_H/2;n.carrying=null;n.flagHP=0;n.jump=null;n.jumps=progression.jumpCap;n.jumpCharge=0;n.inv=1;n.navPath=[];
+  flag.x=flag.homeX;flag.y=flag.homeY;flag.carrier=null;flag.dropped=false;duelRound++;
+}
+function scoreDuel(who){
+  if(duelRoundReset>0)return;
+  duelScore[who]++;running=false;stopMusic();winSound();
+  if(duelScore[who]>=2){
+    unlocked=19;localStorage.setItem('tinaFlagUnlocked',19);
+    if(who==='tina'){setTimeout(()=>showFinalVictory(),900);}
+    else setTimeout(()=>{
+      resultTitle.textContent='💚 ¡Lo hiciste genial!';
+      resultText.innerHTML='Nito ganó este duelo por muy poquito.<br><b>¡La revancha ya está lista!</b>';
+      upgradeBox.style.display='none';nextBtn.style.display='none';retryBtn.textContent='Revancha contra Nito';show('result');
+    },700);
+    return;
+  }
+  duelRoundReset=1.5;
+  setTimeout(()=>{resetDuelRound();duelRoundReset=0;running=true;last=performance.now();startMusic();requestAnimationFrame(loop);},1500);
+}
+function drawDuelScore(){
+  ctx.save();ctx.font='900 28px Arial';ctx.textAlign='center';ctx.fillStyle='#fff';ctx.strokeStyle='#173326';ctx.lineWidth=6;
+  const txt=`TINA ${'★'.repeat(duelScore.tina)}${'☆'.repeat(2-duelScore.tina)}   —   ${'☆'.repeat(2-duelScore.nito)}${'★'.repeat(duelScore.nito)} NITO`;
+  ctx.strokeText(txt,VIEW_W/2,48);ctx.fillText(txt,VIEW_W/2,48);ctx.restore();
+}
 
 function makeDirector(){
   const base=level===1?Infinity:level<=6?60:level<=12?40:30;

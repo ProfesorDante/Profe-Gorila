@@ -36,3 +36,11 @@ canvas{width:100vw;height:100dvh;max-width:none;max-height:none;border:0;border-
 @keyframes victoryShade{to{opacity:.94}}
 @keyframes victoryZoom{to{transform:scale(1);opacity:1}}
 @media(max-width:700px){.finalVictory{padding:7px}.finalVictoryCard{width:100%;max-height:98dvh}.finalVictoryCard img{max-height:55dvh}.finalVictoryStats{padding:10px}.finalVictoryActions{grid-template-columns:1fr}.victoryButton{min-height:44px;font-size:14px}}
+
+
+/* El Gran Duelo */
+.duelCountdown{position:fixed;inset:0;z-index:95;display:none;align-items:center;justify-content:center;flex-direction:column;background:#06140f;color:#fff;text-align:center}
+.duelCountdown.show{display:flex;animation:duelFade .3s ease}
+.duelCountdownTitle{font:900 clamp(34px,7vw,92px) Arial,sans-serif;letter-spacing:.04em;text-shadow:0 6px #000;margin-bottom:30px}
+.duelCountdownNumber{font:900 clamp(90px,20vw,260px) Arial,sans-serif;color:#ffdf4d;text-shadow:0 10px #6f4314;min-height:1.1em}
+@keyframes duelFade{from{opacity:0}to{opacity:1}}
