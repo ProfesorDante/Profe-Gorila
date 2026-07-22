@@ -44,3 +44,11 @@ PULIDO Y OPTIMIZACIÓN — V16
 - El pingüino gira 90 grados durante su ataque para parecer que se desliza.
 - Desde el nivel 8 se corta la ruta central segura con troncos bajos saltables.
 - El Gran Duelo usa la secuencia: soleado, clima especial, soleado.
+
+V17 — Pulido de decisiones y clima
+- IA por intenciones con RNG: cada personalidad cambia probabilidades, pero ninguna sigue una única receta.
+- Llevar la bandera favorece anotar, aunque la agresiva o troll aún pueden tomar una mala decisión breve.
+- La IA táctica puede buscar objetos cercanos a Tina para negárselos.
+- Noche más clara e idéntica en PC y celular.
+- Lluvia visible y activa en celular con menor carga gráfica.
+- Portada adaptable y botón de inicio siempre tocable.

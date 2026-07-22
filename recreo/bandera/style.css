@@ -74,3 +74,16 @@ canvas.polish-hit{animation:polishHit .22s ease}
 .polish-version-splash span{margin-top:8px;font-size:clamp(16px,2.5vw,28px);font-weight:900}
 .polish-version-splash.hide{opacity:0;transform:scale(1.08)}
 @keyframes polishFloat{from{transform:translateY(5px) rotate(-4deg)}to{transform:translateY(-12px) rotate(4deg)}}
+
+/* V17 — portada adaptable en cualquier relación de aspecto */
+.cover{min-height:var(--real-vh,100dvh);padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));overflow:auto}
+.coverStage{width:min(100%,1536px);height:min(calc(var(--real-vh,100dvh) - 16px),1024px);aspect-ratio:auto;display:flex;align-items:center;justify-content:center}
+.coverStage img{width:100%;height:100%;object-fit:contain}
+.coverStage button{left:28%;top:auto;bottom:4.5%;width:44%;height:13%;min-height:48px;touch-action:manipulation}
+@media(max-aspect-ratio:3/4){
+  .coverStage{height:calc(var(--real-vh,100dvh) - 16px)}
+  .coverStage button{left:18%;width:64%;bottom:5%;height:12%}
+}
+@media(max-height:520px){
+  .coverStage button{bottom:2.5%;height:15%;min-height:42px}
+}

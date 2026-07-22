@@ -877,3 +877,186 @@ resetDuelRound=function(){
   weather=duelRound===2?['rain','night','snow','storm'][Math.floor(Math.random()*4)]:'clear';
   duelWeather=weather;setupClimate();initExtraEntity(player);bots.forEach(initExtraEntity);ensureExtraUI();
 };
+
+/* =========================================================
+   V17 — DECISIONES HUMANAS, CLIMAS LEGIBLES Y PORTADA MÓVIL
+   ========================================================= */
+
+/* La IA no busca siempre la jugada óptima: elige una intención y se compromete
+   por un rato. La personalidad cambia las probabilidades, no impone un patrón. */
+const _chooseBotGoalBeforeV17=chooseBotGoal;
+
+function v17WeightedPick(entries){
+  const valid=entries.filter(e=>e&&e.weight>0);
+  const total=valid.reduce((s,e)=>s+e.weight,0);
+  if(!valid.length||total<=0)return null;
+  let roll=Math.random()*total;
+  for(const e of valid){roll-=e.weight;if(roll<=0)return e.key;}
+  return valid[valid.length-1].key;
+}
+
+function v17AnyReachableItem(b,preferDenial=false){
+  const available=objects.filter(o=>!o.got&&o.revealed&&(!o.ownerLock||o.ownerLock!==b.id||levelElapsed>=o.lockUntil)&&itemPathExistsForBot(b,o));
+  if(!available.length)return null;
+  const pref=ITEM_PREFS[b.personality]||ITEM_PREFS.standard;
+  const scored=available.map(o=>{
+    let score=dist(b,o);
+    if(pref.has(o.type))score-=170*mapScale;
+    if(preferDenial&&dist(player,o)<220*mapScale)score-=190*mapScale;
+    return {o,score};
+  }).sort((a,c)=>a.score-c.score);
+  const chosen=scored[0].o;
+  return dist(b,chosen)<430*mapScale?chosen:null;
+}
+
+function v17GuardianOpportunity(b){
+  const prefs=GUARDIAN_INTERACTION_PREFS[b.personality]||GUARDIAN_INTERACTION_PREFS.standard;
+  const candidates=guardians.filter(g=>{
+    if(dist(b,g)>350*mapScale||dist(player,g)>300*mapScale)return false;
+    return dist(b,g)<100*mapScale||findPath(b.x,b.y,g.x,g.y,b.r+3,false).length>0;
+  });
+  if(!candidates.length)return null;
+  const preferred=candidates.filter(g=>prefs.has(g.type));
+  const pool=preferred.length?preferred:candidates;
+  return pool.reduce((a,g)=>dist(b,g)<dist(b,a)?g:a,pool[0]);
+}
+
+function v17DecisionWeights(b){
+  const carrying=b.carrying==='home';
+  const tinaHasFlag=player.carrying==='enemy';
+  const nearTina=dist(b,player)<300*mapScale;
+  const nearScore=carrying&&dist(b,{x:enemyBase.x+enemyBase.w/2,y:enemyBase.y+enemyBase.h/2})<360*mapScale;
+  const p=b.personality;
+
+  if(carrying){
+    // Todas quieren marcar, pero no todas resisten la tentación de hacer otra cosa.
+    const weights={score:62,attack:10,item:8,guardian:5,feint:15};
+    if(p==='offensive'){weights.score=43;weights.attack=32;weights.feint=17;}
+    if(p==='strategist'){weights.score=64;weights.item=20;weights.attack=5;weights.guardian=4;}
+    if(p==='defensive'){weights.score=76;weights.feint=16;weights.attack=3;weights.guardian=2;}
+    if(p==='prankster'){weights.score=48;weights.attack=15;weights.item=16;weights.guardian=14;}
+    if(p==='standard'){weights.score=66;weights.attack=10;weights.item=8;weights.feint=11;}
+    if(nearScore){weights.score+=45;weights.attack*=.25;weights.item*=.2;weights.guardian*=.2;}
+    if(!nearTina)weights.attack*=.35;
+    return weights;
+  }
+
+  const weights={objective:48,attack:14,item:15,guardian:8,defend:15};
+  if(p==='offensive'){weights.objective=30;weights.attack=38;weights.item=16;weights.guardian=10;weights.defend=6;}
+  if(p==='strategist'){weights.objective=42;weights.attack=8;weights.item=29;weights.guardian=13;weights.defend=8;}
+  if(p==='defensive'){weights.objective=30;weights.attack=10;weights.item=18;weights.guardian=7;weights.defend=35;}
+  if(p==='prankster'){weights.objective=29;weights.attack=16;weights.item=25;weights.guardian=23;weights.defend=7;}
+  if(p==='tutorial'){weights.objective=58;weights.attack=6;weights.item=10;weights.guardian=3;weights.defend=23;}
+  if(tinaHasFlag){weights.attack+=34;weights.defend+=14;weights.objective-=18;weights.item-=5;weights.guardian+=4;}
+  if(!nearTina)weights.attack*=.55;
+  return weights;
+}
+
+function v17MakeDecision(b){
+  const weights=v17DecisionWeights(b);
+  const item=v17AnyReachableItem(b,b.personality==='strategist');
+  const guardian=v17GuardianOpportunity(b);
+  if(!item)weights.item=0;
+  if(!guardian)weights.guardian=0;
+  const choices=Object.entries(weights).map(([key,weight])=>({key,weight}));
+  const type=v17WeightedPick(choices)|| (b.carrying?'score':'objective');
+  const duration=.75+Math.random()*1.45;
+  return {type,item,guardian,until:levelElapsed+duration};
+}
+
+function v17GoalFromDecision(b,d){
+  const baseCenter={x:enemyBase.x+enemyBase.w/2,y:enemyBase.y+enemyBase.h/2};
+  switch(d.type){
+    case 'score': {
+      const lane=nearestQuietLane(b)+(Math.random()-.5)*55*mapScale;
+      return {x:baseCenter.x,y:clamp(lane,100,WORLD_H-100),speed:1.18};
+    }
+    case 'attack':
+      return {x:player.x+(player.vx||0)*45,y:player.y+(player.vy||0)*45,speed:b.personality==='offensive'?1.3:1.14};
+    case 'item':
+      if(d.item&&!d.item.got)return {x:d.item.x,y:d.item.y,speed:1.1};
+      break;
+    case 'guardian':
+      if(d.guardian&&guardians.includes(d.guardian)){
+        const g=d.guardian;
+        if(['frog','parrot','turtle'].includes(g.type)&&dist(b,g)<125*mapScale&&b.jumps>0&&!b.jump)startBotJump(b,g.x,g.y);
+        return {x:g.x,y:g.y,speed:1.13};
+      }
+      break;
+    case 'defend':
+      if(player.carrying==='enemy')return {x:player.x,y:player.y,speed:1.22};
+      return {x:enemyBase.x-150*mapScale,y:clamp(player.y,120,WORLD_H-120),speed:.9};
+    case 'feint': {
+      // Amaga hacia Tina o hacia un lateral, pero no durante demasiado tiempo.
+      if(dist(b,player)<230*mapScale)return {x:player.x,y:player.y,speed:1.12};
+      return {x:b.x-70*mapScale,y:clamp(b.y+(Math.random()<.5?-1:1)*120*mapScale,100,WORLD_H-100),speed:1.05};
+    }
+    case 'objective':
+    default:
+      return {x:homeFlag.x,y:homeFlag.y,speed:1.06};
+  }
+  b.v17Decision=null;
+  return b.carrying?{x:baseCenter.x,y:WORLD_H/2,speed:1.16}:{x:homeFlag.x,y:homeFlag.y,speed:1.05};
+}
+
+chooseBotGoal=function(b,dt){
+  if(duelMode)return _chooseBotGoalBeforeV17(b,dt);
+  if(b.confused>0){
+    b.confused=Math.max(0,b.confused-dt);
+    const g=_chooseBotGoalBeforeV17(b,dt);
+    return {x:2*b.x-g.x,y:2*b.y-g.y,speed:g.speed||1};
+  }
+  if(!b.v17Decision||levelElapsed>=b.v17Decision.until||
+     (b.v17Decision.item&&b.v17Decision.item.got)||
+     (b.v17Decision.guardian&&!guardians.includes(b.v17Decision.guardian))){
+    b.v17Decision=v17MakeDecision(b);
+  }
+  return v17GoalFromDecision(b,b.v17Decision);
+};
+
+/* Noche: funciona igual en PC y celular. Reduce información, nunca visibilidad básica. */
+nightOverlay=function(){
+  ctx.save();
+  ctx.fillStyle='rgba(5,14,25,.24)';
+  ctx.fillRect(0,0,VIEW_W,VIEW_H);
+  ctx.globalCompositeOperation='destination-out';
+  const lights=[player,...bots,...guardians].filter(Boolean);
+  for(const e of lights){
+    const ex=e.x-camera.x,ey=e.y-camera.y;
+    const isPlayer=e===player;
+    const radius=isPlayer?(player.activeGear==='candle'?245:player.activeGear==='firefly'?225:195):145;
+    const gr=ctx.createRadialGradient(ex,ey,8,ex,ey,radius);
+    gr.addColorStop(0,'rgba(0,0,0,.96)');
+    gr.addColorStop(.58,'rgba(0,0,0,.72)');
+    gr.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=gr;ctx.beginPath();ctx.arc(ex,ey,radius,0,Math.PI*2);ctx.fill();
+  }
+  if(player.activeGear==='flashlight'){
+    const px=player.x-camera.x,py=player.y-camera.y,a=Math.atan2(player.vy||0,player.vx||1);
+    ctx.save();ctx.translate(px,py);ctx.rotate(a);ctx.fillStyle='rgba(0,0,0,.9)';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(380,-125);ctx.lineTo(380,125);ctx.closePath();ctx.fill();ctx.restore();
+  }
+  ctx.globalCompositeOperation='source-over';
+  ctx.restore();
+};
+
+/* Lluvia visible pero barata: la mecánica nunca se apaga en celular. */
+rainOverlay=function(){
+  ctx.save();
+  const count=V16_MOBILE?42:78;
+  ctx.strokeStyle='rgba(205,240,255,.68)';ctx.lineWidth=V16_MOBILE?2.2:2;
+  for(let i=0;i<count;i++){
+    const x=(i*97+levelElapsed*510)%VIEW_W;
+    const y=(i*61+levelElapsed*760)%VIEW_H;
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-11,y+25);ctx.stroke();
+    if(i%9===0){ctx.globalAlpha=.42;ctx.beginPath();ctx.ellipse(x-11,y+25,8,3,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
+  }
+  ctx.restore();
+};
+
+/* Recalcular portada y canvas cuando cambian las barras u orientación móvil. */
+function v17RefreshViewport(){
+  document.documentElement.style.setProperty('--real-vh',`${window.innerHeight}px`);
+}
+v17RefreshViewport();
+addEventListener('resize',v17RefreshViewport,{passive:true});
+addEventListener('orientationchange',()=>setTimeout(v17RefreshViewport,120),{passive:true});
