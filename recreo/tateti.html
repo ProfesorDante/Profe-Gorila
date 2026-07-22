@@ -38,7 +38,7 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
 .cell{
   position:relative;border:0;border-radius:16px;background:linear-gradient(#f4e2ad,#ddc487);
   box-shadow:inset 0 3px #fff7d6,0 4px #a9793f;cursor:pointer;overflow:hidden;
-  min-width:0;min-height:0;touch-action:manipulation
+  min-width:0;min-height:0;touch-action:none
 }
 .board.size9 .cell{border-radius:6px;box-shadow:inset 0 1px #fff7d6,0 1px #a9793f}
 .cell.dark{background:linear-gradient(#8ab876,#6f9b61);box-shadow:inset 0 3px #acd19f,0 4px #4e7846}
@@ -106,6 +106,7 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
 .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
 .challengeList{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;text-align:left;margin-top:12px}
 .challengeChip{background:#edf7df;border:2px solid #93b76d;border-radius:12px;padding:9px;font-weight:800}
+.opponentCard{display:flex;align-items:center;gap:10px;background:linear-gradient(#f0f7ff,#dcecff);border:2px solid #7798c7;border-radius:14px;padding:9px;font-weight:900}.opponentAvatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;border:3px solid #b7cbe6;font-size:30px;box-shadow:0 3px #7798c7}.opponentText small{display:block;font-weight:700;font-size:11px;margin-top:2px;color:#49627d}.tournamentPanel{display:none;background:#fff4c9;border:2px solid #c28f35;border-radius:14px;padding:10px;font-weight:900;line-height:1.35}.cell.dragTarget{outline:4px solid #69b7e8;outline-offset:-4px}.tournamentScore{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;background:#fff8df;border:3px solid #c28f35;border-radius:16px;padding:12px;margin:12px 0}.tournamentScore strong{font-size:24px;color:#8b5a2b}.tournamentScore span{font-weight:900}
 .finalImage{
   display:block;width:min(100%,650px);max-height:62vh;object-fit:contain;margin:12px auto;
   border:3px solid #8b5a2b;border-radius:16px;background:#e9f3df
@@ -196,8 +197,10 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
     <div class="boardWrap"><div id="board" class="board size3"></div></div>
     <aside class="side">
       <div id="modeBadge" class="modeBadge">Elegí un modo</div>
+      <div id="opponentCard" class="opponentCard"><div id="opponentAvatar" class="opponentAvatar">🐒</div><div class="opponentText"><div id="opponentName">Rival del bosque</div><small id="opponentPhrase">Preparado para jugar</small></div></div>
       <div id="status" class="status">Elegí un modo para comenzar.</div>
       <div id="challengeInfo" class="challengeInfo"></div>
+      <div id="tournamentPanel" class="tournamentPanel"></div>
       <div class="controls">
         <button class="action" onclick="restartRound()">↻ Nueva ronda</button>
         <button class="action secondary" onclick="showMenu()">☰ Cambiar modo</button>
@@ -216,9 +219,10 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
     <p>Elegí el modo de juego.</p>
     <div class="menuGrid">
       <button class="action modeButton" onclick="chooseMode('classic')">🌿 Ta-Te-Ti<small>El clásico de siempre</small></button>
-      <button class="action warn modeButton" onclick="chooseMode('anti')">😈 Anti Ta-Te-Ti<small>Quien forma tres pierde; la IA también intenta evitarlo</small></button>
-      <button class="action secondary modeButton" onclick="chooseMode('mobile')">🔄 Ta-Te-Ti Móvil<small>Después de colocar, las fichas se mueven</small></button>
-      <button class="action gold modeButton" onclick="showChallengeIntro()">🏆 Modo Desafíos<small>Ocho desafíos en un tablero 9 × 9</small></button>
+      <button class="action warn modeButton" onclick="chooseMode('anti')">🍃 Ta-Te-Ti Inverso<small>Quien forma tres fichas en línea pierde</small></button>
+      <button class="action secondary modeButton" onclick="chooseMode('mobile')">🔄 Ta-Te-Ti Móvil<small>Colocá tres fichas y luego movelas</small></button>
+      <button class="action gold modeButton" onclick="chooseMode('tournament')">🏆 Torneo del Gran Árbol<small>Primero en llegar a 10 puntos</small></button>
+      <button class="action soft modeButton" onclick="showChallengeIntro()">🌳 Modo Desafíos<small>Ocho tableros con reglas especiales</small></button>
     </div>
   </div>
 </div>
@@ -242,7 +246,7 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
       <button class="action secondary" onclick="chooseAiLevel('medium')">Medio</button>
       <button class="action warn" onclick="chooseAiLevel('hard')">Difícil</button>
     </div>
-    <p><small>En el modo Desafíos la computadora usa siempre el nivel Medio.</small></p>
+    
     <button class="action soft" onclick="backToPlayType()">Volver</button>
   </div>
 </div>
@@ -260,8 +264,8 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
 
 <div id="challengeIntroOverlay" class="overlay" style="display:none">
   <div class="card">
-    <h2>🏆 Modo Desafíos</h2>
-    <p>Vas a recorrer ocho tableros especiales. Cada uno agrega una nueva sorpresa, pero la computadora siempre juega con una inteligencia equilibrada.</p>
+    <h2>🌳 Modo Desafíos</h2>
+    <p>Recorré ocho tableros especiales. En cada uno aparece una regla nueva del Gran Árbol.</p>
     <div class="challengeList">
       <div class="challengeChip">👑 Rey del Árbol</div>
       <div class="challengeChip">🍌 Banana Traviesa</div>
@@ -270,7 +274,7 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
       <div class="challengeChip">🦜 Loro Bromista</div>
       <div class="challengeChip">🌳 Combinaciones nuevas</div>
     </div>
-    <p>La complejidad aumenta porque aparecen más mecánicas, no porque la IA se vuelva imposible.</p>
+    <p>Formá cinco fichas en línea y prestá atención a las sorpresas de cada tablero. Superá los ocho desafíos para descubrir la imagen final.</p>
     <div class="menuGrid">
       <button class="action gold" onclick="beginChallengeCharacterChoice()">Comenzar</button>
       <button class="action soft" onclick="backToMainMenu()">Volver</button>
@@ -300,6 +304,8 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
   </div>
 </div>
 
+<div id="tournamentRoundOverlay" class="overlay" style="display:none"><div class="card"><h2 id="tournamentRoundTitle">🏆 Torneo del Gran Árbol</h2><p id="tournamentRoundText"></p><div class="tournamentScore"><span id="tourPlayerOne">Nito</span><strong id="tourScore">0 - 0</strong><span id="tourPlayerTwo">Tina</span></div><button class="action gold" onclick="continueTournament()">Siguiente partida</button></div></div>
+<div id="tournamentFinalOverlay" class="overlay" style="display:none"><div class="card"><h2 id="tournamentFinalTitle">🏆 ¡Campeón del Gran Árbol!</h2><p id="tournamentFinalText"></p><img id="tournamentFinalImage" class="finalImage" src="../img/tatetitorneonito.png?v=1" alt="Premio final del torneo de Ta-Te-Ti"><div class="menuGrid"><button class="action gold" onclick="downloadTournamentImage()">⬇ Descargar imagen PNG</button><button class="action secondary" onclick="showMenu()">Volver al menú</button></div><p id="tournamentDownloadStatus" aria-live="polite"></p></div></div>
 <div id="finalOverlay" class="overlay" style="display:none">
   <div class="card">
     <h2>🏆 ¡Completaste los ocho desafíos!</h2>
@@ -323,6 +329,10 @@ const scoreLabel=document.getElementById('scoreLabel');
 const modeBadge=document.getElementById('modeBadge');
 const challengeInfo=document.getElementById('challengeInfo');
 const jumpButton=document.getElementById('jumpButton');
+const tournamentPanel=document.getElementById('tournamentPanel');
+const opponentAvatar=document.getElementById('opponentAvatar');
+const opponentName=document.getElementById('opponentName');
+const opponentPhrase=document.getElementById('opponentPhrase');
 
 const X='X',O='O';
 const wins3=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
@@ -346,9 +356,19 @@ let challengeIndex=0;
 let challengeState=null;
 let aiTurnToken=0;
 let nextStarter=X;
+let tournamentScores={X:0,O:0},tournamentRound=0,tournamentModeIndex=0,tournamentSubMode='classic';
+let dragState=null,suppressNextClick=false;
+let currentOpponent={emoji:'🦉',name:'Profesor Búho',phrase:'Piensa antes de mover.'};
 
 let musicOn=true,audioCtx=null,musicTimer=null,musicStep=0;
 const MASTER_VOLUME=3.2;
+
+const forestOpponents=[
+  {emoji:'🦉',name:'Profesor Búho',phrase:'Piensa antes de mover.'},{emoji:'🐢',name:'Tortuga Tito',phrase:'Nunca se apura.'},{emoji:'🦜',name:'Loro Lolo',phrase:'Siempre tiene algo para decir.'},{emoji:'🐘',name:'Elefante Bruno',phrase:'Recuerda cada jugada.'},{emoji:'🐿️',name:'Ardilla Rita',phrase:'Rápida y observadora.'},{emoji:'🐸',name:'Rana Lila',phrase:'Salta de idea en idea.'},{emoji:'🦊',name:'Zorro Tom',phrase:'Busca caminos inesperados.'},{emoji:'🦒',name:'Jirafa Gina',phrase:'Ve el tablero desde muy alto.'}
+];
+function activeMode(){return gameMode==='tournament'?tournamentSubMode:gameMode}
+function chooseForestOpponent(){currentOpponent=forestOpponents[Math.floor(Math.random()*forestOpponents.length)]}
+function updateOpponentCard(){if(playType==='ai'){opponentAvatar.textContent=currentOpponent.emoji;opponentName.textContent=currentOpponent.name;opponentPhrase.textContent=currentOpponent.phrase}else{opponentAvatar.textContent='🐒🎀';opponentName.textContent='Nito y Tina';opponentPhrase.textContent='Una partida entre amigos.'}}
 
 const challenges=[
   {
@@ -438,12 +458,14 @@ function render(){
   board.forEach((value,index)=>{
     const cell=document.createElement('button');
     cell.className='cell '+(((Math.floor(index/size)+index%size)%2)?'dark':'');
+    cell.dataset.index=index;
     if(selectedCell===index) cell.classList.add('selected');
 
     if(challengeState&&challengeState.winLine&&challengeState.winLine.includes(index)) cell.classList.add('win');
     if(challengeState&&challengeState.banana===index) cell.classList.add('blocked');
 
-    cell.onclick=()=>playAt(index);
+    cell.onclick=()=>{if(suppressNextClick){suppressNextClick=false;return}playAt(index)};
+    cell.addEventListener('pointerdown',event=>beginMobileDrag(event,index));
 
     if(value){
       const piece=document.createElement('div');
@@ -463,20 +485,14 @@ function render(){
   });
 
   turnLabel.textContent=teamName(turn);
-  scoreLabel.textContent=gameMode==='challenge'
-    ?`${challengeIndex+1} / 8`
-    :`${scores.X} - ${scores.O}`;
+  scoreLabel.textContent=gameMode==='challenge'?`${challengeIndex+1} / 8`:gameMode==='tournament'?`${tournamentScores.X} - ${tournamentScores.O}`:`${scores.X} - ${scores.O}`;
 
-  if(gameMode==='mobile'&&size===3){
-    modeBadge.textContent='🔄 Ta-Te-Ti Móvil';
-  }else if(gameMode==='anti'){
-    modeBadge.textContent='😈 Anti Ta-Te-Ti';
-  }else if(gameMode==='challenge'){
-    const ch=challenges[challengeIndex];
-    modeBadge.textContent=`${ch.icon} Desafío ${challengeIndex+1}: ${ch.name}`;
-  }else{
-    modeBadge.textContent='🌿 Ta-Te-Ti Clásico';
-  }
+  const modeNow=activeMode();
+  if(gameMode==='tournament'){const labels={classic:'🌿 Ta-Te-Ti',anti:'🍃 Ta-Te-Ti Inverso',mobile:'🔄 Ta-Te-Ti Móvil'};modeBadge.textContent=`🏆 Torneo · ${labels[modeNow]}`}
+  else if(modeNow==='mobile'&&size===3) modeBadge.textContent='🔄 Ta-Te-Ti Móvil';
+  else if(modeNow==='anti') modeBadge.textContent='🍃 Ta-Te-Ti Inverso';
+  else if(gameMode==='challenge'){const ch=challenges[challengeIndex];modeBadge.textContent=`${ch.icon} Desafío ${challengeIndex+1}: ${ch.name}`}
+  else modeBadge.textContent='🌿 Ta-Te-Ti Clásico';
 
   if(gameMode==='challenge'){
     const ch=challenges[challengeIndex];
@@ -485,17 +501,16 @@ function render(){
     jumpButton.style.display=ch.rules.jump?'block':'none';
     jumpButton.disabled=!challengeState||challengeState.jumpUsed[turn]||roundOver;
     jumpButton.textContent=challengeState&&challengeState.jumpMode?'Elegí la ficha a mover':'🐒 Usar salto';
-  }else{
-    challengeInfo.style.display='none';
-    jumpButton.style.display='none';
-  }
+  }else{challengeInfo.style.display='none';jumpButton.style.display='none'}
+  if(gameMode==='tournament'){const labels={classic:'Ta-Te-Ti',anti:'Ta-Te-Ti Inverso',mobile:'Ta-Te-Ti Móvil'};tournamentPanel.style.display='block';tournamentPanel.innerHTML=`<strong>🏆 Copa a 10 puntos</strong><br>${teamName(X)} ${tournamentScores.X} · ${teamName(O)} ${tournamentScores.O}<br><small>Partida ${tournamentRound+1}: ${labels[tournamentSubMode]}</small>`}else tournamentPanel.style.display='none';
+  updateOpponentCard();
 }
 
 function playAt(index){
   if(roundOver) return;
   if(playType==='ai'&&turn===aiTeam) return;
 
-  if(gameMode==='mobile'){
+  if(activeMode()==='mobile'){
     handleMobileMove(index);
     return;
   }
@@ -516,7 +531,7 @@ function placeStandard(index,team){
 
   const line=getThreeLine(board);
   if(line){
-    if(gameMode==='anti'){
+    if(activeMode()==='anti'){
       const winner=team===X?O:X;
       finishStandard({winner,line,loser:team});
     }else{
@@ -541,6 +556,15 @@ function getThreeLine(currentBoard){
   }
   return null;
 }
+
+function beginMobileDrag(event,index){
+  if(roundOver||activeMode()!=='mobile'||(playType==='ai'&&turn===aiTeam)||placementCounts.X+placementCounts.O<6||board[index]!==turn)return;
+  dragState={from:index,startX:event.clientX,startY:event.clientY,moved:false,target:null};selectedCell=index;render();
+  const moveHandler=ev=>{if(!dragState)return;if(Math.hypot(ev.clientX-dragState.startX,ev.clientY-dragState.startY)>8)dragState.moved=true;document.querySelectorAll('.cell.dragTarget').forEach(el=>el.classList.remove('dragTarget'));const under=document.elementFromPoint(ev.clientX,ev.clientY);const cell=under&&under.closest?under.closest('.cell'):null;if(cell){const to=Number(cell.dataset.index);if(!board[to]&&isAdjacent3(dragState.from,to)){dragState.target=to;cell.classList.add('dragTarget')}else dragState.target=null}};
+  const upHandler=()=>{document.removeEventListener('pointermove',moveHandler);document.removeEventListener('pointerup',upHandler);document.removeEventListener('pointercancel',upHandler);document.querySelectorAll('.cell.dragTarget').forEach(el=>el.classList.remove('dragTarget'));if(!dragState)return;const {from,target,moved}=dragState;dragState=null;if(moved&&target!==null){suppressNextClick=true;moveMobilePiece(from,target)}};
+  document.addEventListener('pointermove',moveHandler,{passive:true});document.addEventListener('pointerup',upHandler,{once:true});document.addEventListener('pointercancel',upHandler,{once:true});
+}
+function moveMobilePiece(from,to){if(roundOver||activeMode()!=='mobile'||board[from]!==turn||board[to]||!isAdjacent3(from,to))return;board[to]=turn;board[from]='';selectedCell=null;mobileMoveCount++;pluck();const line=getThreeLine(board);if(line){finishStandard({winner:turn,line});return}if(mobileMoveCount>=20){finishStandard({winner:null,line:[]});return}switchTurn();afterHumanTurn()}
 
 function handleMobileMove(index){
   const totalPlaced=placementCounts.X+placementCounts.O;
@@ -575,22 +599,7 @@ function handleMobileMove(index){
 
   if(board[index]||!isAdjacent3(selectedCell,index)) return;
 
-  board[index]=turn;
-  board[selectedCell]='';
-  selectedCell=null;
-  mobileMoveCount++;
-  pluck();
-
-  const line=getThreeLine(board);
-  if(line){finishStandard({winner:turn,line});return}
-
-  if(mobileMoveCount>=20){
-    finishStandard({winner:null,line:[]});
-    return;
-  }
-
-  switchTurn();
-  afterHumanTurn();
+  moveMobilePiece(selectedCell,index);
 }
 
 function isAdjacent3(a,b){
@@ -863,7 +872,7 @@ function aiMove(token){
     return;
   }
 
-  if(gameMode==='mobile'){
+  if(activeMode()==='mobile'){
     mobileAiMove();
     return;
   }
@@ -875,7 +884,7 @@ function aiMove(token){
   if(aiLevel==='easy'){
     move=empty[Math.floor(Math.random()*empty.length)];
   }else if(aiLevel==='medium'){
-    move=gameMode==='anti'?mediumAntiMove():mediumMove3();
+    move=activeMode()==='anti'?mediumAntiMove():mediumMove3();
   }else{
     move=hardMove3();
   }
@@ -897,7 +906,7 @@ function mediumAntiMove(){
 
   const candidates=safe.length?safe:empty;
 
-  // En Anti Ta-Te-Ti conviene dejarle al rival casilleros tentadores
+  // En Ta-Te-Ti Inverso conviene dejarle al rival casilleros tentadores
   // que completarían su propia línea y, al mismo tiempo, conservar
   // varias salidas seguras para el siguiente turno.
   const scored=candidates.map(i=>{
@@ -970,7 +979,7 @@ function minimax3(maximizing){
   const line=getThreeLine(board);
   if(line){
     const winner=board[line[0]];
-    if(gameMode==='anti') return winner===aiTeam?-10:10;
+    if(activeMode()==='anti') return winner===aiTeam?-10:10;
     return winner===aiTeam?10:-10;
   }
   if(board.every(Boolean)) return 0;
@@ -1151,36 +1160,20 @@ function bestChallengeJump(){
 }
 
 function finishStandard(result){
-  roundOver=true;
-  aiTurnToken++;
-
-  if(result.winner){
-    scores[result.winner]++;
-    if(result.line){
-      setTimeout(()=>{
-        [...boardEl.children].forEach((cell,i)=>cell.classList.toggle('win',result.line.includes(i)));
-      },0);
-    }
-    winSound();
-
-    if(gameMode==='anti'){
-      endTitle.textContent='😈 ¡Anti Ta-Te-Ti!';
-      endText.textContent=`${teamName(result.loser)} formó tres y perdió. Ganó ${teamName(result.winner)}.`;
-    }else{
-      endTitle.textContent='🍃 ¡Qué buena jugada!';
-      endText.textContent=`Ganó ${teamName(result.winner)}.`;
-    }
-  }else{
-    drawSound();
-    endTitle.textContent='🌿 ¡Partida empatada!';
-    endText.textContent=gameMode==='mobile'
-      ?'Se realizaron veinte movimientos sin ganador.'
-      :'Los dos equipos jugaron muy bien.';
+  roundOver=true;aiTurnToken++;
+  if(result.line)setTimeout(()=>{[...boardEl.children].forEach((cell,i)=>cell.classList.toggle('win',result.line.includes(i)))},0);
+  if(gameMode==='tournament'){
+    if(result.winner){tournamentScores[result.winner]+=2;winSound()}else{tournamentScores.X++;tournamentScores.O++;drawSound()}
+    render();setTimeout(()=>showTournamentRoundResult(result),450);return;
   }
-
-  render();
-  setTimeout(()=>endOverlay.style.display='flex',450);
+  if(result.winner){scores[result.winner]++;winSound();if(activeMode()==='anti'){endTitle.textContent='🍃 ¡Ta-Te-Ti Inverso!';endText.textContent=`${teamName(result.loser)} formó tres y perdió. Ganó ${teamName(result.winner)}.`}else{endTitle.textContent='🍃 ¡Qué buena jugada!';endText.textContent=`Ganó ${teamName(result.winner)}.`}}
+  else{drawSound();endTitle.textContent='🌿 ¡Partida empatada!';endText.textContent=activeMode()==='mobile'?'Se realizaron veinte movimientos sin ganador.':'Los dos equipos jugaron muy bien.'}
+  render();setTimeout(()=>endOverlay.style.display='flex',450);
 }
+function showTournamentRoundResult(result){const labels={classic:'Ta-Te-Ti',anti:'Ta-Te-Ti Inverso',mobile:'Ta-Te-Ti Móvil'};tournamentRoundTitle.textContent=`🏆 ${labels[tournamentSubMode]}`;tournamentRoundText.textContent=result.winner?`${teamName(result.winner)} ganó la partida y suma 2 puntos.`:'La partida terminó empatada. Cada jugador suma 1 punto.';tourPlayerOne.textContent=teamName(X);tourPlayerTwo.textContent=teamName(O);tourScore.textContent=`${tournamentScores.X} - ${tournamentScores.O}`;tournamentRoundOverlay.style.display='flex'}
+function continueTournament(){tournamentRoundOverlay.style.display='none';if(tournamentScores.X>=10||tournamentScores.O>=10){showTournamentFinal(tournamentScores.X>=10?X:O);return}tournamentRound++;tournamentModeIndex=(tournamentModeIndex+1)%3;tournamentSubMode=['classic','anti','mobile'][tournamentModeIndex];restartRound()}
+function showTournamentFinal(winner){const winnerName=teamName(winner),isNito=winnerName==='Nito',filename=isNito?'tatetitorneonito.png':'tatetitorneotina.png';tournamentFinalTitle.textContent=`🏆 ¡${winnerName} ganó el torneo!`;tournamentFinalText.textContent=`Resultado final: ${teamName(X)} ${tournamentScores.X} · ${teamName(O)} ${tournamentScores.O}`;tournamentFinalImage.src=`../img/${filename}?v=1`;tournamentFinalImage.alt=`Premio del torneo ganado por ${winnerName}`;tournamentFinalImage.dataset.filename=filename;tournamentFinalOverlay.style.display='flex';winSound()}
+async function downloadTournamentImage(){const image=document.getElementById('tournamentFinalImage'),status=document.getElementById('tournamentDownloadStatus'),filename=image.dataset.filename||'tatetitorneonito.png';await downloadImageFile(image.src,filename,status)}
 
 function restartRound(){
   aiTurnToken++;
@@ -1222,12 +1215,7 @@ function chooseMode(mode){
   playTypeOverlay.style.display='flex';
 }
 
-function choosePlayType(type){
-  playType=type;
-  playTypeOverlay.style.display='none';
-  if(type==='ai') levelsOverlay.style.display='flex';
-  else characterOverlay.style.display='flex';
-}
+function choosePlayType(type){playType=type;playTypeOverlay.style.display='none';if(type==='ai')chooseForestOpponent();if(gameMode==='tournament'){aiLevel='medium';characterOverlay.style.display='flex'}else if(type==='ai')levelsOverlay.style.display='flex';else characterOverlay.style.display='flex'}
 
 function chooseAiLevel(level){
   aiLevel=level;
@@ -1242,14 +1230,9 @@ function selectCharacter(character){
   nextStarter=X;
   characterOverlay.style.display='none';
 
-  if(gameMode==='challenge'){
-    challengeIndex=0;
-    startChallengeRound();
-  }else{
-    scores={X:0,O:0};
-    restartRound();
-    startMusic();
-  }
+  if(gameMode==='challenge'){challengeIndex=0;startChallengeRound()}
+  else if(gameMode==='tournament'){tournamentScores={X:0,O:0};tournamentRound=0;tournamentModeIndex=0;tournamentSubMode='classic';scores={X:0,O:0};restartRound();startMusic()}
+  else{scores={X:0,O:0};restartRound();startMusic()}
 }
 
 function showChallengeIntro(){
@@ -1286,29 +1269,8 @@ function showMenu(){
   menuOverlay.style.display='flex';
 }
 
-async function downloadFinalImage(){
-  const status=document.getElementById('downloadStatus');
-  const image=document.getElementById('finalImage');
-  status.textContent='Preparando la descarga...';
-
-  try{
-    const response=await fetch(image.src,{cache:'no-store'});
-    if(!response.ok) throw new Error('No se pudo leer la imagen.');
-    const blob=await response.blob();
-    const url=URL.createObjectURL(blob);
-    const link=document.createElement('a');
-    link.href=url;
-    link.download='finaltateti.png';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(()=>URL.revokeObjectURL(url),1500);
-    status.textContent='¡Imagen PNG descargada!';
-  }catch(error){
-    status.textContent='Abrí la imagen y mantené presionado para guardarla.';
-    window.open(image.src,'_blank','noopener');
-  }
-}
+async function downloadImageFile(source,filename,status){status.textContent='Preparando la descarga...';try{const response=await fetch(source,{cache:'no-store'});if(!response.ok)throw new Error('No se pudo leer la imagen.');const blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);status.textContent='¡Imagen PNG descargada!'}catch(error){status.textContent='Abrí la imagen y mantené presionado para guardarla.';window.open(source,'_blank','noopener')}}
+async function downloadFinalImage(){await downloadImageFile(document.getElementById('finalImage').src,'finaltateti.png',document.getElementById('downloadStatus'))}
 
 /* Audio */
 function initAudio(){
