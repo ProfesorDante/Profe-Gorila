@@ -1,131 +1,34 @@
-TINA Y LA BANDERA DEL GRAN ÁRBOL — VERSIÓN 5
+TINA Y LA BANDERA DEL GRAN ÁRBOL — ACTUALIZACIÓN DE OBJETOS E IA
 
-Contenido de la carpeta:
-- index.html
-- style.css
-- game.js
-- LEEME.txt
+CONTROLES
+- Moverse: flechas, WASD o control táctil.
+- Saltar: barra espaciadora o botón de salto.
+- No existe botón para usar objetos.
 
-Ubicación sugerida en GitHub:
-AulaVirtual/recreo/bandera/
+CAMBIOS PRINCIPALES
+- La lluvia tiene más inercia, gotas visibles y ondas en los charcos.
+- Los buffs se sueltan en la posición donde termina su efecto, no donde fueron recogidos.
+- Las pelotas se patean por contacto y también pueden ser usadas por los bots.
+- Se eliminó el arco y la pelota de tenis con raqueta.
+- Nuevas pelotas: fútbol, básquet, béisbol, vóley, rugby y softbol, cada una con velocidad, rebote, empuje y trayectoria propios.
+- IA bromista: prefiere imán, resorte, espiral, búmeran y barrilete.
+- IA ofensiva: prefiere pelotas y martillo.
+- IA estratega: prefiere buffs de movimiento y clima.
+- IA defensiva: prefiere casco, escudo, burbuja y protección climática.
+- IA normal: usa cualquier objeto sin preferencia especial.
+- Nuevos objetos defensivos: escudo y burbuja.
+- Nuevos objetos bromistas: resorte y espiral.
+- El elefante espera 5 segundos antes de su primera furia y luego alterna 3 segundos de furia con 5 de calma.
+- El leopardo quita dos corazones.
 
-La portada se carga desde:
-../../img/bandera.png
+FILOSOFÍA
+Todos los objetos se activan por contacto, movimiento, choque o salto. El juego conserva solo dos acciones: moverse y saltar.
 
-Cambios de esta versión:
-- Guardianes eligen objetivo por proximidad con revisión periódica, compromiso mínimo e histéresis.
-- Corazones de bandera: 3 corazones, visibles solo sobre el portador.
-- Daño: gorila/tortuga 1 corazón; elefante 2; loro/perezoso medio corazón.
-- Choque Tina-bot: pierde medio corazón cada portador involucrado; sin favoritismos.
-- Dos banderas reales: Tina y los bots pueden robar y devolver banderas.
-- Bots con IA ofensiva, defensiva, estratega y oportunista.
-- Los bots se vuelven más agresivos si van perdiendo y más conservadores si van ganando.
-- Gorila con un salto cada 5 segundos.
-- Elefante entra en furia a los 20 segundos y abre una ruta superior o inferior destruyendo obstáculos.
-- Loro devuelve banderas caídas a su base correspondiente.
-- Perezoso busca puntos de paso y se duerme allí.
-- Seis diseños de bosque; cada diseño tiene tres variantes: inicial, media y difícil.
-- Pantalla de juego limpia: sin tiempo, bananas, textos ni minimapa durante la partida.
-- Estadísticas mostradas al finalizar.
-- El mensaje final siempre es positivo.
-
-Controles:
-- PC: WASD o flechas. Espacio para saltar.
-- Celular/tablet: joystick y botón de salto.
-
-
-CAMBIOS V6
-- Corregido el error visual al tomar una bandera: los corazones ya no dejan el lienzo recortado ni duplicado.
-- Tina tiene 3 corazones con 1 bot, 4 corazones con 2 bots y 5 corazones con 3 bots.
-- Los bots mantienen 3 corazones.
-
-VERSIÓN 7
-- Guardianes ubicados siempre en puntos libres y con recuperación automática si quedan trabados.
-- Bots con desvío lateral, recálculo de ruta y salto de emergencia cuando chocan repetidamente con una roca.
-- Música de jazz Nueva Orleans más animada y progresiva: suma capas e instrumentos cada tres niveles.
-
-IMÁGENES EXTERNAS (estructura de GitHub)
----------------------------------------
-Este proyecto debe quedar en: /recreo/bandera/
-La portada se carga desde: ../../img/bandera.png
-La victoria final se carga y descarga desde: ../../img/banderafinal.png
-
-Al completar el nivel 18 aparece la imagen final, un cierre musical,
-las estadísticas del último nivel y los botones para descargar el PNG,
-volver a jugar o elegir un nivel.
-
-ACTUALIZACIÓN DE BALANCE — v8
-- Nivel 1: IA de aprendizaje; explora durante 15 segundos antes de buscar la bandera. Solo se oye la trompeta lejana del elefante.
-- Desde nivel 2: IA estándar, estratega, ofensiva, defensiva y bromista según nivel y equipo.
-- Con tres bots siempre hay al menos uno ofensivo y uno defensivo.
-- Mapas: crecimiento acumulativo del 15 % cada bloque de tres niveles y más obstáculos en los bordes superior e inferior.
-- Saltos: bots y gorila escalan detrás de Tina; igualan la distancia, llegan a 2 cargas cuando Tina tiene 3 y reducen una vez la recarga cuando Tina ya la redujo dos veces.
-- Director IA: puede liberar elefantes destructores cuando la partida queda sin acción. Ventana inicial: 60 s (niveles 2–6), 40 s (7–12), 30 s (13–18). Cada nueva intervención reduce a la mitad la espera; si la partida está reñida, el reloj avanza más lentamente.
-- Música: se conservó íntegra. Solo se agregó la señal sonora lejana del elefante.
-
-VERSIÓN 9 — BALANCE Y GRAN DUELO
-- Guardianes: 3 en niveles 1-6, 4 en 7-12 y 5 en 13-18.
-- Máximo dos guardianes persiguen al mismo objetivo.
-- La IA estratega mantiene su decisión varios segundos y deja de titubear.
-- Bananas y cocos aceleran la recarga del salto para Tina y los bots.
-- Objetos: casco, patineta y zapatos de salto largo.
-- Nivel final desbloqueable: EL DUELO, Tina contra Nito, una sola bandera y mejor de tres.
-- La imagen ../../img/banderafinal.png aparece únicamente después de ganar El Duelo.
-
-
-v9.2 Objetivos de polish: expresiones, parpadeo, respiración, sombra, polvo, sonidos y zooms.
-VERSIÓN 10 — CLIMA, OBJETOS Y GUARDIANES
-
-Climas distribuidos:
-- Nivel 3: lluvia
-- Nivel 6: noche
-- Nivel 8: lluvia
-- Nivel 10: nieve
-- Nivel 12: noche
-- Nivel 15: lluvia
-- Nivel 17: tormenta eléctrica
-- El Gran Duelo: clima aleatorio anunciado antes de comenzar
-
-Controles de objetos:
-- PC: E o Enter
-- Celular/tablet: botón USAR
-- Cada objeto tiene un uso y vuelve a quedar en el piso.
-- Quien lo usó espera 3 segundos para recuperarlo.
-- Si cae por un golpe, el portador espera 1 segundo.
-
-Guardianes climáticos:
-- Sapo: lluvia y tormenta; roba objetos con la lengua y los escupe.
-- Pingüino: nieve; se lanza como misil y hace caer la bandera al instante.
-- Leopardo: noche; ve en la oscuridad y persigue al portador más próximo a ganar.
-
-Incluye además: charcos, rayos, oscuridad lateral, nieve, equipo climático, escombros del elefante, furia visible 3 de cada 5 segundos, loro vulnerable al salto, tortuga disparada, gorila que patea banderas, martillo, patineta, bicicleta, pelotas, arco de ventosa, búmeran, imán y barrilete.
-
-
-VERSIÓN 11 — POLISH Y PERSONALIDAD
-- Tina conserva exactamente su diseño de carita.
-- Respiración suave cuando está quieta.
-- Parpadeo automático.
-- Expresiones para salto, golpe, bandera y victoria.
-- Sombras bajo Tina y los bots para leer mejor los saltos.
-- Polvo discreto al correr, frenar y aterrizar.
-- Sonidos de pasos y aterrizaje.
-- Señales sonoras ambientales propias de cada guardián, incluidos sapo, pingüino y leopardo.
-- Golpe con destello breve y respuesta sonora.
-- Captura con zoom corto y sonido especial antes de mostrar el resultado.
-- Latido visual cuando queda un solo corazón de la bandera.
-- Pantalla inicial muy evidente “VERSIÓN 11” para verificar que GitHub cargó la actualización.
-- Nuevo archivo: polish.js. Debe quedar junto a index.html, game.js y expansion_clima.js.
-
-
-VERSIÓN 12 — FASES COMPLETADAS
-================================
-FASE CLIMA: lluvia (niveles 3, 8 y 15), noche (6 y 12), nieve (10), tormenta eléctrica (17), objetos climáticos y clima aleatorio en El Gran Duelo.
-
-FASE FÍSICA: objetos de un uso, caída al recibir golpes, bloqueo de recogida (3 s al usar / 1 s al perder), escombros del elefante, pelotas y proyectiles que vuelven al piso, tortuga-caparázon disparada, loro aturdido y gorila que patea banderas.
-
-FASE AVANZADA: sapo de lluvia, pingüino de nieve, leopardo nocturno, pararrayos, martillo, bicicleta, objetos estratégicos y reparto por clima.
-
-GUARDIANES CLIMÁTICOS:
-- Pingüino: se desliza como misil hacia el portador y hace caer la bandera instantáneamente.
-- Leopardo: es el único guardián que ve de noche; persigue al portador y, si hay dos, elige al que esté más cerca de marcar.
-- Sapo: toma objetos con la lengua, los dispara y el objeto vuelve a quedar disponible sin gastar su uso.
+CIERRE DE MECÁNICAS — V15
+- El sapo fue rediseñado con cuerpo completo. Traga un objeto, apunta entre 2 y 5 segundos y lo escupe con 1,5 corazones de daño y 1,5 s de aturdimiento.
+- Saltar sobre el sapo obliga a disparar hacia el equipo rival.
+- Gorila, elefante, pingüino, perezoso y leopardo tienen nuevas reacciones manipulables.
+- Las personalidades de IA tienen interacciones favoritas con guardianes.
+- Todos los objetos se validan para no quedar dentro de obstáculos o sin una ruta navegable.
+- La noche mantiene visibles a Tina, bots y guardianes.
+- Diseño declarado completo: desde aquí solo balance, correcciones, gráficos, sonido y animación.

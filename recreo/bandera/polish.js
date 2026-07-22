@@ -192,13 +192,3 @@ draw = function(){
     ctx.save();ctx.translate(56,72);ctx.scale(s,s);ctx.font='32px serif';ctx.textAlign='center';ctx.fillText('❤️',0,0);ctx.restore();
   }
 };
-
-/* Señal muy visible de que se abrió la versión nueva. */
-(function polishVersionSplash(){
-  const badge=document.createElement('div');
-  badge.className='polish-version-splash';
-  badge.innerHTML='<div>✨</div><b>VERSIÓN 12</b><span>¡CLIMA Y FÍSICA COMPLETOS!</span>';
-  document.body.appendChild(badge);
-  setTimeout(()=>badge.classList.add('hide'),2100);
-  setTimeout(()=>badge.remove(),2800);
-})();
