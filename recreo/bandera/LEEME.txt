@@ -118,3 +118,9 @@ v2.0.1 — Ajuste para tablets
 - Joysticks y botones adaptados a tablet horizontal y pantallas de poca altura.
 - Compatibilidad con áreas seguras y barras del navegador.
 - Archivos CSS/JS versionados para forzar la recarga de la actualización.
+
+
+Actualización cooperativa 2.0.2:
+- Tina y Nito pueden pasarse la bandera al tocarse.
+- Cada jugador tiene su propio halo y su propia linterna durante la noche.
+- Máscara nocturna estabilizada para evitar luces desplazadas.

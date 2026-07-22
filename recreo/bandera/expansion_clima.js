@@ -1359,3 +1359,74 @@ drawGuardian=function(g){
   _drawGuardianV21(g);
 };
 
+
+
+/* =========================================================
+   V22 — NOCHE COOPERATIVA Y MÁSCARA ESTABLE
+   Cada jugador humano conserva su propio halo y sus objetos de luz.
+   La máscara se dibuja en un canvas auxiliar sin transformar el canvas
+   principal, evitando círculos desplazados o efectos visuales gigantes.
+   ========================================================= */
+nightOverlay=function(){
+  if(!v18NightCanvas){
+    v18NightCanvas=document.createElement('canvas');
+    v18NightCtx=v18NightCanvas.getContext('2d');
+  }
+  if(v18NightCanvas.width!==VIEW_W||v18NightCanvas.height!==VIEW_H){
+    v18NightCanvas.width=VIEW_W;
+    v18NightCanvas.height=VIEW_H;
+  }
+
+  const nctx=v18NightCtx;
+  nctx.setTransform(1,0,0,1,0,0);
+  nctx.globalAlpha=1;
+  nctx.globalCompositeOperation='source-over';
+  nctx.clearRect(0,0,VIEW_W,VIEW_H);
+  nctx.fillStyle='rgba(1,5,13,.82)';
+  nctx.fillRect(0,0,VIEW_W,VIEW_H);
+  nctx.globalCompositeOperation='destination-out';
+
+  const humans=humanEntities();
+  for(const e of humans){
+    const ex=e.x-camera.x;
+    const ey=e.y-camera.y;
+    let radius=188;
+    if(e.activeGear==='candle') radius=245;
+    else if(e.activeGear==='firefly') radius=225;
+
+    const gr=nctx.createRadialGradient(ex,ey,10,ex,ey,radius);
+    gr.addColorStop(0,'rgba(0,0,0,1)');
+    gr.addColorStop(.50,'rgba(0,0,0,.98)');
+    gr.addColorStop(.80,'rgba(0,0,0,.62)');
+    gr.addColorStop(1,'rgba(0,0,0,0)');
+    nctx.fillStyle=gr;
+    nctx.beginPath();
+    nctx.arc(ex,ey,radius,0,Math.PI*2);
+    nctx.fill();
+
+    if(e.activeGear==='flashlight'){
+      const a=Math.atan2(e.vy||0,e.vx||1);
+      nctx.save();
+      nctx.translate(ex,ey);
+      nctx.rotate(a);
+      const cone=nctx.createLinearGradient(0,0,430,0);
+      cone.addColorStop(0,'rgba(0,0,0,.98)');
+      cone.addColorStop(.72,'rgba(0,0,0,.78)');
+      cone.addColorStop(1,'rgba(0,0,0,0)');
+      nctx.fillStyle=cone;
+      nctx.beginPath();
+      nctx.moveTo(0,0);
+      nctx.lineTo(430,-138);
+      nctx.lineTo(430,138);
+      nctx.closePath();
+      nctx.fill();
+      nctx.restore();
+    }
+  }
+
+  nctx.globalCompositeOperation='source-over';
+  ctx.save();
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.drawImage(v18NightCanvas,0,0);
+  ctx.restore();
+};

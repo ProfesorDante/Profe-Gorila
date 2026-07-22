@@ -15,6 +15,8 @@ const joy = {x:0,y:0,active:false,id:null};
 const joy2 = {x:0,y:0,active:false,id:null};
 let coopMode = false;
 let player2 = null;
+let lastFlagPassAt = -99;
+const FLAG_PASS_COOLDOWN = 0.9;
 
 let level = 1;
 let unlocked = Number(localStorage.getItem('tinaFlagUnlocked') || 1);
@@ -84,6 +86,7 @@ function resetLevel(n = level){
   timeLeft = 125 - Math.min(level * .8, 14);
   levelElapsed = 0;
   lastActionAt = 0;
+  lastFlagPassAt = -99;
   director = makeDirector();
   stats = {jumpsUsed:0,hits:0,bananas:0};
   running = false;
@@ -824,6 +827,36 @@ function dropCarriedFlag(e){
   const kind=e.carrying;if(!kind)return;const f=(kind==='enemy'||kind==='duel')?flag:homeFlag;e.carrying=null;e.flagHP=0;f.carrier=null;f.dropped=true;f.x=e.x;f.y=e.y;burst(f.x,f.y,'#fff1a3');
 }
 
+
+function tryCoopFlagPass(){
+  if(!coopMode||!player2||duelMode) return;
+  if(levelElapsed-lastFlagPassAt<FLAG_PASS_COOLDOWN) return;
+
+  const touching=dist(player,player2)<player.r+player2.r+8;
+  if(!touching) return;
+
+  let from=null,to=null;
+  if(player.carrying==='enemy'&&!player2.carrying){from=player;to=player2;}
+  else if(player2.carrying==='enemy'&&!player.carrying){from=player2;to=player;}
+  if(!from||!to) return;
+
+  const hp=Math.max(1,from.flagHP||from.flagMaxHP||6);
+  from.carrying=null;
+  from.flagHP=0;
+  to.carrying='enemy';
+  to.flagHP=Math.min(to.flagMaxHP||hp,hp);
+  flag.carrier=to;
+  flag.dropped=false;
+  flag.x=to.x;
+  flag.y=to.y-32-(to.jump?to.jump.height*.2:0);
+  lastFlagPassAt=levelElapsed;
+  registerAction('flag-pass');
+  burst((from.x+to.x)/2,(from.y+to.y)/2,'#fff1a3');
+  tone(659,.09,'triangle',.045);
+  setTimeout(()=>tone(880,.11,'triangle',.04),70);
+  if(typeof showToast==='function') showToast(`¡${from.id==='tina'?'Tina':'Nito'} le pasó la bandera a ${to.id==='tina'?'Tina':'Nito'}!`);
+}
+
 function checkWorld(){
   const humans=[player,player2].filter(Boolean);
   for(const h of humans){
@@ -831,6 +864,7 @@ function checkWorld(){
     for(const o of objects)if(!o.got&&dist(h,o)<h.r+o.r){o.got=true;applyObjectTo(h,o.type);}
     if(!h.jump)for(const tr of traps)if(dist(h,tr)<h.r+tr.r){if(tr.type==='mud')h.slow=.35;if(tr.type==='log')moveWithSliding(h,-h.vx*28,-h.vy*28,false);if(tr.type==='vine'&&Math.random()<.08)h.slow=.8;}
   }
+  tryCoopFlagPass();
   bananaLabel.textContent=humans.reduce((n,x)=>n+x.bananas,0);
   for(const b of bots){
     for(const banana of bananas)if(!banana.got&&dist(b,banana)<b.r+banana.r){banana.got=true;b.bananas+=banana.value;b.jumpCharge=Math.min(b.jumpRecharge,b.jumpCharge+(banana.value>1?1.5:.55));}
