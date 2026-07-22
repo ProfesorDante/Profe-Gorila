@@ -37,7 +37,7 @@ let lastActionAt = 0;
 let stats = {jumpsUsed:0,hits:0,bananas:0};
 let camera = {x:0,y:0};
 let progression = {jumpCap:1,recharge:5,jumpDistance:145};
-let duelMode=false, duelScore={tina:0,nito:0}, duelRound=1, duelRoundReset=0;
+let duelMode=false, duelHumanVsHuman=false, duelScore={tina:0,nito:0}, duelRound=1, duelRoundReset=0;
 let duelCountdownTimer=null;
 
 const upgrades = [
@@ -293,7 +293,10 @@ function update(dt){
   updateDirector(dt);
   updateParticles(dt);
   updateCamera(dt);
-  if(duelMode) updateDuelHazards(dt);
+  if(duelMode){
+    updateDuelHazards(dt);
+    if(duelHumanVsHuman) updateDuelHumanCollision();
+  }
   checkWorld();
 }
 
@@ -784,6 +787,35 @@ function guardianContacts(g){
   for(const b of bots)if(!b.jump&&b.inv<=0&&dist(g,b)<g.r+b.r)guardianHitBot(g,b);
 }
 
+
+function updateDuelHumanCollision(){
+  if(!duelHumanVsHuman||!player||!player2||player.jump||player2.jump) return;
+  if(player.inv>0||player2.inv>0) return;
+  if(dist(player,player2)>=player.r+player2.r+4) return;
+
+  const dx=player.x-player2.x;
+  const dy=player.y-player2.y;
+  const length=Math.hypot(dx,dy)||1;
+
+  moveWithSliding(player, dx/length*52, dy/length*52, false);
+  moveWithSliding(player2,-dx/length*52,-dy/length*52,false);
+
+  player.inv=.8;
+  player2.inv=.8;
+  player.stun=.20;
+  player2.stun=.20;
+  player.speedBoost=0;
+  player2.speedBoost=0;
+
+  // Cada golpe afecta solamente a quien lleva la bandera.
+  if(player.carrying==='duel') damageCarrier(player,1);
+  if(player2.carrying==='duel') damageCarrier(player2,1);
+
+  burst((player.x+player2.x)/2,(player.y+player2.y)/2,'#ffe16b');
+  tone(120,.12,'square',.06);
+  shake=8;
+}
+
 function guardianHitBot(g,b){
   registerAction('guardian-bot');
   const damage=guardianDamage(g.type);
@@ -871,7 +903,21 @@ function checkWorld(){
     for(const o of objects)if(!o.got&&dist(b,o)<b.r+o.r){o.got=true;applyObjectTo(b,o.type);}
   }
   if(duelMode){
-    for(const h of humans){if(!h.carrying&&!flag.carrier&&dist(h,flag)<h.r+flag.r){h.carrying='duel';h.flagHP=h.flagMaxHP;flag.carrier=h;flag.dropped=false;}if(h.carrying==='duel'){flag.x=h.x;flag.y=h.y-32-(h.jump?h.jump.height*.2:0);if(rectCircle(homeBase,h))scoreDuel('tina');}}
+    for(const h of humans){
+      if(!h.carrying&&!flag.carrier&&dist(h,flag)<h.r+flag.r){
+        h.carrying='duel';
+        h.flagHP=h.flagMaxHP;
+        flag.carrier=h;
+        flag.dropped=false;
+        tone(h===player?523:392,.1,'triangle',.035);
+      }
+      if(h.carrying==='duel'){
+        flag.x=h.x;
+        flag.y=h.y-32-(h.jump?h.jump.height*.2:0);
+        if(h===player&&rectCircle(homeBase,h)) scoreDuel('tina');
+        if(h===player2&&rectCircle(enemyBase,h)) scoreDuel('nito');
+      }
+    }
     return;
   }
   for(const h of humans){
@@ -1209,7 +1255,13 @@ levelsFinal.onclick=()=>{hideFinalVictory();show('levels');};
 
 
 function startDuel(){
-  coopMode=false;player2=null;duelMode=true;duelScore={tina:0,nito:0};duelRound=1;running=false;stopMusic();
+  duelHumanVsHuman=coopMode;
+  duelMode=true;
+  duelScore={tina:0,nito:0};
+  duelRound=1;
+  running=false;
+  stopMusic();
+  document.body.classList.toggle('coop-active',duelHumanVsHuman);
   resetDuelWorld();
   const overlay=document.getElementById('duelCountdown');
   const title=document.getElementById('duelCountdownTitle');
@@ -1227,7 +1279,20 @@ function resetDuelWorld(){
   enemyBase={x:WORLD_W-240*mapScale,y:WORLD_H/2-115*mapScale,w:150*mapScale,h:230*mapScale};
   player={id:'tina',x:280*mapScale,y:WORLD_H/2,r:22,vx:1,vy:0,speed:240,jumps:progression.jumpCap,recharge:0,jump:null,inv:0,stun:0,bananas:0,carrying:null,flagHP:0,flagMaxHP:10,slow:0,speedBoost:0};
   const nitoSpawn={x:WORLD_W-280*mapScale,y:WORLD_H/2};
-  bots=[{id:'nito',name:'Nito',personality:'duelist',x:nitoSpawn.x,y:nitoSpawn.y,spawnX:nitoSpawn.x,spawnY:nitoSpawn.y,r:22,speed:240,stun:0,inv:0,bananas:0,navPath:[],navTimer:0,stuckTime:0,lastX:nitoSpawn.x,lastY:nitoSpawn.y,jumps:progression.jumpCap,jumpCap:progression.jumpCap,jumpRecharge:progression.recharge,jumpCharge:0,jump:null,vx:-1,vy:0,carrying:null,flagHP:0,flagMaxHP:10,state:'neutral',decisionTimer:0,recoveryTimer:0}];
+
+  if(duelHumanVsHuman){
+    coopMode=true;
+    player2={
+      id:'nito',x:nitoSpawn.x,y:nitoSpawn.y,r:22,vx:-1,vy:0,speed:240,
+      jumps:progression.jumpCap,recharge:0,jump:null,inv:0,stun:0,
+      bananas:0,carrying:null,flagHP:0,flagMaxHP:10,slow:0,speedBoost:0
+    };
+    bots=[];
+  }else{
+    coopMode=false;
+    player2=null;
+    bots=[{id:'nito',name:'Nito',personality:'duelist',x:nitoSpawn.x,y:nitoSpawn.y,spawnX:nitoSpawn.x,spawnY:nitoSpawn.y,r:22,speed:240,stun:0,inv:0,bananas:0,navPath:[],navTimer:0,stuckTime:0,lastX:nitoSpawn.x,lastY:nitoSpawn.y,jumps:progression.jumpCap,jumpCap:progression.jumpCap,jumpRecharge:progression.recharge,jumpCharge:0,jump:null,vx:-1,vy:0,carrying:null,flagHP:0,flagMaxHP:10,state:'neutral',decisionTimer:0,recoveryTimer:0}];
+  }
   guardians=[];
   // Molestias simétricas: obligan a variar la ruta sin favorecer a nadie.
   traps=[
@@ -1288,17 +1353,57 @@ function beginDuelRound(){
   running=true;last=performance.now();startMusic();requestAnimationFrame(loop);
 }
 function resetDuelRound(){
-  player.x=280*mapScale;player.y=WORLD_H/2;player.carrying=null;player.flagHP=0;player.jump=null;player.jumps=progression.jumpCap;player.recharge=0;player.inv=1;
-  const n=bots[0];n.x=WORLD_W-280*mapScale;n.y=WORLD_H/2;n.carrying=null;n.flagHP=0;n.jump=null;n.jumps=progression.jumpCap;n.jumpCharge=0;n.inv=1;n.navPath=[];
-  flag.x=flag.homeX;flag.y=flag.homeY;flag.carrier=null;flag.dropped=false;duelRound++;
+  player.x=280*mapScale;
+  player.y=WORLD_H/2;
+  player.carrying=null;
+  player.flagHP=0;
+  player.jump=null;
+  player.jumps=progression.jumpCap;
+  player.recharge=0;
+  player.inv=1;
+  player.stun=0;
+
+  const n=duelHumanVsHuman?player2:bots[0];
+  if(n){
+    n.x=WORLD_W-280*mapScale;
+    n.y=WORLD_H/2;
+    n.carrying=null;
+    n.flagHP=0;
+    n.jump=null;
+    n.jumps=progression.jumpCap;
+    n.inv=1;
+    n.stun=0;
+    if(duelHumanVsHuman){
+      n.recharge=0;
+    }else{
+      n.jumpCharge=0;
+      n.navPath=[];
+    }
+  }
+
+  flag.x=flag.homeX;
+  flag.y=flag.homeY;
+  flag.carrier=null;
+  flag.dropped=false;
+  duelRound++;
 }
 function scoreDuel(who){
   if(duelRoundReset>0)return;
   duelScore[who]++;running=false;stopMusic();winSound();
   if(duelScore[who]>=2){
     unlocked=19;localStorage.setItem('tinaFlagUnlocked',19);
-    if(who==='tina'){setTimeout(()=>showFinalVictory(),900);}
-    else setTimeout(()=>{
+    if(duelHumanVsHuman){
+      setTimeout(()=>{
+        resultTitle.textContent=who==='tina'?'🏆 ¡Tina ganó el duelo!':'🏆 ¡Nito ganó el duelo!';
+        resultText.innerHTML=`El jugador ${who==='tina'?'1':'2'} consiguió dos puntos.<br><b>¡La revancha ya está lista!</b>`;
+        upgradeBox.style.display='none';
+        nextBtn.style.display='none';
+        retryBtn.textContent='Jugar la revancha';
+        show('result');
+      },700);
+    }else if(who==='tina'){
+      setTimeout(()=>showFinalVictory(),900);
+    }else setTimeout(()=>{
       resultTitle.textContent='💚 ¡Lo hiciste genial!';
       resultText.innerHTML='Nito ganó este duelo por muy poquito.<br><b>¡La revancha ya está lista!</b>';
       upgradeBox.style.display='none';nextBtn.style.display='none';retryBtn.textContent='Revancha contra Nito';show('result');

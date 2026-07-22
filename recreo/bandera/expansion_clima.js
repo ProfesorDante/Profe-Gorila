@@ -167,7 +167,7 @@ checkWorld=function(){
 };
 
 const _guardianHit=guardianHit;
-guardianHit=function(g){dropActiveItem(player,1);if(g.type==='penguin'&&player.carrying)dropCarriedFlag(player);_guardianHit(g);};
+guardianHit=function(g,target=player){dropActiveItem(target,1);if(g.type==='penguin'&&target.carrying)dropCarriedFlag(target);_guardianHit(g,target);};
 const _guardianHitBot=guardianHitBot;
 guardianHitBot=function(g,b){dropActiveItem(b,1);if(g.type==='penguin'&&b.carrying)dropCarriedFlag(b);_guardianHitBot(g,b);};
 
@@ -220,13 +220,13 @@ function updateSpecialGuardian(g,dt){
     const t=nearestEntity(g);navigateEntity(g,t.x,t.y,g.v,dt,false);
   }else if(g.type==='penguin'){
     g.missileClock-=dt;
-    const carriers=[player,...bots].filter(e=>e.carrying),t=(carriers.length?carriers:[player,...bots]).sort((a,b)=>dist(g,a)-dist(g,b))[0];
+    const carriers=[player,player2,...bots].filter(Boolean).filter(e=>e.carrying),t=(carriers.length?carriers:[player,player2,...bots].filter(Boolean)).sort((a,b)=>dist(g,a)-dist(g,b))[0];
     if(g.missileClock<=0&&g.windup<=0&&g.missile<=0){g.missileClock=3.2;g.windup=.62;g.target=t;tone(540,.08,'triangle',.03);}
     if(g.windup>0){g.windup-=dt;if(g.windup<=0){g.missile=1.0;tone(760,.08,'sawtooth',.035);}return;}
     if(g.missile>0){g.missile-=dt;const dx=g.target.x-g.x,dy=g.target.y-g.y,l=Math.hypot(dx,dy)||1;moveWithSliding(g,dx/l*g.v*2.9*dt,dy/l*g.v*2.9*dt,false);}
     else{const tx=WORLD_W/2+Math.cos(g.phase*.7)*320*mapScale,ty=WORLD_H/2+Math.sin(g.phase*.9)*220*mapScale;navigateEntity(g,tx,ty,g.v*.65,dt,false);}
   }else{
-    const carriers=[player,...bots].filter(e=>e.carrying);let t;
+    const carriers=[player,player2,...bots].filter(Boolean).filter(e=>e.carrying);let t;
     if(carriers.length===1)t=carriers[0];
     else if(carriers.length>1)t=carriers.reduce((a,b)=>scoringDistance(b)<scoringDistance(a)?b:a,carriers[0]);
     else t=nearestEntity(g);
@@ -634,7 +634,7 @@ updateSpecialGuardian=function(g,dt){
   if(g.type==='frog'){
     if(g.frogAimTimer>0&&g.swallowedItem){
       g.frogAimTimer-=dt;
-      const t=g.frogTarget&&[player,...bots].includes(g.frogTarget)?g.frogTarget:nearestEntity(g);g.frogTarget=t;
+      const t=g.frogTarget&&[player,player2,...bots].filter(Boolean).includes(g.frogTarget)?g.frogTarget:nearestEntity(g);g.frogTarget=t;
       if(t)navigateEntity(g,t.x,t.y,g.v*.36,dt,false);
       if(g.frogAimTimer<=0)frogSpit(g,t,false);
     }else if(!g.swallowedItem){
@@ -648,7 +648,7 @@ updateSpecialGuardian=function(g,dt){
     }
   }else if(g.type==='penguin'){
     g.missileClock=(g.missileClock||0)-dt;
-    const carriers=[player,...bots].filter(e=>e.carrying),fallback=[player,...bots].filter(Boolean);
+    const carriers=[player,player2,...bots].filter(Boolean).filter(e=>e.carrying),fallback=[player,...bots].filter(Boolean);
     const t=(carriers.length?carriers:fallback).sort((a,b)=>dist(g,a)-dist(g,b))[0];
     if(g.missileClock<=0&&g.windup<=0&&g.missile<=0){g.missileClock=3.25;g.windup=.68;g.target=t;g.missileClosest=Infinity;tone(540,.08,'triangle',.03);}
     if(g.windup>0){g.windup-=dt;if(g.windup<=0){g.missile=1.05;g.missileClosest=Infinity;tone(760,.08,'sawtooth',.035);}return;}
@@ -661,10 +661,10 @@ updateSpecialGuardian=function(g,dt){
     }else{const tx=WORLD_W/2+Math.cos(g.phase*.7)*320*mapScale,ty=WORLD_H/2+Math.sin(g.phase*.9)*220*mapScale;navigateEntity(g,tx,ty,g.v*.65,dt,false);}
   }else if(g.type==='leopard'){
     if(g.leopardRage>0){
-      g.leopardRage-=dt;const carriers=[player,...bots].filter(e=>e.carrying);
-      const t=(carriers.length?carriers:[player,...bots]).sort((a,b)=>dist(g,a)-dist(g,b))[0];if(t)navigateEntity(g,t.x,t.y,g.v*1.65,dt,false);
+      g.leopardRage-=dt;const carriers=[player,player2,...bots].filter(Boolean).filter(e=>e.carrying);
+      const t=(carriers.length?carriers:[player,player2,...bots].filter(Boolean)).sort((a,b)=>dist(g,a)-dist(g,b))[0];if(t)navigateEntity(g,t.x,t.y,g.v*1.65,dt,false);
     }else{
-      const carriers=[player,...bots].filter(e=>e.carrying);let t;
+      const carriers=[player,player2,...bots].filter(Boolean).filter(e=>e.carrying);let t;
       if(carriers.length===1)t=carriers[0];else if(carriers.length>1)t=carriers.reduce((a,b)=>scoringDistance(b)<scoringDistance(a)?b:a,carriers[0]);else t=nearestEntity(g);
       if(t)navigateEntity(g,t.x,t.y,g.v*(t.carrying?1.22:1),dt,false);
     }
@@ -1293,7 +1293,7 @@ updateSpecialGuardian=function(g,dt){
     if(g.frogHop){v21UpdateFrogHop(g,dt);guardianContacts(g);return;}
     if(g.frogAimTimer>0&&g.swallowedItem){
       g.frogAimTimer-=dt;
-      const t=g.frogTarget&&[player,...bots].includes(g.frogTarget)?g.frogTarget:nearestEntity(g);g.frogTarget=t;
+      const t=g.frogTarget&&[player,player2,...bots].filter(Boolean).includes(g.frogTarget)?g.frogTarget:nearestEntity(g);g.frogTarget=t;
       // Salta justo antes de disparar, una sola vez por objeto guardado.
       if(t&&!g.frogHoppedForShot&&g.frogAimTimer<=.72){v21StartFrogHop(g,t);guardianContacts(g);return;}
       if(t&&g.frogAimTimer>.72)navigateEntity(g,t.x,t.y,g.v*.28,dt,false);
@@ -1310,7 +1310,7 @@ updateSpecialGuardian=function(g,dt){
     }
   }else if(g.type==='penguin'){
     g.missileClock=(g.missileClock||0)-dt;
-    const carriers=[player,...bots].filter(e=>e.carrying),fallback=[player,...bots].filter(Boolean);
+    const carriers=[player,player2,...bots].filter(Boolean).filter(e=>e.carrying),fallback=[player,...bots].filter(Boolean);
     const t=(carriers.length?carriers:fallback).sort((a,b)=>dist(g,a)-dist(g,b))[0];
     if(g.missileClock<=0&&g.windup<=0&&g.missile<=0){g.missileClock=3.25;g.windup=.68;g.target=t;g.missileClosest=Infinity;tone(540,.08,'triangle',.03);}
     if(g.windup>0){g.windup-=dt;if(g.windup<=0){g.missile=1.05;g.missileClosest=Infinity;tone(760,.08,'sawtooth',.035);}return;}
@@ -1320,10 +1320,10 @@ updateSpecialGuardian=function(g,dt){
     }else{const tx=WORLD_W/2+Math.cos(g.phase*.7)*320*mapScale,ty=WORLD_H/2+Math.sin(g.phase*.9)*220*mapScale;navigateEntity(g,tx,ty,g.v*.65,dt,false);}
   }else if(g.type==='leopard'){
     if(g.pounce){v21UpdateJaguarPounce(g,dt);guardianContacts(g);return;}
-    const carriers=[player,...bots].filter(e=>e.carrying);
+    const carriers=[player,player2,...bots].filter(Boolean).filter(e=>e.carrying);
     let t;
     if(g.leopardRage>0){
-      g.leopardRage-=dt;t=(carriers.length?carriers:[player,...bots]).sort((a,b)=>dist(g,a)-dist(g,b))[0];
+      g.leopardRage-=dt;t=(carriers.length?carriers:[player,player2,...bots].filter(Boolean)).sort((a,b)=>dist(g,a)-dist(g,b))[0];
     }else if(carriers.length===1)t=carriers[0];
     else if(carriers.length>1)t=carriers.reduce((a,b)=>scoringDistance(b)<scoringDistance(a)?b:a,carriers[0]);
     else t=nearestEntity(g);

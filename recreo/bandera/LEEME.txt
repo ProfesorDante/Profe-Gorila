@@ -124,3 +124,11 @@ Actualización cooperativa 2.0.2:
 - Tina y Nito pueden pasarse la bandera al tocarse.
 - Cada jugador tiene su propio halo y su propia linterna durante la noche.
 - Máscara nocturna estabilizada para evitar luces desplazadas.
+
+
+ACTUALIZACIÓN COOPERATIVA 2.0.4
+- El Gran Duelo respeta el modo elegido.
+- En cooperativo, el duelo final es Jugador 1 (Tina) vs Jugador 2 (Nito).
+- Tina anota en la base izquierda y Nito en la base derecha.
+- Los golpes, objetos y estados se aplican al jugador correcto.
+- Se corrigió un wrapper que hacía perder objetos al Jugador 1 cuando golpeaban al Jugador 2.
