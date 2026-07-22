@@ -46,6 +46,7 @@ button{
 button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}
 button.soft{background:#8a6844;box-shadow:0 5px #60482f}
 button.warn{background:#b7644e;box-shadow:0 5px #7d4032}
+button.expert{background:#5e467f;box-shadow:0 5px #3d2c55}
 button:active{transform:translateY(3px);box-shadow:0 2px #333}
 .controls{display:grid;grid-template-columns:1fr;gap:8px}
 small.note{color:#5b704e;line-height:1.35}
@@ -61,7 +62,7 @@ small.note{color:#5b704e;line-height:1.35}
 .card p,.card li{font-size:17px;line-height:1.45}
 .card ul{text-align:left}
 .menuGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-.modeRow{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.modeRow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
 .teacherPanel{text-align:left;background:#f0f7e5;border:2px solid #9fba78;border-radius:14px;padding:12px}
 .voiceRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .footer{text-align:center;background:#183326;color:#dcebd9;padding:8px;font-size:12px;font-weight:700}
@@ -148,6 +149,56 @@ small.note{color:#5b704e;line-height:1.35}
   .coverStage{width:100vw;height:auto}
 }
 
+
+/* Ajustes específicos para tablets táctiles, incluidas las de 1024–1280 px. */
+@media (pointer:coarse) and (max-width:1180px){
+  html,body{height:100%;min-height:100%;overflow:hidden}
+  body{padding:0;align-items:stretch;overscroll-behavior:none}
+  .app{
+    width:100%;height:100dvh;min-height:100svh;border:0;border-radius:0;
+    display:flex;flex-direction:column;box-shadow:none
+  }
+  header{flex:0 0 auto;padding:5px 8px;gap:5px}
+  main{display:block;flex:1;min-height:0;padding:4px}
+  .boardWrap{height:100%;display:flex;align-items:center;justify-content:center}
+  canvas{
+    width:auto;height:auto;max-width:100%;max-height:100%;
+    border-width:3px;border-radius:12px;touch-action:none
+  }
+  .side,.footer{display:none}
+  .mobileGameBar{display:flex}
+  .overlay{padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left))}
+  .card{max-height:94dvh}
+  .modeRow{grid-template-columns:repeat(2,1fr)}
+  button{min-height:44px}
+}
+@media (pointer:coarse) and (orientation:landscape) and (max-height:760px){
+  header{padding:3px 7px;flex-wrap:nowrap}
+  .title{font-size:13px;white-space:nowrap;width:auto;text-align:left}
+  .hud{margin-left:auto;flex-wrap:nowrap}
+  .pill{font-size:10px;padding:3px 6px}
+  main{padding:2px}
+  .mobileGameBar{top:6px;right:6px}
+  .mobileGameBar button{width:40px;height:40px}
+  .card{width:min(720px,96%);padding:12px;max-height:94dvh}
+  .card p,.card li{font-size:14px;line-height:1.3}
+}
+@media (pointer:coarse){
+  button:hover,.coverStart:hover{filter:none}
+  button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+}
+.coverOverlay{
+  padding:
+    env(safe-area-inset-top)
+    env(safe-area-inset-right)
+    env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+.coverStage{
+  width:min(100vw,calc(100dvh * 1.5));
+  max-height:100dvh;
+}
+
 </style>
 </head>
 <body>
@@ -168,7 +219,7 @@ small.note{color:#5b704e;line-height:1.35}
       <button class="secondary" onclick="toggleMusic()" aria-label="Activar o desactivar música" title="Música">🎵</button>
       <button class="soft" onclick="showTeacher()" aria-label="Ver reglas" title="Reglas">🦍</button>
     </div>
-    <canvas id="board" width="760" height="760" aria-label="Tablero de damas"></canvas>
+    <canvas id="board" width="760" height="760" aria-label="Tablero de damas" role="application"></canvas>
   </div>
   <aside class="side">
     <h2>Partida</h2>
@@ -190,7 +241,7 @@ small.note{color:#5b704e;line-height:1.35}
 
 <div class="coverOverlay" id="coverOverlay">
   <div class="coverStage">
-    <img src="../img/damas.png" alt="Portada de Damas del Gran Árbol con Nito y Tina">
+    <img src="../img/damas.png?v=2.1" alt="Portada de Damas del Gran Árbol con Nito y Tina">
     <button class="coverStart" onclick="enterFromCover()" aria-label="Jugar ahora" title="Jugar ahora"></button>
   </div>
 </div>
@@ -227,6 +278,7 @@ small.note{color:#5b704e;line-height:1.35}
       <button onclick="prepareTeamChoice('ai','easy')">Fácil</button>
       <button class="secondary" onclick="prepareTeamChoice('ai','medium')">Medio</button>
       <button class="warn" onclick="prepareTeamChoice('ai','hard')">Difícil</button>
+      <button class="expert" onclick="prepareTeamChoice('ai','expert')">🧠 Experto</button>
     </div>
     <div class="voiceRow"><button class="soft" onclick="hideAi()">Volver</button></div>
   </div>
@@ -482,6 +534,13 @@ function selectCell(r,c){
   const clickedMove=legalMoves.find(m=>m.to.r===r&&m.to.c===c);
   if(clickedMove){makeMove(clickedMove);return;}
 
+  // Durante una captura múltiple no se puede cambiar de ficha.
+  if(mustContinue&&(r!==mustContinue.r||c!==mustContinue.c)){
+    setStatus('La misma ficha debe continuar capturando.');
+    draw();
+    return;
+  }
+
   const p=board[r][c];
   const belongs=(turn===GREEN&&isGreen(p))||(turn===GOLD&&isGold(p));
   if(!belongs) return;
@@ -504,11 +563,13 @@ function aiTurn(){
     move=moves[Math.floor(Math.random()*moves.length)];
   }else if(aiLevel==='medium'){
     move=chooseMedium(moves);
-  }else{
+  }else if(aiLevel==='hard'){
     move=chooseHard(moves);
+  }else{
+    move=chooseExpert(moves);
   }
   makeMove(move,true);
-  if(!gameOver&&turn===GOLD) setTimeout(aiTurn,300+Math.random()*300);
+  if(!gameOver&&turn===aiPlayer) setTimeout(aiTurn,300+Math.random()*300);
 }
 
 function chooseMedium(moves){
@@ -540,6 +601,30 @@ function chooseHard(moves){
     if(val>best){best=val;bestMove=m;}
   }
   return bestMove;
+}
+
+function chooseExpert(moves){
+  // Profundidad adaptable: piensa más en finales sin congelar tablets.
+  const totalPieces=countPieces(GREEN)+countPieces(GOLD);
+  const depth=totalPieces<=10?7:totalPieces<=16?6:5;
+  let best=-Infinity,bestMoves=[];
+  for(const m of moves){
+    const nb=applyMoveToBoard(board,m);
+    const val=minimax(nb,depth,false,-Infinity,Infinity)+expertMoveBonus(m,board);
+    if(val>best+.001){best=val;bestMoves=[m]}
+    else if(Math.abs(val-best)<=.001) bestMoves.push(m);
+  }
+  return bestMoves[Math.floor(Math.random()*bestMoves.length)];
+}
+
+function expertMoveBonus(m,b){
+  const p=b[m.from.r][m.from.c];
+  let s=0;
+  if(m.capture) s+=1.5;
+  if(!isKing(p)&&((p===GOLD&&m.to.r===7)||(p===GREEN&&m.to.r===0))) s+=3;
+  if(m.to.c>=2&&m.to.c<=5&&m.to.r>=2&&m.to.r<=5) s+=.6;
+  if(m.to.c===0||m.to.c===7) s+=.35; // bordes: menos ángulos de ataque.
+  return s;
 }
 
 function minimax(b,depth,maximizing,alpha,beta){
@@ -578,7 +663,20 @@ function rawTeamScore(b,player){
   }
   return s;
 }
-function evaluateForAi(b){return rawTeamScore(b,aiPlayer)-rawTeamScore(b,humanPlayer)}
+function evaluateForAi(b){
+  let score=rawTeamScore(b,aiPlayer)-rawTeamScore(b,humanPlayer);
+  const aiMoves=allMovesFor(aiPlayer,b),humanMoves=allMovesFor(humanPlayer,b);
+  score+=(aiMoves.length-humanMoves.length)*.10;
+  score+=(aiMoves.filter(m=>m.capture).length-humanMoves.filter(m=>m.capture).length)*.45;
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const p=b[r][c];
+    if(!p) continue;
+    const belongsAi=(aiPlayer===GREEN&&isGreen(p))||(aiPlayer===GOLD&&isGold(p));
+    const center=(r>=2&&r<=5&&c>=2&&c<=5)?.18:0;
+    score+=belongsAi?center:-center;
+  }
+  return score;
+}
 
 
 function updateAll(){
@@ -788,7 +886,7 @@ canvas.addEventListener('pointermove',e=>{
   if(!drag||drag.pointerId!==e.pointerId) return;
   const pos=pointerBoardPosition(e);
   drag.x=pos.x;drag.y=pos.y;
-  if(!drag.active&&Math.hypot(pos.x-drag.startX,pos.y-drag.startY)>8) drag.active=true;
+  if(!drag.active&&Math.hypot(pos.x-drag.startX,pos.y-drag.startY)>Math.max(8,pos.size*.10)) drag.active=true;
   if(drag.active) draw();
 });
 
@@ -799,9 +897,12 @@ function finishPointer(e,cancelled=false){
   drag=null;
   try{canvas.releasePointerCapture(e.pointerId)}catch(err){}
 
-  if(!cancelled&&current.active&&inBounds(pos.r,pos.c)){
+  if(!cancelled&&inBounds(pos.r,pos.c)){
     const move=legalMoves.find(m=>m.from.r===current.from.r&&m.from.c===current.from.c&&m.to.r===pos.r&&m.to.c===pos.c);
-    if(move){makeMove(move);return;}
+    if(move&&(current.active||(pos.r!==current.from.r||pos.c!==current.from.c))){
+      makeMove(move);
+      return;
+    }
   }
   draw();
 }
