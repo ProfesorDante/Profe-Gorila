@@ -260,3 +260,68 @@ body::after{
   .cover-play-button:focus-visible,
   .cover-play-button:active{transform:none}
 }
+
+
+/* =========================================================
+   COMPATIBILIDAD TABLET / CELULAR / PC — 2026-07-22
+   Las tablets táctiles no siempre entran en los cortes de “celular”.
+   Este bloque usa el tipo de puntero y el tamaño real de la pantalla.
+   ========================================================= */
+@media (pointer:coarse) and (max-width:1366px){
+  html,body{height:100%;min-height:100%;overflow:hidden}
+  body{
+    padding:0;align-items:stretch;overscroll-behavior:none;
+    padding-top:env(safe-area-inset-top);
+    padding-right:env(safe-area-inset-right);
+    padding-bottom:env(safe-area-inset-bottom);
+    padding-left:env(safe-area-inset-left)
+  }
+  .app{
+    position:relative;width:100%;height:100dvh;min-height:100svh;
+    border:0;border-radius:0;display:flex;flex-direction:column;box-shadow:none
+  }
+  header{flex:0 0 auto;padding:5px 7px;gap:5px}
+  .game-wrap{flex:1 1 auto;min-height:0;padding:3px;display:flex;align-items:center;justify-content:center}
+  canvas{width:auto;height:auto;max-width:100%;max-height:100%;border-width:3px;border-radius:10px}
+  .controls{flex:0 0 auto;padding:4px 7px 6px}
+  .pad{width:184px;max-width:184px;gap:4px}
+  .control{height:42px;min-height:42px;padding:2px;font-size:20px;border-width:2px;box-shadow:0 3px #1d3959}
+  .foot{display:none}
+  .overlay{inset:3px;padding:8px;border-radius:10px}
+  .card{width:min(94%,680px);max-height:calc(100dvh - 16px);overflow:auto;padding:15px}
+  button{min-height:44px;touch-action:manipulation}
+  .cover-overlay{
+    padding-top:env(safe-area-inset-top);padding-right:env(safe-area-inset-right);
+    padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left)
+  }
+  .cover-stage{width:min(100vw,150dvh);max-height:100dvh}
+}
+
+@media (pointer:coarse) and (max-width:1366px) and (orientation:portrait){
+  header{display:grid;grid-template-columns:auto minmax(0,1fr);flex-wrap:nowrap}
+  .title{width:auto;text-align:left;font-size:14px;white-space:nowrap}
+  .hud{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+  .pill{min-width:0;text-align:center;overflow:hidden;text-overflow:ellipsis;font-size:11px;padding:4px 6px}
+  canvas{max-height:calc(100dvh - 158px)}
+}
+
+@media (pointer:coarse) and (max-width:1366px) and (orientation:landscape){
+  header{display:flex;flex-wrap:nowrap;padding:3px 7px}
+  .title{width:auto;text-align:left;font-size:13px;white-space:nowrap}
+  .hud{margin-left:auto;display:flex;flex-wrap:nowrap;gap:4px;min-width:0}
+  .pill{font-size:10px;padding:3px 5px;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .game-wrap{padding:2px 86px 2px 2px}
+  canvas{max-height:calc(100dvh - 42px)}
+  .controls{
+    position:absolute;right:max(5px,env(safe-area-inset-right));top:50%;transform:translateY(-43%);
+    width:78px;padding:4px;background:rgba(41,74,53,.90);border-radius:14px;z-index:4
+  }
+  .pad{width:70px;max-width:70px;gap:3px}
+  .control{height:34px;min-height:34px;font-size:16px}
+  .card{width:min(720px,95%);padding:12px}
+  .card p{font-size:14px;line-height:1.3}
+}
+
+@media (hover:none){
+  button:hover,.cover-play-button:hover{transform:none;outline:none;filter:none}
+}

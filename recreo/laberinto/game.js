@@ -235,6 +235,8 @@ function startHeldMove(button,dx,dy,e){
 window.addEventListener('pointerup',stopHeldMove);
 window.addEventListener('pointercancel',stopHeldMove);
 window.addEventListener('blur',stopHeldMove);
+window.addEventListener('pagehide',stopHeldMove);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopHeldMove()});
 document.addEventListener('selectstart',e=>{
   if(e.target.closest('.controls,.control,canvas'))e.preventDefault();
 });
@@ -243,10 +245,13 @@ document.addEventListener('dragstart',e=>{
 });
 
 function resizeCanvasForViewport(){
-  const mobile=window.innerWidth<=700;
   const portrait=window.innerHeight>=window.innerWidth;
-  const targetW=mobile&&portrait?620:900;
-  const targetH=mobile&&portrait?820:620;
+  const coarsePointer=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;
+  const touchDevice=(navigator.maxTouchPoints||0)>0;
+  const tabletOrPhone=(coarsePointer||touchDevice)&&Math.min(window.innerWidth,window.innerHeight)<=1024;
+  const compactPortrait=portrait&&(window.innerWidth<=700||tabletOrPhone);
+  const targetW=compactPortrait?620:900;
+  const targetH=compactPortrait?820:620;
   if(canvas.width!==targetW||canvas.height!==targetH){
     canvas.width=targetW;
     canvas.height=targetH;

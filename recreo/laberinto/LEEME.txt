@@ -13,3 +13,16 @@ El juego busca la imagen en:
 ../../img/portadalaberinto.png
 
 Conservá portadalaberinto.png en la carpeta general img del repositorio.
+
+
+ACTUALIZACIÓN 2026-07-22 — TABLET Y REVISIÓN GENERAL
+- Diseño adaptado a tablets táctiles en vertical y horizontal (hasta 1366 px).
+- Los controles ya no dependen solamente del ancho típico de un celular.
+- Canvas vertical en celular/tablet vertical y panorámico en horizontal/PC.
+- Compatibilidad con barras dinámicas del navegador y áreas seguras.
+- Se detiene correctamente el movimiento sostenido al cambiar de pestaña o bloquear el dispositivo.
+- Versionado de CSS, JavaScript e imágenes para evitar caché viejo en GitHub Pages.
+- Verificación estática: JavaScript sin errores de sintaxis; no se encontraron TODO/FIXME ni mecánicas declaradas como pendientes.
+
+NOTA TÉCNICA
+El juego contiene muchas mejoras históricas agregadas por capas en game.js. Funcionan y se preservaron, pero para una futura etapa grande convendría consolidarlas en módulos para facilitar el mantenimiento.
