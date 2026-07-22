@@ -93,23 +93,25 @@ const CLASS_BY_NAME=Object.fromEntries(CLASS_ROSTER.map(s=>[s.name,s]));
 
 let running=false,last=0,elapsed=0,totalTime=600;
 let camX=0,camY=0,world=1,screenShake=0,radioDanceTimer=0,radioBoostTimer=0;
-let bananas=0,rareFruits=0,students=0,mochilas=0,heart=0,noBumps=true,message="",rescuedStudents=[];
+let bananas=0,rareFruits=0,students=0,heart=0,noBumps=true,message="",rescuedStudents=[];
 let musicOn=true,layers=4,wind=0,windClock=0,radioEvent={active:false,x:0,y:0,t:0,kind:"radio"};
 let highTrumpetLevel=0, highTrumpetTriumph=false, trumpetFinale=false;
 let platforms=[],items=[],vines=[],storyProps=[],particles=[],followers=[],lifeClock=0,ambientBirds=[],curiousButterflies=[],idleTarareoTimer=0;
+let visualUpdateStart=performance.now();
+const VISUAL_UPDATE_VERSION="0.2.6";
 let secrets={uke:false,gold:false,radio:false,hum:false,rain:false,butterfly:false};
 
-const player={x:80,y:360,w:58,h:78,vx:0,vy:0,onGround:false,onVine:false,facing:1,idle:0,state:"run",stateTimer:0,spawnX:80,spawnY:360,walkFrame:0,blink:0,coyote:0,jumpBuffer:0,landTimer:0,jumpHeldTime:0,jumpCut:false,radioLock:0};
+const player={x:80,y:360,w:58,h:78,vx:0,vy:0,onGround:false,onVine:false,facing:1,idle:0,state:"run",stateTimer:0,spawnX:80,spawnY:360,walkFrame:0,blink:0,coyote:0,jumpBuffer:0,landTimer:0,jumpHeldTime:0,jumpVisualTime:0,jumpCut:false,radioLock:0};
 
 function showStart(){running=false;stopAudio();document.getElementById("endOverlay").style.display="none";document.getElementById("startOverlay").style.display="flex";}
 function startGame(){
   document.getElementById("startOverlay").style.display="none";
   document.getElementById("endOverlay").style.display="none";
   buildLevel();
-  Object.assign(player,{x:80,y:360,vx:0,vy:0,onGround:false,onVine:false,facing:1,idle:0,state:"run",stateTimer:0,spawnX:80,spawnY:360,walkFrame:0,blink:0,coyote:0,jumpBuffer:0,landTimer:0,jumpHeldTime:0,jumpCut:false,radioLock:0});
+  Object.assign(player,{x:80,y:360,vx:0,vy:0,onGround:false,onVine:false,facing:1,idle:0,state:"run",stateTimer:0,spawnX:80,spawnY:360,walkFrame:0,blink:0,coyote:0,jumpBuffer:0,landTimer:0,jumpHeldTime:0,jumpVisualTime:0,jumpCut:false,radioLock:0});
   running=true;last=performance.now();elapsed=0;camX=0;camY=0;world=1;screenShake=0;radioDanceTimer=0;radioBoostTimer=0;radioEvent={active:false,x:0,y:0,t:0,kind:"radio"};
   highTrumpetLevel=0; highTrumpetTriumph=false; trumpetFinale=false;
-  bananas=0;rareFruits=0;students=0;mochilas=0;heart=0;noBumps=true;message="";rescuedStudents=[];particles=[];followers=[];
+  bananas=0;rareFruits=0;students=0;heart=0;noBumps=true;message="";rescuedStudents=[];particles=[];followers=[];
   secrets={uke:false,gold:false,radio:false,hum:false,rain:false,butterfly:false};
   hud(); if(musicOn)startAudio(); requestAnimationFrame(loop);
 }
@@ -120,11 +122,11 @@ function endGame(win){
   const rescuedSet=new Set(rescuedStudents);
   const arrived=CLASS_ROSTER.filter(s=>rescuedSet.has(s.name)).map(s=>s.name);
   const missing=CLASS_ROSTER.filter(s=>!rescuedSet.has(s.name)).map(s=>s.name);
-  const fuerza=Math.round(mochilas*20 + students*12 + bananas + rareFruits*5 + heart);
+  const fuerza=Math.round(students*12 + bananas + rareFruits*5 + heart);
   const arrivedHtml=arrived.length?arrived.map(n=>`<span style="color:#24934b;font-weight:900">${n}</span>`).join(", "):"<span style='color:#777'>ningún compañero todavía</span>";
   const missingHtml=missing.length?missing.map(n=>`<span style="color:#777;font-weight:800">${n}</span>`).join(", "):"<span style='color:#24934b;font-weight:900'>¡Nadie! Llegó toda la clase.</span>";
   const cierre=missing.length?"<br><strong>¡Mañana volveremos a buscarlos!</strong>":"<br><strong>✨ ¡Toda la clase llegó a la escuela! ✨</strong>";
-  document.getElementById("endText").innerHTML=`<strong>Hoy viajamos con:</strong><br>${arrivedHtml}<br><br><strong>Hoy quedaron esperando:</strong><br>${missingHtml}${cierre}<br><br>Mochilas cargadas: <b>${mochilas}</b> · Energía final: <b>${Math.round(heart)}</b> · Fuerza del Profe: <b>${fuerza}</b>`+(noBumps?"<br>👏 Los monitos aplaudieron porque llegaron sin tropezar.":"");
+  document.getElementById("endText").innerHTML=`<strong>Hoy viajamos con:</strong><br>${arrivedHtml}<br><br><strong>Hoy quedaron esperando:</strong><br>${missingHtml}${cierre}<br><br>Energía final: <b>${Math.round(heart)}</b> · Fuerza del Profe: <b>${fuerza}</b>`+(noBumps?"<br>👏 Los monitos aplaudieron porque llegaron sin tropezar.":"");
   document.getElementById("endOverlay").style.display="flex";
 }
 function loop(t){
@@ -132,6 +134,51 @@ function loop(t){
   const dt=Math.min(.033,(t-last)/1000);last=t;elapsed+=dt;
   update(dt);draw();hud();
   if(elapsed>=totalTime)endGame(false);else requestAnimationFrame(loop);
+}
+
+
+// Fase 2.1: ampliación orgánica del recorrido.
+// Conserva la estructura original y estira cada tramo sin convertirlo en un mapa nuevo.
+function mapLevelX(x){
+  if(x<=3300) return x*1.20;
+  if(x<=7800) return 3960+(x-3300)*1.18;
+  if(x<=9500) return 9270+(x-7800)*1.12;
+  if(x<=10300) return 11174+(x-9500)*1.05;
+  return 12014+(x-10300)*1.18;
+}
+function mapUpperY(y){
+  return y<300 ? 300+(y-300)*1.12 : y;
+}
+function expandPhaseTwoLevel(){
+  for(const p of platforms){
+    const oldX=p.x, oldEnd=p.x+p.w;
+    p.x=mapLevelX(oldX);
+    p.w=mapLevelX(oldEnd)-p.x;
+    if(oldX>=8400 && p.y<300) p.y=mapUpperY(p.y);
+  }
+  for(const o of items){
+    const oldX=o.x;
+    o.x=mapLevelX(oldX);
+    if(oldX>=8400 && o.y<300) o.y=mapUpperY(o.y);
+  }
+  for(const v of vines){
+    const oldX=v.x;
+    v.x=mapLevelX(oldX);
+    if(oldX>=8400 && v.y<300){
+      const bottom=v.y+v.h;
+      v.y=mapUpperY(v.y);
+      v.h=Math.max(120,mapUpperY(bottom)-v.y);
+    }
+  }
+  for(const p of storyProps){
+    const oldX=p.x, oldEnd=p.x+p.w;
+    p.x=mapLevelX(oldX);
+    p.w=mapLevelX(oldEnd)-p.x;
+    if(oldX>=8400 && p.y<300) p.y=mapUpperY(p.y);
+  }
+  // Estos recursos volverán en una fase posterior, cuando tengan una función narrativa propia.
+  items=items.filter(o=>!["radio","ukulele","trumpet","humming"].includes(o.type));
+  storyProps=storyProps.filter(p=>p.type!=="backpack");
 }
 
 function buildLevel(){
@@ -169,14 +216,7 @@ function buildLevel(){
   addStoryProp("branchBack",9650,-1335,760,95);
   addStoryProp("branchFront",10180,-1248,860,96);
   addStoryProp("branchBack",10950,-1305,780,100);
-
-  // Mochilas: el esfuerzo aparece a lo largo del viaje, no amontonado.
-  addStoryProp("backpack",980,401,44,44);
-  addStoryProp("backpack",2920,401,44,44);
-  addStoryProp("backpack",6020,506,44,44);
-  addStoryProp("backpack",8430,401,44,44);
-  addStoryProp("backpack",11180,-1514,44,44);
-  addStoryProp("backpack",11940,-1479,44,44);
+  // Mochilas retiradas temporalmente: volverán cuando tengan una función jugable clara.
 
   // 1) Sendero inicial más largo: entrar en la Selva antes de decidir.
   [[360,405],[760,405],[1180,405],[1600,405],[2020,405],[2460,405],[2950,405]].forEach(p=>addItem("banana",p[0],p[1]));
@@ -213,8 +253,7 @@ function buildLevel(){
    [4450,560,360,30],[4920,555,380,30],[5330,565,350,30],[5780,555,360,30],
    [6250,540,350,30],[6720,525,360,30],[7200,500,370,30]].forEach(p=>addPlatform(p[0],p[1],p[2],p[3],"cave"));
   [[3450,425],[3790,460],[4140,490],[4540,515],[5020,510],[5430,520],[5870,510],[6340,495],[6810,480],[7310,455]].forEach(p=>addItem("banana",p[0],p[1]));
-  // El ukelele vive en un claro visible del túnel, apoyado sobre una raíz.
-  addItem("ukulele",5365,520);
+  // Instrumentos retirados temporalmente durante la consolidación visual.
   addItem("orange",6400,495);
   addStudent(5365,517,"Martu");
   addStudent(7240,452,"Lauti");
@@ -236,7 +275,7 @@ function buildLevel(){
   addStudent(9040,42,"Samy"); addStudent(8545,-678,"Vicky chiquita"); addStudent(8910,-1083,"Vicky grande");
   addStudent(9300,-1258,"Leandrus");
   addStudent(9130,-568,"Anto");
-  addItem("radio",8580,-690);
+  addItem("banana",8580,-690);
   addVine(8780,-1430,1880); addVine(9210,-1290,1690); addVine(8585,-690,620);
 
   // 6) Copa del Gran Árbol: EL GRAN SALTO con plan B amable.
@@ -265,6 +304,7 @@ function buildLevel(){
   // 7) Escuela del Gran Árbol: meta alta, integrada entre ramas no jugables.
   addItem("humming",11720,-1630);
   addItem("school",12360,-1540);
+  expandPhaseTwoLevel();
 }
 function addPlatform(x,y,w,h,type){platforms.push({x,y,w,h,type});}
 function addStoryProp(type,x,y,w,h){storyProps.push({type,x,y,w,h,bob:Math.random()*10,collected:false});}
@@ -289,7 +329,9 @@ function update(dt){
   if(idleTarareoTimer>5.5){idleTarareoTimer=0;particles.push({x:player.x+50,y:player.y-10,vx:15,vy:-28,life:1.4,color:'#ffd25b',type:'musicNote'});}
   if(player.idle<0)player.idle=0;
   player.stateTimer=Math.max(0,player.stateTimer-dt);
-  player.walkFrame+=Math.abs(player.vx)*dt/45;
+  // Fase 1.7: ocho tiempos lógicos. Cada pose se sostiene durante dos
+  // tiempos para suavizar el traslado del peso sin acelerar las piernas.
+  player.walkFrame += Math.abs(player.vx) * dt / 42;
   player.blink+=dt;
   player.coyote=Math.max(0,player.coyote-dt);
   player.jumpBuffer=Math.max(0,player.jumpBuffer-dt);
@@ -344,6 +386,7 @@ function update(dt){
       player.coyote=0;
       player.jumpBuffer=0;
       player.jumpHeldTime=0;
+      player.jumpVisualTime=0;
       player.jumpCut=false;
       playJump();
     }
@@ -354,6 +397,7 @@ function update(dt){
   wind*=.985;if(world!==2)wind=0;
 
   if(!player.onVine){
+    if(!player.onGround) player.jumpVisualTime += dt;
     if(keys.jump && player.vy<0 && player.jumpHeldTime<maxHoldTime && !player.jumpCut){
       player.vy += (gravityUp + jumpHoldBoost)*dt;
       player.jumpHeldTime += dt;
@@ -384,20 +428,20 @@ function update(dt){
 
   // Cámara 3.0: zona del Gran Árbol estable.
   // Antes el cambio de mundo estaba justo cerca de la radio y hacía saltar el encuadre.
-  world=(player.x>7800 || player.y<40) ? (player.x<11650?2:3) : 1;
+  world=(player.x>mapLevelX(7800) || player.y<40) ? (player.x<mapLevelX(11650)?2:3) : 1;
   updateHighTrumpetState(dt);
-  if(player.x>12280&&player.y<-1440)endGame(true);
+  if(player.x>mapLevelX(12280)&&player.y<mapUpperY(-1440))endGame(true);
 
   const mode=cameraMode();
   const lookAhead=player.facing*82+Math.max(-48,Math.min(48,player.vx*.18));
-  const targetX=Math.max(0,Math.min(player.x-W*.40+lookAhead,12800));
+  const targetX=Math.max(0,Math.min(player.x-W*.40+lookAhead,mapLevelX(12800)));
   const verticalLook=mode==="jump" ? (player.vy<-120?-26:player.vy>180?32:0) : 0;
   let rawY=player.y-H*.66+verticalLook;
   let minY=-20, maxY=35;
   // RC1: el Túnel de las Raíces ya no se juega a ciegas en PC.
-  if(player.x>4200 && player.x<7600 && player.y>420){maxY=155;}
-  if(world===2){minY=-1740;maxY=65;}
-  if(world===3){minY=-1780;maxY=-1110;}
+  if(player.x>mapLevelX(4200) && player.x<mapLevelX(7600) && player.y>420){maxY=155;}
+  if(world===2){minY=mapUpperY(-1740);maxY=65;}
+  if(world===3){minY=mapUpperY(-1780);maxY=mapUpperY(-1110);}
   const targetY=Math.max(minY,Math.min(rawY,maxY));
 
   const dx=targetX-camX, dy=targetY-camY;
@@ -419,13 +463,13 @@ function updateHighTrumpetState(dt){
     return;
   }
   // Entra al subir a la Ruta Alta sobre el túnel; si el jugador cae, se apaga con fade.
-  const onTunnelHighRoute = player.x>3300 && player.x<7800 && player.y<360;
-  const reachedUpperTree = player.x>=7800 && player.y<120;
-  const onUpperCanopy = player.x>=9000 && player.y<-1260;
+  const onTunnelHighRoute = player.x>mapLevelX(3300) && player.x<mapLevelX(7800) && player.y<360;
+  const reachedUpperTree = player.x>=mapLevelX(7800) && player.y<120;
+  const onUpperCanopy = player.x>=mapLevelX(9000) && player.y<mapUpperY(-1260);
 
   if(onTunnelHighRoute || (highTrumpetTriumph && (reachedUpperTree || onUpperCanopy))){
     highTrumpetLevel = Math.min(1, highTrumpetLevel + dt*2.2);
-    if(player.x>7800 && player.y<160) highTrumpetTriumph = true;
+    if(player.x>mapLevelX(7800) && player.y<160) highTrumpetTriumph = true;
     if(highTrumpetLevel>.55 && Math.random()<0.018){
       particles.push({x:player.x+player.w/2,y:player.y+4,vx:(Math.random()-.5)*22,vy:-26-Math.random()*22,life:.9,color:'#fff1a8',type:'musicNote'});
     }
@@ -434,7 +478,7 @@ function updateHighTrumpetState(dt){
   }
 
   // Si cae a la ruta baja antes del Gran Árbol o a la rama inferior del final, la trompeta se despide.
-  if((player.x<7800 && player.y>400) || (player.x>9900 && player.x<12150 && player.y>-1260)){
+  if((player.x<mapLevelX(7800) && player.y>400) || (player.x>mapLevelX(9900) && player.x<mapLevelX(12150) && player.y>mapUpperY(-1260))){
     highTrumpetTriumph = false;
   }
 }
@@ -459,6 +503,7 @@ function collidePlatforms(dt){
         player.coyote=.10;
         player.jumpCut=false;
         player.jumpHeldTime=0;
+        player.jumpVisualTime=0;
         grounded=true;
         player.spawnX=player.x;
         player.spawnY=player.y;
@@ -471,40 +516,13 @@ function collidePlatforms(dt){
   }else player.onGround=false;
 }
 
-function mochilaCapacity(){
-  // Energía positiva: ayudar, comer y tocar música aumenta la capacidad del Profe.
-  // No castiga explorar; habilita llevar más mochilas.
-  if(heart>=70) return 6;
-  if(heart>=35) return 4;
-  return 2;
-}
-
 function updateEnergy(dt){
-  // La energía ya no baja por caminar ni reinicia el nivel.
-  // Ahora representa entusiasmo/fuerza acumulada para poder cargar más mochilas.
+  // La energía representa el entusiasmo acumulado durante el recorrido.
   heart=Math.max(0,Math.min(100,heart));
 }
 
 function collectAndCollide(){
 
-  // Mochilas: pequeño storytelling del aula real.
-  for(const p of storyProps){
-    if(p.collected || p.type!=="backpack") continue;
-    const box={x:p.x,y:p.y,w:p.w,h:p.h};
-    if(rect(player,box)){
-      const cap=mochilaCapacity();
-      if(mochilas>=cap){
-        msg("🎒 el Profe necesita más energía para otra mochila",1700);
-        continue;
-      }
-      p.collected=true;
-      mochilas++;
-      heart=Math.min(100,heart+6);
-      msg(`🎒 mochila rescatada (${mochilas}/${mochilaCapacity()})`,1500);
-      burst(p.x,p.y,"#67b5ff",14);
-      if(navigator.vibrate) navigator.vibrate(18);
-    }
-  }
   for(const o of items){
     if(o.type==="vine"||o.taken)continue;
     if(["banana","golden","student","apple","orange","humming"].includes(o.type)&&rect(player,o)){
@@ -586,7 +604,7 @@ function triggerTrumpetDance(o){
 }
 
 function setState(s,t){player.state=s;player.stateTimer=t;}
-function respawn(){msg('🌿 probá otra vez',900);noBumps=false;screenShake=6;playBump();player.x=player.spawnX;player.y=player.spawnY;player.vx=0;player.vy=0;player.jumpCut=false;player.jumpHeldTime=0;}
+function respawn(){msg('🌿 probá otra vez',900);noBumps=false;screenShake=6;playBump();player.x=player.spawnX;player.y=player.spawnY;player.vx=0;player.vy=0;player.jumpCut=false;player.jumpHeldTime=0;player.jumpVisualTime=0;}
 function rect(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function msg(t,ms){message=t;setTimeout(()=>{if(message===t)message=""},ms);}
 
@@ -717,7 +735,6 @@ function hud(){
   document.getElementById("bananas").textContent=bananas;
   document.getElementById("fruits").textContent=rareFruits;
   document.getElementById("students").textContent=students+"/"+CLASS_ROSTER.length;
-  const mochilaHud=document.getElementById("mochilas"); if(mochilaHud) mochilaHud.textContent=mochilas+"/"+mochilaCapacity();
   document.getElementById("heartFill").style.width=heart+"%";
   let r=Math.max(0,Math.ceil(totalTime-elapsed));
   document.getElementById("time").textContent=String(Math.floor(r/60)).padStart(2,"0")+":"+String(r%60).padStart(2,"0");
@@ -730,7 +747,7 @@ function draw(){
   const shakeY=(Math.random()-.5)*screenShake;
   ctx.save();
   ctx.translate(shakeX,shakeY);
-  drawSky();drawBackdrop();drawNaturalForest();drawContinuousGround();drawCaveAmbience();drawStoryProps();drawPlatforms();drawItems();drawFollowers();drawParticles();drawPlayer();drawForegroundBranches();drawMessage();
+  drawSky();drawFarCanopy();drawBackdrop();drawNaturalForest();drawContinuousGround();drawCaveAmbience();drawStoryProps();drawPlatforms();drawItems();drawFollowers();drawParticles();drawPlayer();drawForegroundBranches();drawDappledLight();drawVisualUpdateProof();drawMessage();
   ctx.restore();
 }
 function sx(x){return Math.round(x-camX)}
@@ -739,17 +756,80 @@ function px(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),
 function circ(x,y,r,c){ctx.fillStyle=c;ctx.beginPath();ctx.arc(Math.round(x),Math.round(y),r,0,Math.PI*2);ctx.fill()}
 function oval(x,y,rx,ry,c){ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(Math.round(x),Math.round(y),rx,ry,0,0,Math.PI*2);ctx.fill()}
 
+
+function drawFarCanopy(){
+  // Fase 2.6: una copa lejana en varias capas da profundidad sin cambiar las colisiones.
+  ctx.save();
+  const layers=[
+    {speed:.035,y:150,color:"rgba(27,92,66,.28)",r:95},
+    {speed:.065,y:205,color:"rgba(35,118,76,.34)",r:78},
+    {speed:.11,y:265,color:"rgba(44,139,82,.30)",r:62}
+  ];
+  for(const layer of layers){
+    ctx.fillStyle=layer.color;
+    const offset=(camX*layer.speed)%180;
+    for(let i=-2;i<9;i++){
+      const x=i*180-offset;
+      const bob=Math.sin(elapsed*.35+i)*6;
+      ctx.beginPath();
+      ctx.arc(x,layer.y+bob,layer.r,Math.PI,Math.PI*2);
+      ctx.fill();
+      ctx.fillRect(x-layer.r,layer.y+bob,layer.r*2,H-layer.y);
+    }
+  }
+  ctx.restore();
+}
+
+function drawDappledLight(){
+  // Manchas de luz sobre el escenario: pass visual, no afecta jugabilidad.
+  ctx.save();
+  ctx.globalCompositeOperation="screen";
+  for(let i=0;i<9;i++){
+    const x=((i*173 + elapsed*12)%(W+260))-130;
+    const y=120+(i%4)*115+Math.sin(elapsed*.7+i)*16;
+    const g=ctx.createRadialGradient(x,y,4,x,y,68+(i%3)*18);
+    g.addColorStop(0,"rgba(255,244,180,.13)");
+    g.addColorStop(1,"rgba(255,244,180,0)");
+    ctx.fillStyle=g;
+    ctx.beginPath();ctx.arc(x,y,90,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawVisualUpdateProof(){
+  // Ley 7: prueba imposible. Desaparece sola y nunca altera el nivel.
+  const age=(performance.now()-visualUpdateStart)/1000;
+  if(age>4.2) return;
+  const fade=age<3.3?1:Math.max(0,1-(age-3.3)/.9);
+  ctx.save();
+  ctx.globalAlpha=fade;
+  const pulse=1+Math.sin(age*7)*.08;
+  ctx.translate(W/2,125);
+  ctx.scale(pulse,pulse);
+  ctx.textAlign="center";
+  ctx.shadowColor="rgba(0,0,0,.45)";ctx.shadowBlur=18;ctx.shadowOffsetY=7;
+  ctx.font="108px Arial";ctx.fillText("🎨",0,0);
+  ctx.shadowBlur=8;
+  ctx.font="900 28px Arial";
+  ctx.fillStyle="#fff7d6";ctx.fillText("REVOLUCIÓN VISUAL · v"+VISUAL_UPDATE_VERSION,0,48);
+  ctx.restore();
+}
+
 function drawSky(){
   const g=ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,"#55b9e8");
-  g.addColorStop(.45,"#8ed7cb");
-  g.addColorStop(1,"#d7f1c9");
+  g.addColorStop(0,"#3d9ed3");
+  g.addColorStop(.38,"#78c9bd");
+  g.addColorStop(.72,"#b8dfaa");
+  g.addColorStop(1,"#eef2b9");
   ctx.fillStyle=g;
   ctx.fillRect(0,0,W,H);
 
   // sol suave detrás de neblina
-  ctx.fillStyle="rgba(255,228,115,.25)";
-  ctx.beginPath();ctx.arc(785,78,62,0,Math.PI*2);ctx.fill();
+  const sun=ctx.createRadialGradient(785,78,8,785,78,95);
+  sun.addColorStop(0,"rgba(255,248,188,.95)");
+  sun.addColorStop(.45,"rgba(255,224,116,.34)");
+  sun.addColorStop(1,"rgba(255,224,116,0)");
+  ctx.fillStyle=sun;ctx.beginPath();ctx.arc(785,78,95,0,Math.PI*2);ctx.fill();
 
   // nubes más suaves
   for(let i=0;i<9;i++)cloud(i*185-(camX*.13)%185,58+(i%3)*44);
@@ -846,7 +926,22 @@ function drawBackdrop(){
   // Beta097: decorative trees are now handled by drawNaturalForest(), not attached to platforms.
   if(camX>7600&&camX<10150){
     const tx=sx(8950),ty=sy(-1260);
-    px(tx-190,ty,380,1700,"#4b2c17");px(tx-95,ty,190,1700,"#7a4b26");
+    px(tx-190,ty,380,1840,"#4b2c17");px(tx-95,ty,190,1840,"#7a4b26");
+    // Vetado de corteza y cicatrices: primera mejora gráfica real del Gran Árbol.
+    ctx.save();ctx.lineCap="round";
+    for(let yy=30;yy<1780;yy+=86){
+      ctx.strokeStyle=yy%172===30?"rgba(44,24,12,.46)":"rgba(177,112,54,.28)";
+      ctx.lineWidth=8+(yy%3);
+      ctx.beginPath();
+      ctx.moveTo(tx-145+Math.sin(yy)*18,ty+yy);
+      ctx.bezierCurveTo(tx-40,ty+yy+32,tx+15,ty+yy-18,tx+130+Math.cos(yy)*18,ty+yy+25);
+      ctx.stroke();
+    }
+    for(let i=0;i<7;i++){
+      ctx.strokeStyle="rgba(52,30,16,.5)";ctx.lineWidth=5;
+      ctx.beginPath();ctx.arc(tx-80+i*27,ty+240+i*205,18+i%2*8,.2,2.8);ctx.stroke();
+    }
+    ctx.restore();
     // Copa del Gran Árbol: más ancha y alta para que se sienta como una entidad del mundo.
     for(let i=0;i<18;i++)oval(tx-430+i*52+Math.sin(elapsed*1.2+i)*6,ty-150+(i%5)*42,120,42,"#2f8845");
     for(let i=0;i<15;i++)oval(tx-360+i*56+Math.cos(elapsed+i)*5,ty-35+(i%4)*52,110,38,"#3b9b4b");
@@ -874,6 +969,11 @@ function drawGroundBand(worldX, width, groundY, grassColor, dirtColor){
   px(a,b,width,2200,dirtColor);
   px(a,b,width,24,grassColor);
   px(a,b+24,width,10,"#3f7f35");
+  // borde orgánico de césped, más cercano a un plataformas de 16 bits
+  for(let k=-12;k<width+24;k+=22){
+    const tx=a+k; if(tx<-70||tx>W+70) continue;
+    oval(tx,b+5,18,10,k%44===0?"#69bd4e":"#58a947");
+  }
 
   for(let k=0;k<width;k+=32){
     const tx=a+k;
@@ -1410,24 +1510,11 @@ function drawParticles(){
 }
 
 
-function drawCarriedBackpacks(a,b){
-  if(!mochilas) return;
-  const count=Math.min(mochilas,3);
-  for(let i=0;i<count;i++){
-    const ox=player.facing>=0 ? 50+i*7 : -2-i*7;
-    const oy=42+i*8;
-    drawAsset("backpackCarry",a+ox,b+oy,24,24);
-  }
-  if(mochilas>3){
-    ctx.fillStyle="#fff1cf";
-    ctx.font="bold 12px Arial";
-    ctx.fillText("+"+(mochilas-3),a+(player.facing>=0?76:-14),b+74);
-  }
-}
-
 function drawPlayer(){
   let a=sx(player.x),b=sy(player.y),bounce=player.state==="dance"?Math.sin(elapsed*18)*5:0;
-  drawShadow(a+32,b+84, player.onGround?25:18);
+  // La sombra de suelo sólo aparece cuando el Profe está apoyado.
+  // Evita una mancha gris pegada al sprite durante el salto.
+  if(player.onGround) drawShadow(a+32,b+84,25);
 
   const fr=spriteFrameName();
   if(fr && drawProfeSprite(fr,a,b+bounce,player.facing<0)){
@@ -1444,7 +1531,6 @@ function drawPlayer(){
     if(player.state==="dance" && radioEvent.kind==="ukulele"){
       drawUkulele(a+(player.facing<0?6:43), b+48+bounce);
     }
-    drawCarriedBackpacks(a,b+bounce);
     return;
   }
 
@@ -1452,7 +1538,6 @@ function drawPlayer(){
   if(player.state==="dance" && radioEvent.kind==="ukulele"){
     drawUkulele(a+(player.facing<0?6:43), b+48+bounce);
   }
-  drawCarriedBackpacks(a,b+bounce);
 }
 
 function drawProfe(a,b){
@@ -1625,9 +1710,9 @@ function tone(fq,d,type="sine",vol=.04,delay=0,cutoff=0){
 }
 function currentMusicZone(){
   if(radioBoostTimer>0) return radioEvent.kind||"radio";
-  if(player.x>11800 || world===3) return "school";
+  if(player.x>mapLevelX(11800) || world===3) return "school";
   if(trumpetFinale) return "trumpet";
-  if(player.x>8250 || player.y<-420) return "tree";
+  if(player.x>mapLevelX(8250) || player.y<mapUpperY(-420)) return "tree";
   if(player.x>4200 && player.x<7600 && player.y>390) return "tunnel";
   return "path";
 }

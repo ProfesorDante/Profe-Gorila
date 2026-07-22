@@ -1,0 +1,112 @@
+/*
+  PROFE GORILA — HOJA BASE V1 OFICIAL
+
+  00 Idle
+  01 Walk A
+  02 Walk B
+  03 Walk C
+  04 Walk D
+  05 Walk E
+  06 Jump normal
+  07 Jump high
+  08 Fall
+
+  Todos los cuadros usan 180x220, el mismo anclaje y la misma escala.
+*/
+const PROFE_SHEET_SRC = "imyso/profe/profe-base-v1.png";
+const PROFE_FRAME_W = 180;
+const PROFE_FRAME_H = 220;
+const PROFE_COLS = 9;
+
+const PROFE_FRAME_MAP = {
+  idle1: 0,
+  walk1: 1,
+  walk2: 2,
+  walk3: 3,
+  walk4: 4,
+  walk5: 5,
+  jump: 6,
+  jumpHigh: 7,
+  fall: 8,
+  climb1: 8,
+  climb2: 8,
+  hug: 0,
+  dance1: 1,
+  dance2: 5
+};
+
+const profeSheet = new Image();
+let profeSheetReady = false;
+profeSheet.onload = () => { profeSheetReady = true; };
+profeSheet.src = PROFE_SHEET_SRC;
+
+function spriteFrameName(){
+  if(player.state === "uke") return null;
+  if(player.onVine) return "fall";
+
+  if(!player.onGround){
+    // Salto tranquilo al principio.
+    // El salto alto aparece sólo cuando se mantiene el botón
+    // y el impulso ya superó claramente el umbral.
+    if(player.jumpHeldTime >= 0.20 && player.vy < -60){
+      return "jumpHigh";
+    }
+    return player.vy < 0 ? "jump" : "fall";
+  }
+
+  if(player.state === "hug") return "hug";
+
+  if(player.state === "dance"){
+    return Math.floor(elapsed * 5) % 2 ? "dance1" : "dance2";
+  }
+
+  if(Math.abs(player.vx) > 25){
+    // Cinco cuadros nítidos, al ritmo lento que ya funcionó bien.
+    const cycle = Math.floor(elapsed * 5) % 8;
+    return [
+      "walk1", "walk2", "walk3", "walk4",
+      "walk5", "walk4", "walk3", "walk2"
+    ][cycle];
+  }
+
+  return "idle1";
+}
+
+function drawProfeSprite(frameName, x, y, flip){
+  const idx = PROFE_FRAME_MAP[frameName];
+  if(idx === undefined || !profeSheetReady) return false;
+
+  const sx = idx * PROFE_FRAME_W;
+  const sy = 0;
+
+  const drawW = 124;
+  const drawH = 151;
+  const drawX = x - 33;
+  let drawY = y - 64;
+
+  if(player.landTimer > 0){
+    drawY += Math.sin((player.landTimer / .16) * Math.PI) * 3;
+  }
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+
+  if(flip){
+    ctx.translate(drawX + drawW, drawY);
+    ctx.scale(-1, 1);
+    ctx.drawImage(
+      profeSheet,
+      sx, sy, PROFE_FRAME_W, PROFE_FRAME_H,
+      0, 0, drawW, drawH
+    );
+  }else{
+    ctx.drawImage(
+      profeSheet,
+      sx, sy, PROFE_FRAME_W, PROFE_FRAME_H,
+      drawX, drawY, drawW, drawH
+    );
+  }
+
+  ctx.restore();
+  return true;
+}

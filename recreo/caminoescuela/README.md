@@ -1,13 +1,14 @@
-# Camino a la Escuela — Nivel 1
+# Camino a la Escuela — Fase 2.6: Revolución visual
 
-Versión simplificada para subir fácilmente a GitHub Pages.
+Primer pase artístico real del mapa, manteniendo intactas las colisiones y el movimiento del Profe Gorila.
 
-## Estructura
+Cambios principales:
+- Prueba Imposible: emoji 🎨 gigante y versión 0.2.6 al iniciar.
+- Cielo con nueva paleta, sol volumétrico y profundidad atmosférica.
+- Tres capas nuevas de copas lejanas con paralaje.
+- Manchas de luz animadas sobre el escenario.
+- Suelo con borde de césped más orgánico.
+- Gran Árbol con mayor presencia visual, corteza, vetas y cicatrices.
+- Mochilas e instrumentos retirados temporalmente.
 
-- `index.html`: abre el juego.
-- `style.css`: apariencia.
-- `game.js`: nivel, físicas y reglas.
-- `profe-gorila.js`: animaciones del Profe Gorila.
-- `imyso/`: imágenes y sonidos.
-
-No cambies los nombres de los archivos ni de la carpeta `imyso`, porque el juego usa esas rutas.
+La prueba visual desaparece sola después de unos segundos.

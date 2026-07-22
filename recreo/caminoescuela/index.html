@@ -4,10 +4,12 @@
 <head><!-- Proyecto separado en HTML, CSS, JavaScript y recursos -->
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,user-scalable=no" name="viewport"/>
-<title>Camino a la Escuela - Nivel 1 · Art Pass del Profe</title>
+<title>Camino a la Escuela - Nivel 1 · Primer Profe jugable</title>
 
 <link href="style.css" rel="stylesheet"/></head>
 <body>
+<div id="updateBanner" style="position:fixed;top:20px;left:50%;transform:translateX(-50%);font-size:48px;font-weight:bold;background:#ffeb3b;padding:16px 24px;border:4px solid #000;border-radius:12px;z-index:9999">🚧 ACTUALIZACIÓN 0.2.5 🚧</div>
+<script>setTimeout(()=>{const b=document.getElementById('updateBanner'); if(b)b.remove();},3000);</script>
 <div class="wrap">
 <div class="top">
 <div class="title">🦍 CAMINO A LA ESCUELA</div>
@@ -17,7 +19,6 @@
 <div class="pill">🍌 <span id="bananas">0</span></div>
 <div class="pill">🍎🍊 <span id="fruits">0</span></div>
 <div class="pill">👦 <span id="students">0</span></div>
-<div class="pill">🎒 <span id="mochilas">0</span></div>
 <div class="pill">⏱ <span id="time">10:00</span></div>
 </div>
 </div>
@@ -27,7 +28,7 @@
 <div class="card">
 <h1>🌳 Camino a la Escuela</h1>
 <p>Una mañana, el Profe Gorila abrió los ojos, miró el reloj y pegó un salto: ¡se le había hecho tardísimo! Desayunó una banana, se lavó los dientes a toda velocidad, se peinó como pudo y salió rumbo a la Escuela del Gran Árbol.</p>
-<p>Pero apenas dobló la primera curva encontró una sorpresa: el colectivo escolar estaba averiado en medio del sendero. Nadie se había lastimado, pero los monitos no podían llegar a clase. Entonces el Profe sonrió, acomodó su mochila y dijo: <strong>“No se preocupen... hoy vamos caminando.”</strong></p>
+<p>Pero apenas dobló la primera curva encontró una sorpresa: el colectivo escolar estaba averiado en medio del sendero. Nadie se había lastimado, pero los monitos no podían llegar a clase. Entonces el Profe sonrió, respiró hondo y dijo: <strong>“No se preocupen... hoy vamos caminando.”</strong></p>
 <div class="buttons">
 <button onclick="startGame()">▶ Jugar</button>
 <button class="secondary" id="fullscreenBtn" onclick="goFullscreen()">⛶ Pantalla completa</button>
@@ -56,6 +57,6 @@
 <div class="credit">© 2026 Dante Martín. Todos los derechos reservados. Proyecto desarrollado con asistencia de IA.</div>
 </div>
 
-<script src="profe-gorila.js"></script>
+<script src="profe-gorila.js?v=PROFE-BASE-V1-OFICIAL"></script>
 <script src="game.js"></script></body>
 </html>
