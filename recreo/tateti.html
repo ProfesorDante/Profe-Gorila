@@ -112,6 +112,90 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
   border:3px solid #8b5a2b;border-radius:16px;background:#e9f3df
 }
 
+
+/* Identidad visual de cada variante */
+body.theme-classic{
+  background:linear-gradient(#c7ecf0,#dff2d7);
+}
+body.theme-classic header{background:linear-gradient(#315f3c,#21462e)}
+body.theme-classic main{background:linear-gradient(#b9db95,#8fc16f)}
+body.theme-classic .board{
+  background:#8b5a2b;border-color:#356b3f;box-shadow:0 10px 0 #214b2c,0 16px 30px #0003
+}
+body.theme-classic .cell{background:linear-gradient(#fff2c7,#e4cf91);box-shadow:inset 0 3px #fffbe6,0 4px #a9793f}
+body.theme-classic .cell.dark{background:linear-gradient(#9bcb83,#72a866);box-shadow:inset 0 3px #c6e5b6,0 4px #4e7846}
+body.theme-classic .modeBadge{background:#e7f5d8;border-color:#6e9e55;color:#285735}
+
+body.theme-anti{
+  background:linear-gradient(#ffe8ba,#f5c878);
+}
+body.theme-anti header{background:linear-gradient(#9b5b22,#6d3919)}
+body.theme-anti main{background:linear-gradient(#f5c66d,#d89039)}
+body.theme-anti .board{
+  background:#9a5427;border-color:#d87926;box-shadow:0 10px 0 #8b441e,0 16px 30px #55220855
+}
+body.theme-anti .cell{background:linear-gradient(#fff0b0,#edc55e);box-shadow:inset 0 3px #fff8da,0 4px #b56c29}
+body.theme-anti .cell.dark{background:linear-gradient(#ef9b45,#cc6b29);box-shadow:inset 0 3px #ffc078,0 4px #91431f}
+body.theme-anti .modeBadge{
+  background:#fff0c5;border-color:#d87926;color:#753b16;font-size:16px
+}
+body.theme-anti .modeBadge::after{
+  content:" · ¡NO FORMES TRES!";font-weight:1000
+}
+
+body.theme-mobile{
+  background:linear-gradient(#cceeff,#b7d8f2);
+}
+body.theme-mobile header{background:linear-gradient(#356f9d,#214d73)}
+body.theme-mobile main{background:linear-gradient(#a9d9ee,#70b3d5)}
+body.theme-mobile .board{
+  background:#4f7da5;border-color:#285c88;box-shadow:0 10px 0 #204a70,0 16px 30px #173f6555
+}
+body.theme-mobile .cell{background:linear-gradient(#e8f8ff,#b9dff0);box-shadow:inset 0 3px #fff,0 4px #5797b8}
+body.theme-mobile .cell.dark{background:linear-gradient(#87c8e2,#5da8ca);box-shadow:inset 0 3px #bdeaff,0 4px #397c9e}
+body.theme-mobile .modeBadge{background:#e4f6ff;border-color:#4b91ba;color:#245a7e}
+body.theme-mobile .cell.selected .monkey{animation:pieceReady .65s ease-in-out infinite alternate}
+
+body.theme-challenge{
+  background:linear-gradient(#d7ecf4,#dff2d7);
+}
+body.theme-challenge header{background:linear-gradient(#315f3c,#21462e)}
+body.theme-challenge main{background:linear-gradient(#b9db95,#8fc16f)}
+
+@keyframes pieceReady{from{transform:scale(1)}to{transform:scale(1.08);filter:brightness(1.08)}}
+@keyframes pulse{from{filter:brightness(1)}to{filter:brightness(1.25)}}
+
+.modePreview{
+  display:grid;grid-template-columns:repeat(3,18px);grid-template-rows:repeat(3,18px);
+  gap:3px;justify-content:center;margin:0 auto 7px;padding:6px;border-radius:10px;
+  width:max-content;background:#0002
+}
+.modePreview i{display:block;border-radius:4px;background:#fff9}
+.modeButton.classicMode{background:#3f8f51;box-shadow:0 5px #245d35}
+.modeButton.antiMode{background:#d87926;box-shadow:0 5px #8b441e}
+.modeButton.mobileMode{background:#438bb5;box-shadow:0 5px #285c88}
+
+.roundCard{
+  position:relative;overflow:hidden
+}
+.roundCard::before{
+  content:"";position:absolute;inset:0;opacity:.12;pointer-events:none;
+  background:repeating-linear-gradient(45deg,#fff 0 12px,#000 12px 24px)
+}
+.roundIcon{font-size:64px;line-height:1;margin:4px 0 10px;filter:drop-shadow(0 5px 2px #0002)}
+.roundRule{
+  position:relative;margin:12px auto;padding:12px;border-radius:14px;max-width:520px;
+  font-weight:900;font-size:18px;background:#fff9;border:2px solid currentColor
+}
+.roundClassic{background:linear-gradient(#eef8df,#c9e6a8);border-color:#4d874b!important;color:#285735}
+.roundAnti{background:linear-gradient(#fff1c4,#f5c16f);border-color:#d87926!important;color:#753b16}
+.roundMobile{background:linear-gradient(#e8f7ff,#b9dff2);border-color:#438bb5!important;color:#245a7e}
+.roundTiebreak{background:linear-gradient(#fff4c4,#e0ad42);border-color:#9a6816!important;color:#65410d}
+.suddenBadge{
+  display:inline-block;background:#8b2f25;color:#fff;border-radius:999px;padding:7px 13px;
+  font-weight:1000;letter-spacing:.5px;box-shadow:0 4px #5b1c17
+}
+
 /* Portada */
 .cover-overlay{
   position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
@@ -174,7 +258,7 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
 @media(hover:none){.cover-play-button:hover{background:transparent;box-shadow:none}}
 </style>
 </head>
-<body>
+<body class="theme-classic">
 
 <div id="coverOverlay" class="cover-overlay" aria-label="Portada de Ta-Te-Ti">
   <div class="cover-stage">
@@ -218,9 +302,9 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
     <h1>🌳 Ta-Te-Ti del Gran Árbol</h1>
     <p>Elegí el modo de juego.</p>
     <div class="menuGrid">
-      <button class="action modeButton" onclick="chooseMode('classic')">🌿 Ta-Te-Ti<small>El clásico de siempre</small></button>
-      <button class="action warn modeButton" onclick="chooseMode('anti')">🍃 Ta-Te-Ti Inverso<small>Quien forma tres fichas en línea pierde</small></button>
-      <button class="action secondary modeButton" onclick="chooseMode('mobile')">🔄 Ta-Te-Ti Móvil<small>Colocá tres fichas y luego movelas</small></button>
+      <button class="action modeButton classicMode" onclick="chooseMode('classic')"><span class="modePreview"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>🌿 Ta-Te-Ti<small>Formá una línea de tres</small></button>
+      <button class="action modeButton antiMode" onclick="chooseMode('anti')"><span class="modePreview"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>🍃 Ta-Te-Ti Inverso<small>¡No formes una línea de tres!</small></button>
+      <button class="action modeButton mobileMode" onclick="chooseMode('mobile')"><span class="modePreview"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>🔄 Ta-Te-Ti Móvil<small>Colocá tres fichas y luego movelas</small></button>
       <button class="action gold modeButton" onclick="chooseMode('tournament')">🏆 Torneo del Gran Árbol<small>Primero en llegar a 10 puntos</small></button>
       <button class="action soft modeButton" onclick="showChallengeIntro()">🌳 Modo Desafíos<small>Ocho tableros con reglas especiales</small></button>
     </div>
@@ -304,6 +388,18 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
   </div>
 </div>
 
+
+<div id="tournamentIntroOverlay" class="overlay" style="display:none">
+  <div id="tournamentIntroCard" class="card roundCard roundClassic">
+    <div id="tournamentIntroIcon" class="roundIcon">🌿</div>
+    <div id="tournamentIntroEyebrow"><strong>RONDA 1</strong></div>
+    <h2 id="tournamentIntroTitle">TA-TE-TI</h2>
+    <div id="tournamentIntroRule" class="roundRule">Formá una línea de tres fichas.</div>
+    <div id="tournamentIntroScore" class="tournamentScore"></div>
+    <button id="tournamentStartButton" class="action gold" onclick="startPresentedTournamentRound()">Comenzar partida</button>
+  </div>
+</div>
+
 <div id="tournamentRoundOverlay" class="overlay" style="display:none"><div class="card"><h2 id="tournamentRoundTitle">🏆 Torneo del Gran Árbol</h2><p id="tournamentRoundText"></p><div class="tournamentScore"><span id="tourPlayerOne">Nito</span><strong id="tourScore">0 - 0</strong><span id="tourPlayerTwo">Tina</span></div><button class="action gold" onclick="continueTournament()">Siguiente partida</button></div></div>
 <div id="tournamentFinalOverlay" class="overlay" style="display:none"><div class="card"><h2 id="tournamentFinalTitle">🏆 ¡Campeón del Gran Árbol!</h2><p id="tournamentFinalText"></p><img id="tournamentFinalImage" class="finalImage" src="../img/tatetitorneonito.png?v=1" alt="Premio final del torneo de Ta-Te-Ti"><div class="menuGrid"><button class="action gold" onclick="downloadTournamentImage()">⬇ Descargar imagen PNG</button><button class="action secondary" onclick="showMenu()">Volver al menú</button></div><p id="tournamentDownloadStatus" aria-live="polite"></p></div></div>
 <div id="finalOverlay" class="overlay" style="display:none">
@@ -356,7 +452,7 @@ let challengeIndex=0;
 let challengeState=null;
 let aiTurnToken=0;
 let nextStarter=X;
-let tournamentScores={X:0,O:0},tournamentRound=0,tournamentModeIndex=0,tournamentSubMode='classic';
+let tournamentScores={X:0,O:0},tournamentRound=0,tournamentModeIndex=0,tournamentSubMode='classic',tournamentSuddenDeath=false,tournamentPendingWinner=null;
 let dragState=null,suppressNextClick=false;
 let currentOpponent={emoji:'🦉',name:'Profesor Búho',phrase:'Piensa antes de mover.'};
 
@@ -367,6 +463,19 @@ const forestOpponents=[
   {emoji:'🦉',name:'Profesor Búho',phrase:'Piensa antes de mover.'},{emoji:'🐢',name:'Tortuga Tito',phrase:'Nunca se apura.'},{emoji:'🦜',name:'Loro Lolo',phrase:'Siempre tiene algo para decir.'},{emoji:'🐘',name:'Elefante Bruno',phrase:'Recuerda cada jugada.'},{emoji:'🐿️',name:'Ardilla Rita',phrase:'Rápida y observadora.'},{emoji:'🐸',name:'Rana Lila',phrase:'Salta de idea en idea.'},{emoji:'🦊',name:'Zorro Tom',phrase:'Busca caminos inesperados.'},{emoji:'🦒',name:'Jirafa Gina',phrase:'Ve el tablero desde muy alto.'}
 ];
 function activeMode(){return gameMode==='tournament'?tournamentSubMode:gameMode}
+
+function applyVisualTheme(){
+  document.body.classList.remove('theme-classic','theme-anti','theme-mobile','theme-challenge');
+  const mode=gameMode==='challenge'?'challenge':activeMode();
+  document.body.classList.add(`theme-${mode}`);
+}
+
+function modeAccent(){
+  const mode=activeMode();
+  if(mode==='anti') return {ring:'#d87926',detail:'#ffb24d',stroke:'#8b441e'};
+  if(mode==='mobile') return {ring:'#438bb5',detail:'#77c8ef',stroke:'#285c88'};
+  return {ring:'#4f8d50',detail:'#8fc16f',stroke:'#285735'};
+}
 function chooseForestOpponent(){currentOpponent=forestOpponents[Math.floor(Math.random()*forestOpponents.length)]}
 function updateOpponentCard(){if(playType==='ai'){opponentAvatar.textContent=currentOpponent.emoji;opponentName.textContent=currentOpponent.name;opponentPhrase.textContent=currentOpponent.phrase}else{opponentAvatar.textContent='🐒🎀';opponentName.textContent='Nito y Tina';opponentPhrase.textContent='Una partida entre amigos.'}}
 
@@ -430,9 +539,11 @@ function teamName(team){
 function monkeySVG(team){
   const nitoTeam=selectedCharacter==='nito'?humanTeam:(humanTeam===X?O:X);
   const isNito=team===nitoTeam;
-  const ring=isNito?'#8b5434':'#e0ad42';
+  const accent=modeAccent();
+  const ring=accent.ring;
   const head=isNito?'#5e3827':'#8b572d';
   const face=isNito?'#e4b77d':'#f1c983';
+  const mode=activeMode();
 
   return `<svg viewBox="0 0 100 100" aria-hidden="true">
     <circle cx="50" cy="52" r="40" fill="${ring}" stroke="#fff2c4" stroke-width="4"/>
@@ -445,13 +556,19 @@ function monkeySVG(team){
     <path d="M42 60 Q50 68 58 60" fill="none" stroke="#5b3424" stroke-width="3" stroke-linecap="round"/>
     ${isNito
       ?'<path d="M40 27 L47 15 L51 26 L59 17 L60 30" fill="#4b2c21"/>'
-      :'<path d="M34 25 Q42 14 49 27 Q57 14 66 25 Q57 34 50 28 Q42 34 34 25" fill="#e85b7f" stroke="#8f2f4e" stroke-width="2"/>'}
+      :`<path d="M34 25 Q42 14 49 27 Q57 14 66 25 Q57 34 50 28 Q42 34 34 25" fill="${mode==='classic'?'#e85b7f':accent.detail}" stroke="${accent.stroke}" stroke-width="2"/>`}
+    ${mode==='anti'
+      ?`<path d="M29 73 Q50 84 71 73 L67 83 Q50 91 33 83 Z" fill="${accent.detail}" stroke="${accent.stroke}" stroke-width="2"/>`
+      :mode==='mobile'
+        ?`<circle cx="76" cy="72" r="11" fill="${accent.detail}" stroke="${accent.stroke}" stroke-width="3"/><path d="M70 72 H82 M78 67 L83 72 L78 77" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`
+        :''}
   </svg>`;
 }
 
 function createEmptyBoard(n){return Array(n*n).fill('')}
 
 function render(){
+  applyVisualTheme();
   boardEl.className='board '+(size===3?'size3':'size9');
   boardEl.innerHTML='';
 
@@ -1160,20 +1277,164 @@ function bestChallengeJump(){
 }
 
 function finishStandard(result){
-  roundOver=true;aiTurnToken++;
-  if(result.line)setTimeout(()=>{[...boardEl.children].forEach((cell,i)=>cell.classList.toggle('win',result.line.includes(i)))},0);
-  if(gameMode==='tournament'){
-    if(result.winner){tournamentScores[result.winner]+=2;winSound()}else{tournamentScores.X++;tournamentScores.O++;drawSound()}
-    render();setTimeout(()=>showTournamentRoundResult(result),450);return;
+  roundOver=true;
+  aiTurnToken++;
+
+  if(result.line){
+    setTimeout(()=>{
+      [...boardEl.children].forEach((cell,i)=>cell.classList.toggle('win',result.line.includes(i)));
+    },0);
   }
-  if(result.winner){scores[result.winner]++;winSound();if(activeMode()==='anti'){endTitle.textContent='🍃 ¡Ta-Te-Ti Inverso!';endText.textContent=`${teamName(result.loser)} formó tres y perdió. Ganó ${teamName(result.winner)}.`}else{endTitle.textContent='🍃 ¡Qué buena jugada!';endText.textContent=`Ganó ${teamName(result.winner)}.`}}
-  else{drawSound();endTitle.textContent='🌿 ¡Partida empatada!';endText.textContent=activeMode()==='mobile'?'Se realizaron veinte movimientos sin ganador.':'Los dos equipos jugaron muy bien.'}
-  render();setTimeout(()=>endOverlay.style.display='flex',450);
+
+  if(gameMode==='tournament'){
+    if(tournamentSuddenDeath){
+      if(result.winner){
+        tournamentPendingWinner=result.winner;
+        winSound();
+      }else{
+        drawSound();
+      }
+    }else{
+      if(result.winner){
+        tournamentScores[result.winner]+=2;
+        winSound();
+      }else{
+        tournamentScores.X++;
+        tournamentScores.O++;
+        drawSound();
+      }
+    }
+
+    render();
+    setTimeout(()=>showTournamentRoundResult(result),450);
+    return;
+  }
+
+  if(result.winner){
+    scores[result.winner]++;
+    winSound();
+    if(activeMode()==='anti'){
+      endTitle.textContent='🍃 ¡Ta-Te-Ti Inverso!';
+      endText.textContent=`${teamName(result.loser)} formó tres y perdió. Ganó ${teamName(result.winner)}.`;
+    }else{
+      endTitle.textContent='🍃 ¡Qué buena jugada!';
+      endText.textContent=`Ganó ${teamName(result.winner)}.`;
+    }
+  }else{
+    drawSound();
+    endTitle.textContent='🌿 ¡Partida empatada!';
+    endText.textContent=activeMode()==='mobile'
+      ?'Se realizaron veinte movimientos sin ganador.'
+      :'Los dos equipos jugaron muy bien.';
+  }
+
+  render();
+  setTimeout(()=>endOverlay.style.display='flex',450);
 }
-function showTournamentRoundResult(result){const labels={classic:'Ta-Te-Ti',anti:'Ta-Te-Ti Inverso',mobile:'Ta-Te-Ti Móvil'};tournamentRoundTitle.textContent=`🏆 ${labels[tournamentSubMode]}`;tournamentRoundText.textContent=result.winner?`${teamName(result.winner)} ganó la partida y suma 2 puntos.`:'La partida terminó empatada. Cada jugador suma 1 punto.';tourPlayerOne.textContent=teamName(X);tourPlayerTwo.textContent=teamName(O);tourScore.textContent=`${tournamentScores.X} - ${tournamentScores.O}`;tournamentRoundOverlay.style.display='flex'}
-function continueTournament(){tournamentRoundOverlay.style.display='none';if(tournamentScores.X>=10||tournamentScores.O>=10){showTournamentFinal(tournamentScores.X>=10?X:O);return}tournamentRound++;tournamentModeIndex=(tournamentModeIndex+1)%3;tournamentSubMode=['classic','anti','mobile'][tournamentModeIndex];restartRound()}
-function showTournamentFinal(winner){const winnerName=teamName(winner),isNito=winnerName==='Nito',filename=isNito?'tatetitorneonito.png':'tatetitorneotina.png';tournamentFinalTitle.textContent=`🏆 ¡${winnerName} ganó el torneo!`;tournamentFinalText.textContent=`Resultado final: ${teamName(X)} ${tournamentScores.X} · ${teamName(O)} ${tournamentScores.O}`;tournamentFinalImage.src=`../img/${filename}?v=1`;tournamentFinalImage.alt=`Premio del torneo ganado por ${winnerName}`;tournamentFinalImage.dataset.filename=filename;tournamentFinalOverlay.style.display='flex';winSound()}
-async function downloadTournamentImage(){const image=document.getElementById('tournamentFinalImage'),status=document.getElementById('tournamentDownloadStatus'),filename=image.dataset.filename||'tatetitorneonito.png';await downloadImageFile(image.src,filename,status)}
+
+function showTournamentRoundResult(result){
+  const labels={classic:'Ta-Te-Ti',anti:'Ta-Te-Ti Inverso',mobile:'Ta-Te-Ti Móvil'};
+  tournamentRoundTitle.textContent=tournamentSuddenDeath?'⚔️ Desempate':`🏆 ${labels[tournamentSubMode]}`;
+
+  if(tournamentSuddenDeath){
+    tournamentRoundText.textContent=result.winner
+      ?`${teamName(result.winner)} ganó el desempate.`
+      :'La partida terminó empatada. El desempate continúa.';
+  }else{
+    tournamentRoundText.textContent=result.winner
+      ?`${teamName(result.winner)} ganó la partida y suma 2 puntos.`
+      :'La partida terminó empatada. Cada jugador suma 1 punto.';
+  }
+
+  tourPlayerOne.textContent=teamName(X);
+  tourPlayerTwo.textContent=teamName(O);
+  tourScore.textContent=`${tournamentScores.X} - ${tournamentScores.O}`;
+
+  const button=tournamentRoundOverlay.querySelector('button');
+  button.textContent=tournamentPendingWinner?'Ver campeón':'Siguiente partida';
+  tournamentRoundOverlay.style.display='flex';
+}
+
+function continueTournament(){
+  tournamentRoundOverlay.style.display='none';
+
+  if(tournamentPendingWinner){
+    const winner=tournamentPendingWinner;
+    tournamentPendingWinner=null;
+    showTournamentFinal(winner);
+    return;
+  }
+
+  if(!tournamentSuddenDeath&&tournamentScores.X>=10&&tournamentScores.O>=10&&tournamentScores.X===tournamentScores.O){
+    tournamentSuddenDeath=true;
+    tournamentRound++;
+    tournamentModeIndex=(tournamentModeIndex+1)%3;
+    tournamentSubMode=['classic','anti','mobile'][tournamentModeIndex];
+    presentTournamentRound(true);
+    return;
+  }
+
+  if(!tournamentSuddenDeath&&(tournamentScores.X>=10||tournamentScores.O>=10)){
+    showTournamentFinal(tournamentScores.X>=10?X:O);
+    return;
+  }
+
+  tournamentRound++;
+  tournamentModeIndex=(tournamentModeIndex+1)%3;
+  tournamentSubMode=['classic','anti','mobile'][tournamentModeIndex];
+  presentTournamentRound(false);
+}
+
+function presentTournamentRound(isFirstTiebreak=false){
+  const data={
+    classic:{icon:'🌿',title:'TA-TE-TI',rule:'Formá una línea de tres fichas.',className:'roundClassic'},
+    anti:{icon:'🍃',title:'TA-TE-TI INVERSO',rule:'¡No formes tres! Quien complete una línea pierde.',className:'roundAnti'},
+    mobile:{icon:'🔄',title:'TA-TE-TI MÓVIL',rule:'Primero colocá tres fichas. Después mové una por turno a un casillero vecino.',className:'roundMobile'}
+  }[tournamentSubMode];
+
+  tournamentIntroCard.className=`card roundCard ${isFirstTiebreak?'roundTiebreak':data.className}`;
+  tournamentIntroIcon.textContent=isFirstTiebreak?'⚔️':data.icon;
+  tournamentIntroEyebrow.innerHTML=isFirstTiebreak
+    ?'<span class="suddenBadge">DESEMPATE</span>'
+    :`<strong>RONDA ${tournamentRound+1}</strong>`;
+  tournamentIntroTitle.textContent=isFirstTiebreak?'¡PRÓXIMA VICTORIA GANA!':data.title;
+  tournamentIntroRule.textContent=isFirstTiebreak
+    ?'Los dos llegaron a 10 puntos. Los empates hacen continuar el torneo; la próxima victoria decide al campeón.'
+    :data.rule;
+  tournamentIntroScore.innerHTML=`<span>${teamName(X)}</span><strong>${tournamentScores.X} - ${tournamentScores.O}</strong><span>${teamName(O)}</span>`;
+  tournamentStartButton.textContent=isFirstTiebreak?'Jugar desempate':'Comenzar partida';
+  tournamentIntroOverlay.style.display='flex';
+  applyVisualTheme();
+}
+
+function startPresentedTournamentRound(){
+  tournamentIntroOverlay.style.display='none';
+  restartRound();
+  startMusic();
+}
+
+function showTournamentFinal(winner){
+  const winnerName=teamName(winner);
+  const isNito=winnerName==='Nito';
+  const filename=isNito?'tatetitorneonito.png':'tatetitorneotina.png';
+
+  tournamentFinalTitle.textContent=`🏆 ¡${winnerName} ganó el torneo!`;
+  tournamentFinalText.textContent=tournamentSuddenDeath
+    ?`¡Ganó el desempate! Resultado del torneo: ${teamName(X)} ${tournamentScores.X} · ${teamName(O)} ${tournamentScores.O}`
+    :`Resultado final: ${teamName(X)} ${tournamentScores.X} · ${teamName(O)} ${tournamentScores.O}`;
+  tournamentFinalImage.src=`../img/${filename}?v=2`;
+  tournamentFinalImage.alt=`Premio del torneo ganado por ${winnerName}`;
+  tournamentFinalImage.dataset.filename=filename;
+  tournamentFinalOverlay.style.display='flex';
+  winSound();
+}
+
+async function downloadTournamentImage(){
+  const image=document.getElementById('tournamentFinalImage');
+  const status=document.getElementById('tournamentDownloadStatus');
+  const filename=image.dataset.filename||'tatetitorneonito.png';
+  await downloadImageFile(image.src,filename,status);
+}
 
 function restartRound(){
   aiTurnToken++;
@@ -1211,6 +1472,7 @@ function restartRound(){
 
 function chooseMode(mode){
   gameMode=mode;
+  applyVisualTheme();
   menuOverlay.style.display='none';
   playTypeOverlay.style.display='flex';
 }
@@ -1231,7 +1493,17 @@ function selectCharacter(character){
   characterOverlay.style.display='none';
 
   if(gameMode==='challenge'){challengeIndex=0;startChallengeRound()}
-  else if(gameMode==='tournament'){tournamentScores={X:0,O:0};tournamentRound=0;tournamentModeIndex=0;tournamentSubMode='classic';scores={X:0,O:0};restartRound();startMusic()}
+  else if(gameMode==='tournament'){
+    tournamentScores={X:0,O:0};
+    tournamentRound=0;
+    tournamentModeIndex=0;
+    tournamentSubMode='classic';
+    tournamentSuddenDeath=false;
+    tournamentPendingWinner=null;
+    scores={X:0,O:0};
+    presentTournamentRound(false);
+    startMusic();
+  }
   else{scores={X:0,O:0};restartRound();startMusic()}
 }
 
@@ -1294,19 +1566,35 @@ function tone(f,d,type='sine',volume=.03,delay=0){
 function midi(n){return 440*Math.pow(2,(n-69)/12)}
 function playMusicStep(){
   if(!musicOn||!audioCtx)return;
-  const melody=[60,64,65,67,60,64,65,67,60,64,65,67,64,60,64,62];
-  const note=melody[musicStep%melody.length];
-  tone(midi(note+12),.22,'triangle',.012);
-  if(musicStep%2===0) tone(midi(note-24),.30,'sine',.008);
+
+  const mode=activeMode();
+  const arrangements={
+    classic:{melody:[60,64,65,67,60,64,65,67,60,64,65,67,64,60,64,62],shift:12,type:'triangle',bass:'sine'},
+    anti:{melody:[57,60,61,64,57,60,56,59,57,60,61,64,60,57,56,52],shift:12,type:'sine',bass:'triangle'},
+    mobile:{melody:[64,67,69,71,72,71,69,67,64,67,69,72,71,69,67,66],shift:12,type:'square',bass:'triangle'}
+  };
+  const a=arrangements[mode]||arrangements.classic;
+  const note=a.melody[musicStep%a.melody.length];
+
+  tone(midi(note+a.shift),mode==='mobile'?.14:.22,a.type,mode==='mobile'?.009:.012);
+  if(musicStep%2===0)tone(midi(note-24),mode==='mobile'?.20:.30,a.bass,.008);
   musicStep++;
 }
+
+function musicTempo(){
+  const mode=activeMode();
+  if(mode==='mobile')return 360;
+  if(mode==='anti')return 610;
+  return 520;
+}
+
 function startMusic(){
   stopMusic();
   if(!musicOn)return;
   initAudio();
   musicStep=0;
   playMusicStep();
-  musicTimer=setInterval(playMusicStep,520);
+  musicTimer=setInterval(playMusicStep,musicTempo());
 }
 function stopMusic(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
 function toggleMusic(){
