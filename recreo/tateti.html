@@ -216,7 +216,7 @@ main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
     <p>Elegí el modo de juego.</p>
     <div class="menuGrid">
       <button class="action modeButton" onclick="chooseMode('classic')">🌿 Ta-Te-Ti<small>El clásico de siempre</small></button>
-      <button class="action warn modeButton" onclick="chooseMode('anti')">😈 Anti Ta-Te-Ti<small>Quien forma tres, pierde</small></button>
+      <button class="action warn modeButton" onclick="chooseMode('anti')">😈 Anti Ta-Te-Ti<small>Quien forma tres pierde; la IA también intenta evitarlo</small></button>
       <button class="action secondary modeButton" onclick="chooseMode('mobile')">🔄 Ta-Te-Ti Móvil<small>Después de colocar, las fichas se mueven</small></button>
       <button class="action gold modeButton" onclick="showChallengeIntro()">🏆 Modo Desafíos<small>Ocho desafíos en un tablero 9 × 9</small></button>
     </div>
@@ -345,6 +345,7 @@ let moveCount=0;
 let challengeIndex=0;
 let challengeState=null;
 let aiTurnToken=0;
+let nextStarter=X;
 
 let musicOn=true,audioCtx=null,musicTimer=null,musicStep=0;
 const MASTER_VOLUME=3.2;
@@ -874,12 +875,61 @@ function aiMove(token){
   if(aiLevel==='easy'){
     move=empty[Math.floor(Math.random()*empty.length)];
   }else if(aiLevel==='medium'){
-    move=mediumMove3();
+    move=gameMode==='anti'?mediumAntiMove():mediumMove3();
   }else{
     move=hardMove3();
   }
 
   placeStandard(move,aiTeam);
+}
+
+
+function mediumAntiMove(){
+  const empty=board.map((v,i)=>v?'':i).filter(v=>v!=='');
+
+  // Nunca busca formar tres: primero descarta todas las jugadas
+  // que harían perder inmediatamente a la computadora.
+  const safe=empty.filter(i=>{
+    const test=board.slice();
+    test[i]=aiTeam;
+    return !getThreeLine(test);
+  });
+
+  const candidates=safe.length?safe:empty;
+
+  // En Anti Ta-Te-Ti conviene dejarle al rival casilleros tentadores
+  // que completarían su propia línea y, al mismo tiempo, conservar
+  // varias salidas seguras para el siguiente turno.
+  const scored=candidates.map(i=>{
+    const test=board.slice();
+    test[i]=aiTeam;
+
+    let humanLosingMoves=0;
+    let aiSafeReplies=0;
+
+    for(let j=0;j<9;j++){
+      if(test[j]) continue;
+
+      const humanTest=test.slice();
+      humanTest[j]=humanTeam;
+      if(getThreeLine(humanTest)) humanLosingMoves++;
+
+      const aiTest=test.slice();
+      aiTest[j]=aiTeam;
+      if(!getThreeLine(aiTest)) aiSafeReplies++;
+    }
+
+    const positionPreference=[4,0,2,6,8,1,3,5,7].indexOf(i);
+    const positionalBonus=(9-positionPreference)*0.08;
+
+    return {
+      i,
+      score:humanLosingMoves*3+aiSafeReplies*.35+positionalBonus+Math.random()*.25
+    };
+  });
+
+  scored.sort((a,b)=>b.score-a.score);
+  return scored[0].i;
 }
 
 function mediumMove3(){
@@ -1147,9 +1197,23 @@ function restartRound(){
   selectedCell=null;
   placementCounts={X:0,O:0};
   mobileMoveCount=0;
-  turn=humanTeam;
-  statusEl.textContent=`Turno de ${teamName(turn)}.`;
+
+  // En cada ronda comienza el personaje contrario al que inició la anterior.
+  turn=nextStarter;
+  nextStarter=nextStarter===X?O:X;
+
+  if(playType==='ai'&&turn===aiTeam){
+    statusEl.textContent=`${teamName(aiTeam)} comienza y está pensando...`;
+  }else{
+    statusEl.textContent=`Turno de ${teamName(turn)}.`;
+  }
+
   render();
+
+  if(playType==='ai'&&turn===aiTeam){
+    const token=++aiTurnToken;
+    setTimeout(()=>aiMove(token),500);
+  }
 }
 
 function chooseMode(mode){
@@ -1175,6 +1239,7 @@ function selectCharacter(character){
   selectedCharacter=character;
   humanTeam=X;
   aiTeam=O;
+  nextStarter=X;
   characterOverlay.style.display='none';
 
   if(gameMode==='challenge'){
