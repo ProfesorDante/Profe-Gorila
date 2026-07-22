@@ -144,16 +144,16 @@ body.theme-anti .modeBadge::after{
 }
 
 body.theme-mobile{
-  background:linear-gradient(#cceeff,#b7d8f2);
+  background:linear-gradient(#eadcff,#d8c6f3);
 }
-body.theme-mobile header{background:linear-gradient(#356f9d,#214d73)}
-body.theme-mobile main{background:linear-gradient(#a9d9ee,#70b3d5)}
+body.theme-mobile header{background:linear-gradient(#7652a8,#4e3478)}
+body.theme-mobile main{background:linear-gradient(#cbb5ea,#9d7ac9)}
 body.theme-mobile .board{
-  background:#4f7da5;border-color:#285c88;box-shadow:0 10px 0 #204a70,0 16px 30px #173f6555
+  background:#7757a7;border-color:#4d3477;box-shadow:0 10px 0 #3d285f,0 16px 30px #2d1d4855
 }
-body.theme-mobile .cell{background:linear-gradient(#e8f8ff,#b9dff0);box-shadow:inset 0 3px #fff,0 4px #5797b8}
-body.theme-mobile .cell.dark{background:linear-gradient(#87c8e2,#5da8ca);box-shadow:inset 0 3px #bdeaff,0 4px #397c9e}
-body.theme-mobile .modeBadge{background:#e4f6ff;border-color:#4b91ba;color:#245a7e}
+body.theme-mobile .cell{background:linear-gradient(#f5efff,#d8c7ef);box-shadow:inset 0 3px #fff,0 4px #8c6eb2}
+body.theme-mobile .cell.dark{background:linear-gradient(#b99bdc,#9473be);box-shadow:inset 0 3px #dcc9f2,0 4px #65498c}
+body.theme-mobile .modeBadge{background:#f1eaff;border-color:#7652a8;color:#4e3478}
 body.theme-mobile .cell.selected .monkey{animation:pieceReady .65s ease-in-out infinite alternate}
 
 body.theme-challenge{
@@ -194,6 +194,97 @@ body.theme-challenge main{background:linear-gradient(#b9db95,#8fc16f)}
 .suddenBadge{
   display:inline-block;background:#8b2f25;color:#fff;border-radius:999px;padding:7px 13px;
   font-weight:1000;letter-spacing:.5px;box-shadow:0 4px #5b1c17
+}
+
+
+/* Ajuste móvil: la partida ocupa la pantalla y los controles aparecen al finalizar */
+@media(max-width:860px){
+  header{
+    min-height:38px;
+    padding:4px 7px;
+  }
+  .title{font-size:12px;line-height:1.1}
+  .hud{gap:4px}
+  .pill{font-size:9px;padding:3px 5px;border-width:1px}
+
+  main{padding:3px}
+  .gameLayout{
+    grid-template-rows:minmax(0,1fr) auto;
+    gap:3px;
+  }
+  .board{
+    width:min(94vw,calc(100dvh - 106px));
+    max-height:calc(100dvh - 106px);
+    gap:5px;
+    padding:7px;
+  }
+  .board.size9{
+    width:min(95vw,calc(100dvh - 100px));
+    max-height:calc(100dvh - 100px);
+    gap:2px;
+    padding:4px;
+  }
+  .side{
+    padding:4px 5px;
+    border-width:1px;
+    border-radius:9px;
+    box-shadow:0 2px #65421f;
+    display:grid;
+    grid-template-columns:auto minmax(0,1fr);
+    align-items:center;
+    gap:4px;
+  }
+  .modeBadge{
+    padding:4px 6px;
+    font-size:9px!important;
+    line-height:1.15;
+    white-space:nowrap;
+  }
+  .status{
+    padding:4px 6px;
+    font-size:9px;
+    line-height:1.15;
+    min-height:0;
+  }
+  .challengeInfo{display:none!important}
+  .controls{display:none!important}
+}
+@media(max-width:560px) and (orientation:portrait){
+  .board{
+    width:min(95vw,calc(100dvh - 110px));
+    max-height:calc(100dvh - 110px);
+  }
+  .board.size9{
+    width:min(96vw,calc(100dvh - 104px));
+    max-height:calc(100dvh - 104px);
+  }
+  .side{
+    grid-template-columns:1fr;
+  }
+  .modeBadge,.status{
+    text-align:center;
+    white-space:normal;
+  }
+}
+@media(orientation:landscape) and (hover:none) and (pointer:coarse){
+  .gameLayout{
+    grid-template-columns:minmax(0,1fr) clamp(145px,19vw,190px);
+  }
+  .board,.board.size9{
+    width:min(calc(100dvh - 46px),calc(100vw - 205px));
+    max-height:calc(100dvh - 46px);
+  }
+  .side{
+    display:grid;
+    grid-template-columns:1fr;
+    align-self:center;
+  }
+}
+
+
+@media(max-width:560px){
+  .monkey{inset:11%}
+  .board.size9 .monkey{inset:7%}
 }
 
 /* Portada */
@@ -472,9 +563,29 @@ function applyVisualTheme(){
 
 function modeAccent(){
   const mode=activeMode();
-  if(mode==='anti') return {ring:'#d87926',detail:'#ffb24d',stroke:'#8b441e'};
-  if(mode==='mobile') return {ring:'#438bb5',detail:'#77c8ef',stroke:'#285c88'};
-  return {ring:'#4f8d50',detail:'#8fc16f',stroke:'#285735'};
+
+  // Colores pensados para diferenciar las fichas del tablero a primera vista.
+  if(mode==='anti'){
+    return {
+      nitoRing:'#cf3e32',nitoDetail:'#ff7468',
+      tinaRing:'#f3c62f',tinaDetail:'#ffe36d',
+      stroke:'#7a2b24'
+    };
+  }
+
+  if(mode==='mobile'){
+    return {
+      nitoRing:'#2f80d0',nitoDetail:'#72b7f3',
+      tinaRing:'#d83e4f',tinaDetail:'#ff7b89',
+      stroke:'#4b2b69'
+    };
+  }
+
+  return {
+    nitoRing:'#2f80d0',nitoDetail:'#79bdf2',
+    tinaRing:'#f2c230',tinaDetail:'#ffe370',
+    stroke:'#285735'
+  };
 }
 function chooseForestOpponent(){currentOpponent=forestOpponents[Math.floor(Math.random()*forestOpponents.length)]}
 function updateOpponentCard(){if(playType==='ai'){opponentAvatar.textContent=currentOpponent.emoji;opponentName.textContent=currentOpponent.name;opponentPhrase.textContent=currentOpponent.phrase}else{opponentAvatar.textContent='🐒🎀';opponentName.textContent='Nito y Tina';opponentPhrase.textContent='Una partida entre amigos.'}}
@@ -540,7 +651,8 @@ function monkeySVG(team){
   const nitoTeam=selectedCharacter==='nito'?humanTeam:(humanTeam===X?O:X);
   const isNito=team===nitoTeam;
   const accent=modeAccent();
-  const ring=accent.ring;
+  const ring=isNito?accent.nitoRing:accent.tinaRing;
+  const detail=isNito?accent.nitoDetail:accent.tinaDetail;
   const head=isNito?'#5e3827':'#8b572d';
   const face=isNito?'#e4b77d':'#f1c983';
   const mode=activeMode();
@@ -556,11 +668,11 @@ function monkeySVG(team){
     <path d="M42 60 Q50 68 58 60" fill="none" stroke="#5b3424" stroke-width="3" stroke-linecap="round"/>
     ${isNito
       ?'<path d="M40 27 L47 15 L51 26 L59 17 L60 30" fill="#4b2c21"/>'
-      :`<path d="M34 25 Q42 14 49 27 Q57 14 66 25 Q57 34 50 28 Q42 34 34 25" fill="${mode==='classic'?'#e85b7f':accent.detail}" stroke="${accent.stroke}" stroke-width="2"/>`}
+      :`<path d="M34 25 Q42 14 49 27 Q57 14 66 25 Q57 34 50 28 Q42 34 34 25" fill="${detail}" stroke="${accent.stroke}" stroke-width="2"/>`}
     ${mode==='anti'
-      ?`<path d="M29 73 Q50 84 71 73 L67 83 Q50 91 33 83 Z" fill="${accent.detail}" stroke="${accent.stroke}" stroke-width="2"/>`
+      ?`<path d="M29 73 Q50 84 71 73 L67 83 Q50 91 33 83 Z" fill="${detail}" stroke="${accent.stroke}" stroke-width="2"/>`
       :mode==='mobile'
-        ?`<circle cx="76" cy="72" r="11" fill="${accent.detail}" stroke="${accent.stroke}" stroke-width="3"/><path d="M70 72 H82 M78 67 L83 72 L78 77" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`
+        ?`<circle cx="76" cy="72" r="11" fill="${detail}" stroke="${accent.stroke}" stroke-width="3"/><path d="M70 72 H82 M78 67 L83 72 L78 77" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`
         :''}
   </svg>`;
 }
