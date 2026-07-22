@@ -36,7 +36,7 @@ function setupClimate(){
 const _resetLevel=resetLevel;
 resetLevel=function(n=level){weather=climateFor(n);_resetLevel(n);setupClimate();initExtraEntity(player);bots.forEach(initExtraEntity);ensureExtraUI();missionText.textContent+=` Clima: ${WNAME[weather].toLowerCase()}.`;};
 const _resetDuelWorld=resetDuelWorld;
-resetDuelWorld=function(){const a=['clear','rain','night','snow','storm'];duelWeather=a[Math.floor(Math.random()*a.length)];_resetDuelWorld();weather=duelWeather;setupClimate();initExtraEntity(player);bots.forEach(initExtraEntity);ensureExtraUI();};
+resetDuelWorld=function(){duelWeather='clear';_resetDuelWorld();weather='clear';setupClimate();initExtraEntity(player);bots.forEach(initExtraEntity);ensureExtraUI();};
 const _startDuel=startDuel;
 startDuel=function(){_startDuel();setTimeout(()=>{const t=document.getElementById('duelCountdownTitle');if(t)t.textContent=`${WICON[duelWeather]} ${WNAME[duelWeather]} · ¿ESTÁS PREPARADO?`;},40);};
 
@@ -608,11 +608,11 @@ function guardianReactToImpact(g,source,kind){
 const _guardianContactsV15=guardianContacts;
 guardianContacts=function(g){
   if(g.type!=='sloth'){_guardianContactsV15(g);return;}
-  if(g.slothBounce>0)return;
+  if(g.slothBounce>0||g.hugTarget)return;
   const targets=[player,...bots].filter(Boolean);
   for(const e of targets){
-    if(dist(g,e)<g.r+e.r+3&&e.inv<=0&&!e.jump){
-      e.stun=Math.max(e.stun||0,3);e.inv=.35;g.hugTarget=e;g.hugTimer=3;burst(e.x,e.y,'#ffd9a8');tone(190,.08,'sine',.03);
+    if(dist(g,e)<g.r+e.r+3&&e.inv<=0&&(e.slothImmune||0)<=0&&!e.jump){
+      e.stun=Math.max(e.stun||0,3);e.inv=.35;g.hugTarget=e;g.hugTimer=3;burst(e.x,e.y,'#ffd9a8');tone(190,.08,'sine',.03);break;
     }
   }
 };
@@ -685,9 +685,12 @@ specialInteractions=function(dt){
     if(g.slothBounce>0){
       g.slothBounce-=dt;const nx=g.x+g.slothVX*dt,ny=g.y+g.slothVY*dt;
       if(collidesObstacle(nx,ny,g.r,false)){g.slothVX*=-.82;g.slothVY*=-.82;}else{g.x=nx;g.y=ny;}
-      for(const e of ents)if(e.inv<=0&&dist(g,e)<g.r+e.r){e.stun=Math.max(e.stun||0,3);e.inv=.35;g.hugTarget=e;g.hugTimer=3;}
+      if(!g.hugTarget){for(const e of ents)if(e.inv<=0&&(e.slothImmune||0)<=0&&dist(g,e)<g.r+e.r){e.stun=Math.max(e.stun||0,3);e.inv=.35;g.hugTarget=e;g.hugTimer=3;break;}}
     }
-    if(g.hugTimer>0&&g.hugTarget){g.hugTimer-=dt;g.x=g.hugTarget.x-18;g.y=g.hugTarget.y+4;if(g.hugTimer<=0)g.hugTarget=null;}
+    if(g.hugTimer>0&&g.hugTarget){
+      const held=g.hugTarget;g.hugTimer-=dt;g.x=held.x-18;g.y=held.y+4;
+      if(g.hugTimer<=0){held.stun=0;held.slothImmune=2;held.inv=Math.max(held.inv||0,.45);g.hugTarget=null;const safe=findSafePoint(g.x-72,g.y,g.r+5);g.x=safe.x;g.y=safe.y;burst(held.x,held.y,'#d9f6ff');}
+    }
     if(g.type==='frog'&&g.swallowedItem){
       for(const e of ents){if(e.jump&&dist(e,g)<e.r+g.r+11){
         const target=e===player?bots.sort((a,b)=>dist(g,a)-dist(g,b))[0]:player;
@@ -768,18 +771,18 @@ chooseBotGoal=function(b,dt){
 
 /* Noche corregida: Tina, bots y guardianes conservan una silueta legible. */
 nightOverlay=function(){
-  ctx.fillStyle='rgba(2,8,18,.72)';ctx.fillRect(0,0,VIEW_W,VIEW_H);
+  // Noche legible: reduce visión sin ocultar el juego. Mucho más liviana para celular.
+  ctx.fillStyle='rgba(3,12,24,.40)';ctx.fillRect(0,0,VIEW_W,VIEW_H);
   ctx.globalCompositeOperation='destination-out';
-  ctx.fillStyle='rgba(0,0,0,.30)';ctx.fillRect(0,VIEW_H*.32,VIEW_W,VIEW_H*.36);
   const lights=[player,...bots].filter(Boolean);
   for(const e of lights){
     const ex=e.x-camera.x,ey=e.y-camera.y;
-    let r=e===player?(player.activeGear==='candle'?150:player.activeGear==='firefly'?125:96):72;
-    const gr=ctx.createRadialGradient(ex,ey,8,ex,ey,r);gr.addColorStop(0,'rgba(0,0,0,.96)');gr.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(ex,ey,r,0,Math.PI*2);ctx.fill();
+    let r=e===player?(player.activeGear==='candle'?190:player.activeGear==='firefly'?170:145):112;
+    const gr=ctx.createRadialGradient(ex,ey,12,ex,ey,r);gr.addColorStop(0,'rgba(0,0,0,1)');gr.addColorStop(.55,'rgba(0,0,0,.82)');gr.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(ex,ey,r,0,Math.PI*2);ctx.fill();
   }
-  for(const g of guardians){const gx=g.x-camera.x,gy=g.y-camera.y;const gr=ctx.createRadialGradient(gx,gy,4,gx,gy,42);gr.addColorStop(0,'rgba(0,0,0,.58)');gr.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(gx,gy,42,0,Math.PI*2);ctx.fill();}
+  for(const g of guardians){const gx=g.x-camera.x,gy=g.y-camera.y;const gr=ctx.createRadialGradient(gx,gy,5,gx,gy,72);gr.addColorStop(0,'rgba(0,0,0,.9)');gr.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gr;ctx.beginPath();ctx.arc(gx,gy,72,0,Math.PI*2);ctx.fill();}
   if(player.activeGear==='flashlight'){
-    const px=player.x-camera.x,py=player.y-camera.y,a=Math.atan2(player.vy||0,player.vx||1);ctx.save();ctx.translate(px,py);ctx.rotate(a);ctx.fillStyle='rgba(0,0,0,.62)';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(250,-75);ctx.lineTo(250,75);ctx.closePath();ctx.fill();ctx.restore();
+    const px=player.x-camera.x,py=player.y-camera.y,a=Math.atan2(player.vy||0,player.vx||1);ctx.save();ctx.translate(px,py);ctx.rotate(a);ctx.fillStyle='rgba(0,0,0,.82)';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(300,-95);ctx.lineTo(300,95);ctx.closePath();ctx.fill();ctx.restore();
   }
   ctx.globalCompositeOperation='source-over';
 };
@@ -788,6 +791,9 @@ nightOverlay=function(){
    Además se muestran estados especiales sin texto. */
 const _drawGuardianV15=drawGuardian;
 drawGuardian=function(g){
+  if(g.type==='penguin'&&g.missile>0){
+    ctx.save();ctx.translate(g.x,g.y);const t=g.target||player;ctx.rotate(Math.atan2(t.y-g.y,t.x-g.x)+Math.PI/2);ctx.font='46px serif';ctx.textAlign='center';ctx.fillText('🐧',0,15);ctx.restore();return;
+  }
   if(g.type==='frog'){
     ctx.save();ctx.translate(g.x,g.y);
     if(g.frogAimTimer>0){ctx.globalAlpha=.22+.12*Math.sin(levelElapsed*10);ctx.fillStyle='#ffcf62';ctx.beginPath();ctx.arc(0,0,42,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
@@ -807,3 +813,67 @@ drawGuardian=function(g){
 
 const hc15=document.querySelector('#help .card');
 if(hc15){const p=document.createElement('p');p.innerHTML='<b>Guardianes interactivos:</b> saltá sobre el loro, la tortuga o el sapo; usá pelotas y rebotes para provocar al gorila, al elefante, al perezoso y al leopardo. Todo se resuelve moviéndote y saltando.';hc15.insertBefore(p,hc15.querySelector('button'));}
+
+
+/* =========================================================
+   V16 — PULIDO MOBILE, FOCO EN TINA Y DUELO CLIMÁTICO
+   ========================================================= */
+const V16_MOBILE = matchMedia('(pointer:coarse)').matches || /Android|iPhone|iPad|Mobile/i.test(navigator.userAgent);
+
+// En celular, las partículas nunca crecen sin límite.
+const _updateParticlesV16=updateParticles;
+updateParticles=function(dt){_updateParticlesV16(dt);if(V16_MOBILE&&particles.length>55)particles.splice(0,particles.length-55);};
+
+// Los guardianes que están a más de una pantalla de Tina "duermen" y no calculan rutas.
+const _updateGuardiansV16=updateGuardians;
+updateGuardians=function(dt){
+  if(!V16_MOBILE||duelMode){_updateGuardiansV16(dt);return;}
+  const all=guardians,active=[],sleeping=[];
+  const wakeDistance=Math.hypot(VIEW_W,VIEW_H)*1.05;
+  for(const g of all)(dist(g,player)<=wakeDistance||g.rageTimer>0||g.stampedeTimer>0||g.missile>0||g.hugTarget?active:sleeping).push(g);
+  guardians=active;_updateGuardiansV16(dt);guardians=[...active,...sleeping];
+};
+
+// La IA piensa a intervalos, pero se mueve cada frame. Tina y la bandera mandan.
+const _chooseBotGoalCoreV16=_chooseBotGoalV15;
+chooseBotGoal=function(b,dt){
+  // Si Tina lleva la bandera, se termina cualquier distracción: todos intentan frenarla.
+  if(!duelMode&&player.carrying==='enemy'){
+    b.guardianPlan=null;b.v16Goal={x:player.x,y:player.y,speed:1.34};b.v16Think=0;
+    return b.v16Goal;
+  }
+  if(b.guardianPlan&&levelElapsed<b.guardianPlan.until&&guardians.includes(b.guardianPlan.g)){
+    const g=b.guardianPlan.g;
+    if(['frog','parrot','turtle'].includes(g.type)&&dist(b,g)<125*mapScale&&b.jumps>0&&!b.jump)startBotJump(b,g.x,g.y);
+    return {x:g.x,y:g.y,speed:1.15};
+  }
+  b.guardianPlan=null;
+  b.v16Think=(b.v16Think||0)-dt;
+  if(b.v16Think>0&&b.v16Goal)return b.v16Goal;
+  b.v16Think=(V16_MOBILE?.14:.09)+Math.random()*.05;
+
+  // Un guardián solo interesa si puede usarse contra Tina ahora mismo.
+  if(!duelMode&&!b.carrying){
+    b.guardianIdeaClock=(b.guardianIdeaClock||0)-Math.max(dt,.1);
+    if(b.guardianIdeaClock<=0){
+      b.guardianIdeaClock=1.1+Math.random()*.9;
+      const prefs=GUARDIAN_INTERACTION_PREFS[b.personality]||GUARDIAN_INTERACTION_PREFS.standard;
+      const candidates=guardians.filter(g=>['frog','parrot','turtle'].includes(g.type)&&dist(b,g)<320*mapScale&&dist(player,g)<270*mapScale&&(dist(b,g)<95*mapScale||findPath(b.x,b.y,g.x,g.y,b.r+3,false).length));
+      if(candidates.length){
+        const preferred=candidates.filter(g=>prefs.has(g.type)),pool=preferred.length?preferred:candidates;
+        const chance=(preferred.length?.14:.05)+(isDesperateBot(b)?.08:0);
+        if(Math.random()<chance){const g=pool.reduce((a,x)=>dist(b,x)<dist(b,a)?x:a,pool[0]);b.guardianPlan={g,until:levelElapsed+1.25};b.v16Goal={x:g.x,y:g.y,speed:1.15};return b.v16Goal;}
+      }
+    }
+  }
+  b.v16Goal=_chooseBotGoalCoreV16(b,Math.max(dt,.09));
+  return b.v16Goal;
+};
+
+// Gran Duelo: soleado → clima especial → soleado.
+const _resetDuelRoundV16=resetDuelRound;
+resetDuelRound=function(){
+  _resetDuelRoundV16();
+  weather=duelRound===2?['rain','night','snow','storm'][Math.floor(Math.random()*4)]:'clear';
+  duelWeather=weather;setupClimate();initExtraEntity(player);bots.forEach(initExtraEntity);ensureExtraUI();
+};

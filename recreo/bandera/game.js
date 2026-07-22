@@ -67,7 +67,8 @@ function updateUpgradeHud(){
 function resetLevel(n = level){
   duelMode=false;
   level = n;
-  mapScale = Math.pow(1.15, Math.floor((level - 1) / 3));
+  // Desde el nivel 8 el bosque deja de crecer hacia todos lados: evita mapas enormes y mejora celulares.
+  mapScale = Math.min(1.32, Math.pow(1.15, Math.floor((level - 1) / 3)));
   WORLD_W = Math.round(BASE_WORLD_W * mapScale);
   WORLD_H = Math.round(BASE_WORLD_H * mapScale);
   recalcProgression(level);
@@ -134,6 +135,12 @@ function makeOrganicMaze(){
     add(690,390,95,80,'rock'); add(1320,690,95,80,'rock'); add(920,210,180,65); add(1050,910,180,65);
   }
   add(900,85,220,82,'flowers'); add(880,1030,250,78,'flowers');
+  // A partir del nivel 8, dos troncos bajos cortan la 'autopista' central sin cerrar rutas.
+  if(level>=8){
+    const shift=(variant-1)*95;
+    add(900+shift,365,190,52,'log',true,true);
+    add(1080-shift,735,190,52,'log',true,true);
+  }
   // Los laterales crecen junto al mapa, pero nunca se convierten en autopistas vacías.
   const edgeDensity=2+design+variant;
   for(let i=0;i<edgeDensity;i++){
@@ -263,6 +270,8 @@ function update(dt){
   if(duelMode&&duelRoundReset>0){duelRoundReset-=dt;if(duelRoundReset<=0)resetDuelRound();}
   timeLeft -= dt;
   levelElapsed += dt;
+  // Inmunidad específica tras escapar del abrazo del perezoso.
+  for(const e of [player,...bots]) if(e&&e.slothImmune>0) e.slothImmune=Math.max(0,e.slothImmune-dt);
   if(timeLeft<=0){finishByTime();return;}
   updatePlayer(dt);
   updateBots(dt);

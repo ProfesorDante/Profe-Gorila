@@ -32,3 +32,15 @@ CIERRE DE MECÁNICAS — V15
 - Todos los objetos se validan para no quedar dentro de obstáculos o sin una ruta navegable.
 - La noche mantiene visibles a Tina, bots y guardianes.
 - Diseño declarado completo: desde aquí solo balance, correcciones, gráficos, sonido y animación.
+
+PULIDO Y OPTIMIZACIÓN — V16
+- Optimización prioritaria para celulares: mapas con crecimiento limitado, menos partículas y guardianes lejanos en reposo.
+- La IA toma decisiones a intervalos y mantiene a Tina como objetivo principal.
+- Si Tina lleva la bandera, los bots abandonan distracciones y entran en modo cacería.
+- Las interacciones con guardianes solo se intentan cuando pueden afectar a Tina de forma inmediata.
+- El perezoso suelta siempre después de 3 segundos y concede 2 segundos de inmunidad contra otro abrazo.
+- Se evitó que el perezoso inmovilice simultáneamente a dos personajes.
+- La noche fue rehecha para conservar visibilidad real en celular.
+- El pingüino gira 90 grados durante su ataque para parecer que se desliza.
+- Desde el nivel 8 se corta la ruta central segura con troncos bajos saltables.
+- El Gran Duelo usa la secuencia: soleado, clima especial, soleado.
