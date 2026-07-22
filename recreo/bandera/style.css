@@ -44,3 +44,33 @@ canvas{width:100vw;height:100dvh;max-width:none;max-height:none;border:0;border-
 .duelCountdownTitle{font:900 clamp(34px,7vw,92px) Arial,sans-serif;letter-spacing:.04em;text-shadow:0 6px #000;margin-bottom:30px}
 .duelCountdownNumber{font:900 clamp(90px,20vw,260px) Arial,sans-serif;color:#ffdf4d;text-shadow:0 10px #6f4314;min-height:1.1em}
 @keyframes duelFade{from{opacity:0}to{opacity:1}}
+
+
+/* v9.2 polish placeholders */
+@keyframes tinaBreath{0%,100%{transform:translateY(0)}50%{transform:translateY(-1px)}}
+@keyframes blink{0%,96%,100%{filter:none}97%,99%{filter:brightness(.7)}}
+.playerSprite{
+ animation:tinaBreath 1.2s ease-in-out infinite,blink 4s linear infinite;
+ transform-origin:center bottom;
+}
+
+
+/* V11 — respuesta visual */
+canvas{transition:transform .18s ease,filter .12s ease}
+canvas.polish-capture{transform:scale(1.055);filter:brightness(1.12) saturate(1.08)}
+canvas.polish-hit{animation:polishHit .22s ease}
+@keyframes polishHit{
+  0%,100%{filter:none}
+  35%{filter:brightness(1.35) sepia(.25)}
+  65%{filter:brightness(.9)}
+}
+.polish-version-splash{
+  position:fixed;inset:0;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(7,27,19,.9);color:#fff6d8;text-align:center;pointer-events:none;
+  transition:opacity .55s ease,transform .55s ease
+}
+.polish-version-splash div{font-size:min(24vw,170px);animation:polishFloat .75s ease-in-out infinite alternate}
+.polish-version-splash b{font-size:clamp(28px,6vw,72px);text-shadow:0 5px #173f2b}
+.polish-version-splash span{margin-top:8px;font-size:clamp(16px,2.5vw,28px);font-weight:900}
+.polish-version-splash.hide{opacity:0;transform:scale(1.08)}
+@keyframes polishFloat{from{transform:translateY(5px) rotate(-4deg)}to{transform:translateY(-12px) rotate(4deg)}}

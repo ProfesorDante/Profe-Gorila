@@ -73,7 +73,59 @@ VERSIÓN 9 — BALANCE Y GRAN DUELO
 - La imagen ../../img/banderafinal.png aparece únicamente después de ganar El Duelo.
 
 
-AJUSTE GRAN DUELO (v9.1)
-- Cada choque durante El Gran Duelo quita 1 corazón completo al portador.
-- La imagen banderafinal.png aparece únicamente si Tina gana el mejor de tres.
-- El Gran Duelo usa una banda sonora exclusiva de deathmatch, más rápida, tensa y percusiva.
+v9.2 Objetivos de polish: expresiones, parpadeo, respiración, sombra, polvo, sonidos y zooms.
+VERSIÓN 10 — CLIMA, OBJETOS Y GUARDIANES
+
+Climas distribuidos:
+- Nivel 3: lluvia
+- Nivel 6: noche
+- Nivel 8: lluvia
+- Nivel 10: nieve
+- Nivel 12: noche
+- Nivel 15: lluvia
+- Nivel 17: tormenta eléctrica
+- El Gran Duelo: clima aleatorio anunciado antes de comenzar
+
+Controles de objetos:
+- PC: E o Enter
+- Celular/tablet: botón USAR
+- Cada objeto tiene un uso y vuelve a quedar en el piso.
+- Quien lo usó espera 3 segundos para recuperarlo.
+- Si cae por un golpe, el portador espera 1 segundo.
+
+Guardianes climáticos:
+- Sapo: lluvia y tormenta; roba objetos con la lengua y los escupe.
+- Pingüino: nieve; se lanza como misil y hace caer la bandera al instante.
+- Leopardo: noche; ve en la oscuridad y persigue al portador más próximo a ganar.
+
+Incluye además: charcos, rayos, oscuridad lateral, nieve, equipo climático, escombros del elefante, furia visible 3 de cada 5 segundos, loro vulnerable al salto, tortuga disparada, gorila que patea banderas, martillo, patineta, bicicleta, pelotas, arco de ventosa, búmeran, imán y barrilete.
+
+
+VERSIÓN 11 — POLISH Y PERSONALIDAD
+- Tina conserva exactamente su diseño de carita.
+- Respiración suave cuando está quieta.
+- Parpadeo automático.
+- Expresiones para salto, golpe, bandera y victoria.
+- Sombras bajo Tina y los bots para leer mejor los saltos.
+- Polvo discreto al correr, frenar y aterrizar.
+- Sonidos de pasos y aterrizaje.
+- Señales sonoras ambientales propias de cada guardián, incluidos sapo, pingüino y leopardo.
+- Golpe con destello breve y respuesta sonora.
+- Captura con zoom corto y sonido especial antes de mostrar el resultado.
+- Latido visual cuando queda un solo corazón de la bandera.
+- Pantalla inicial muy evidente “VERSIÓN 11” para verificar que GitHub cargó la actualización.
+- Nuevo archivo: polish.js. Debe quedar junto a index.html, game.js y expansion_clima.js.
+
+
+VERSIÓN 12 — FASES COMPLETADAS
+================================
+FASE CLIMA: lluvia (niveles 3, 8 y 15), noche (6 y 12), nieve (10), tormenta eléctrica (17), objetos climáticos y clima aleatorio en El Gran Duelo.
+
+FASE FÍSICA: objetos de un uso, caída al recibir golpes, bloqueo de recogida (3 s al usar / 1 s al perder), escombros del elefante, pelotas y proyectiles que vuelven al piso, tortuga-caparázon disparada, loro aturdido y gorila que patea banderas.
+
+FASE AVANZADA: sapo de lluvia, pingüino de nieve, leopardo nocturno, pararrayos, martillo, bicicleta, objetos estratégicos y reparto por clima.
+
+GUARDIANES CLIMÁTICOS:
+- Pingüino: se desliza como misil hacia el portador y hace caer la bandera instantáneamente.
+- Leopardo: es el único guardián que ve de noche; persigue al portador y, si hay dos, elige al que esté más cerca de marcar.
+- Sapo: toma objetos con la lengua, los dispara y el objeto vuelve a quedar disponible sin gastar su uso.
