@@ -4,9 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
   <title>Tina y la Bandera del Gran Árbol</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2.0.1-tablet">
 </head>
 <body>
+  <script>
+    (function(){
+      const touch = navigator.maxTouchPoints > 0 || matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+      document.documentElement.classList.toggle('touch-capable', touch);
+      const refresh = () => document.documentElement.style.setProperty('--real-vh', window.innerHeight + 'px');
+      refresh();
+      addEventListener('resize', refresh, {passive:true});
+      addEventListener('orientationchange', () => setTimeout(refresh, 180), {passive:true});
+    })();
+  </script>
   <div id="cover" class="cover" aria-label="Portada del juego">
     <div class="coverStage">
       <img src="../../img/bandera.png" alt="Toma la bandera">
@@ -125,8 +135,8 @@
     </section>
   </div>
 
-  <script src="game.js"></script>
-  <script src="expansion_clima.js"></script>
-  <script src="polish.js"></script>
+  <script src="game.js?v=2.0.1-tablet"></script>
+  <script src="expansion_clima.js?v=2.0.1-tablet"></script>
+  <script src="polish.js?v=2.0.1-tablet"></script>
 </body>
 </html>

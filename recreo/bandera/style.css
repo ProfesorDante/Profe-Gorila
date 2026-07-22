@@ -130,3 +130,47 @@ body.coop-active .jumpBtn small{font-size:10px;white-space:nowrap}
   body.coop-active .nitoJump{right:82px}
   body.coop-active .jumpBtn{width:62px}
 }
+
+/* v2.0.1 — compatibilidad y rendimiento para tablets táctiles */
+html.touch-capable .mobileControls{display:block}
+html.touch-capable .gameShell{height:var(--real-vh,100dvh)}
+html.touch-capable body{overscroll-behavior:none}
+
+/* La portada conserva exactamente la relación 3:2 de la ilustración.
+   Así el área táctil de «Empezar a jugar» nunca cae debajo de la imagen. */
+.coverStage{
+  width:min(calc(100vw - max(16px, env(safe-area-inset-left) + env(safe-area-inset-right))),calc((var(--real-vh,100dvh) - 16px) * 1.5),1536px);
+  height:auto;
+  aspect-ratio:3/2;
+  flex:0 0 auto;
+}
+.coverStage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.coverStage button{z-index:2}
+
+/* Tablet horizontal: controles visibles, cómodos y sin tapar tanto el campo. */
+@media (pointer:coarse) and (orientation:landscape) and (min-width:700px){
+  .mobileControls{display:block!important}
+  .joystick{width:104px;height:104px;bottom:max(12px,env(safe-area-inset-bottom))}
+  .joyKnob{left:30px;top:30px;width:44px;height:44px}
+  .jumpBtn{width:78px;height:96px;bottom:max(5px,env(safe-area-inset-bottom))}
+  .jumpBtn svg{height:78px}
+  body.coop-active .joystick{width:100px;height:100px}
+  body.coop-active .joyKnob{left:29px;top:29px;width:42px;height:42px}
+  body.coop-active .tinaJoy{left:max(10px,env(safe-area-inset-left))}
+  body.coop-active .tinaJump{left:120px}
+  body.coop-active .nitoJoy{right:max(10px,env(safe-area-inset-right))}
+  body.coop-active .nitoJump{right:120px}
+  body.coop-active .jumpBtn{width:76px;height:94px}
+  body.coop-active .controlName{bottom:-15px;font-size:9px}
+}
+
+/* Tablets bajas o navegadores con barras grandes. */
+@media (pointer:coarse) and (orientation:landscape) and (max-height:560px){
+  .joystick,body.coop-active .joystick{width:86px;height:86px;bottom:8px}
+  .joyKnob,body.coop-active .joyKnob{left:25px;top:25px;width:36px;height:36px}
+  .jumpBtn,body.coop-active .jumpBtn{width:64px;height:80px;bottom:1px}
+  .jumpBtn svg,body.coop-active .jumpBtn svg{height:65px}
+  body.coop-active .tinaJump{left:100px}
+  body.coop-active .nitoJump{right:100px}
+  .controlName{display:none}
+}

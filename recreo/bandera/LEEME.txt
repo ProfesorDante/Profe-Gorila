@@ -111,3 +111,10 @@ V2.0 FASE 2 — COOPERATIVO EN CELULAR
 - Cada joystick admite un dedo diferente al mismo tiempo.
 - Se agregó manejo de touchcancel para evitar que un control quede trabado.
 - En 1 jugador se conservan los controles móviles clásicos.
+
+v2.0.1 — Ajuste para tablets
+- La portada conserva la relación 3:2 para que el botón de inicio quede sobre la imagen.
+- Los controles táctiles se detectan por pantalla táctil, no solo por ancho de pantalla.
+- Joysticks y botones adaptados a tablet horizontal y pantallas de poca altura.
+- Compatibilidad con áreas seguras y barras del navegador.
+- Archivos CSS/JS versionados para forzar la recarga de la actualización.
