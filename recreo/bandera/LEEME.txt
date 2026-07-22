@@ -83,8 +83,22 @@ V21 — COLORES Y GUARDIANES
 - El sapo usa el emoji reconocible y salta para reposicionarse antes de disparar.
 - El loro vuela, flota visualmente e ignora por completo el terreno.
 
+============================================================
+VERSIÓN 2.0 — FASE 1: COOPERATIVO EN PC
+============================================================
 
-=== Hoja de ruta v2.0 ===
-- Menú preparado para modo cooperativo.
-- Controles documentados para Tina y Nito.
-- Próximo paso: cámara compartida, segundo jugador y optimización móvil.
+Esta fase agrega la base funcional del modo de dos jugadores:
+
+- Menú con "1 jugador" y "2 jugadores".
+- Tina: W A S D + ESPACIO.
+- Nito: FLECHAS + ENTER/INTRO (incluye Enter del teclado numérico).
+- Tina y Nito aparecen simultáneamente en el mapa.
+- Cámara compartida centrada entre ambos.
+- Límite suave de separación para que ninguno quede fuera de pantalla.
+- Una sola bandera compartida por el equipo.
+- Un bot rival adicional en cooperativo.
+- Ambos jugadores pueden recoger bananas, objetos, recibir golpes y llevar la bandera.
+- Nito usa azul; Tina conserva el rosa.
+
+Todavía no incluye controles dobles táctiles para celular. Esa será la siguiente fase,
+acompañada por la optimización específica del modo cooperativo móvil.

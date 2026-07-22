@@ -12,6 +12,8 @@ let mapScale = 1;
 const CLASSMATES = ['Franchu','Martu','Lucy','Jose','Samy','Ori','Rousy','Vicky chiquita','Vicky grande','Anto','Vitti','Ramirito','Santi','Francis','Leandrus','Feli','Beltru','Lauti'];
 const keys = {};
 const joy = {x:0,y:0,active:false,id:null};
+let coopMode = false;
+let player2 = null;
 
 let level = 1;
 let unlocked = Number(localStorage.getItem('tinaFlagUnlocked') || 1);
@@ -76,7 +78,7 @@ function resetLevel(n = level){
   bananaLabel.textContent = 0;
   flagLabel.textContent = 'En juego';
   missionTitle.textContent = `Nivel ${level}: contra ${CLASSMATES[level-1]}`;
-  missionText.textContent = 'Tomá la bandera rival y defendé la tuya.';
+  missionText.textContent = coopMode ? 'Tina y Nito comparten una misión: traigan una sola bandera.' : 'Tomá la bandera rival y defendé la tuya.';
   timeLeft = 125 - Math.min(level * .8, 14);
   levelElapsed = 0;
   lastActionAt = 0;
@@ -91,13 +93,19 @@ function resetLevel(n = level){
     jumps:progression.jumpCap,recharge:0,jump:null,inv:0,stun:0,
     bananas:0,carrying:null,flagHP:0,slow:0,speedBoost:0
   };
+  player2 = coopMode ? {
+    id:'nito',x:250*mapScale,y:WORLD_H/2+75*mapScale,r:22,vx:1,vy:0,speed:235,
+    jumps:progression.jumpCap,recharge:0,jump:null,inv:0,stun:0,
+    bananas:0,carrying:null,flagHP:0,slow:0,speedBoost:0
+  } : null;
   flag = {kind:'enemy',x:enemyBase.x+75,y:WORLD_H/2,homeX:enemyBase.x+75,homeY:WORLD_H/2,r:18,carrier:null,dropped:false};
   homeFlag = {kind:'home',x:homeBase.x+75,y:WORLD_H/2,homeX:homeBase.x+75,homeY:WORLD_H/2,r:18,carrier:null,dropped:false};
 
   obstacles = makeOrganicMaze();
   bots = [];
-  const botCount = level <= 4 ? 1 : level <= 12 ? 2 : 3;
-  player.flagMaxHP = (botCount + 2) * 2; // 3, 4 o 5 corazones para Tina
+  const botCount = (level <= 4 ? 1 : level <= 12 ? 2 : 3) + (coopMode ? 1 : 0);
+  player.flagMaxHP = (botCount + 2) * 2;
+  if(player2) player2.flagMaxHP = player.flagMaxHP;
   for(let i=0;i<botCount;i++) bots.push(makeBot(i));
   guardians = makeGuardians();
   traps = makeTraps();
@@ -181,7 +189,7 @@ function botPersonalityFor(levelNumber,index,botCount){
 
 function makeBot(i){
   const ys=[350,590,830].map(v=>v*mapScale);
-  const botCount = level <= 4 ? 1 : level <= 12 ? 2 : 3;
+  const botCount = (level <= 4 ? 1 : level <= 12 ? 2 : 3) + (coopMode ? 1 : 0);
   const jumpCap = progression.jumpCap>=3 ? 2 : 1;
   const jumpRecharge = progression.recharge<=3 ? 4 : 5;
   const spawn=findSafePoint(WORLD_W-(315+i*54)*mapScale,ys[i%3],20);
@@ -271,9 +279,10 @@ function update(dt){
   timeLeft -= dt;
   levelElapsed += dt;
   // Inmunidad específica tras escapar del abrazo del perezoso.
-  for(const e of [player,...bots]) if(e&&e.slothImmune>0) e.slothImmune=Math.max(0,e.slothImmune-dt);
+  for(const e of [player,player2,...bots].filter(Boolean)) if(e&&e.slothImmune>0) e.slothImmune=Math.max(0,e.slothImmune-dt);
   if(timeLeft<=0){finishByTime();return;}
   updatePlayer(dt);
+  if(player2) updateSecondPlayer(dt);
   updateBots(dt);
   updateGuardians(dt);
   updateDirector(dt);
@@ -284,8 +293,16 @@ function update(dt){
 }
 
 function getInputVector(){
-  let dx=(keys.ArrowRight||keys.d||keys.D?1:0)-(keys.ArrowLeft||keys.a||keys.A?1:0)+joy.x;
-  let dy=(keys.ArrowDown||keys.s||keys.S?1:0)-(keys.ArrowUp||keys.w||keys.W?1:0)+joy.y;
+  let dx=(keys.d||keys.D?1:0)-(keys.a||keys.A?1:0)+joy.x;
+  let dy=(keys.s||keys.S?1:0)-(keys.w||keys.W?1:0)+joy.y;
+  if(!coopMode){dx+=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0);dy+=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);}
+  const len=Math.hypot(dx,dy);
+  if(len>1){dx/=len;dy/=len;}
+  return {x:dx,y:dy,len:Math.min(1,len)};
+}
+function getSecondInputVector(){
+  let dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0);
+  let dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
   const len=Math.hypot(dx,dy);
   if(len>1){dx/=len;dy/=len;}
   return {x:dx,y:dy,len:Math.min(1,len)};
@@ -327,6 +344,43 @@ function updatePlayer(dt){
   }
 }
 
+function updateSecondPlayer(dt){
+  updateHumanEntity(player2,getSecondInputVector(),dt);
+  // Mantiene a ambos dentro de una cámara compartida sin teletransportarlos.
+  const maxSeparation=820*mapScale;
+  const dx=player2.x-player.x,dy=player2.y-player.y,d=Math.hypot(dx,dy)||1;
+  if(d>maxSeparation){
+    const excess=d-maxSeparation;
+    moveWithSliding(player2,-dx/d*excess*.55,-dy/d*excess*.55,false);
+    moveWithSliding(player,dx/d*excess*.45,dy/d*excess*.45,false);
+  }
+}
+function updateHumanEntity(e,input,dt){
+  if(!e)return;
+  if(e.stun>0){e.stun-=dt;if(e.inv>0)e.inv-=dt;return;}
+  if(input.len>.05){e.vx=input.x;e.vy=input.y;}
+  if(e.jump){
+    const j=e.jump;j.elapsed+=dt;const t=Math.min(1,j.elapsed/j.duration);
+    const ease=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+    e.x=j.sx+(j.ex-j.sx)*ease;e.y=j.sy+(j.ey-j.sy)*ease;j.height=Math.sin(Math.PI*t)*54;
+    if(t>=1){e.x=j.ex;e.y=j.ey;e.jump=null;e.inv=.18;burst(e.x,e.y,'#fff1aa');tone(190,.08,'triangle',.025);}
+  }else{
+    let speed=e.speed;if(e.slow>0){e.slow-=dt;speed*=.5;}if(e.speedBoost>0){e.speedBoost-=dt;speed*=1.28;}
+    moveWithSliding(e,input.x*speed*dt,input.y*speed*dt,false);
+  }
+  if(e.inv>0)e.inv-=dt;
+  if(e.jumps<progression.jumpCap){e.recharge+=dt;if(e.recharge>=progression.recharge){e.recharge=0;e.jumps++;tone(740,.08,'triangle',.02);}}
+}
+function jumpSecond(){jumpHuman(player2);}
+function jumpHuman(e){
+  if(!running||!e||e.jumps<=0||e.jump)return;
+  let dx=e.vx,dy=e.vy;if(Math.hypot(dx,dy)<.1){dx=1;dy=0;}const l=Math.hypot(dx,dy);dx/=l;dy/=l;
+  const distance=progression.jumpDistance*(e.jumpShoes?1.5:1);e.jumpShoes=false;
+  const target=findEntityJumpLanding(e.x,e.y,dx,dy,distance,e.r);
+  e.jump={sx:e.x,sy:e.y,ex:target.x,ey:target.y,elapsed:0,duration:.34,height:0};e.jumps--;e.recharge=0;e.inv=.45;
+  stats.jumpsUsed++;burst(e.x,e.y,e===player?'#ffe0ef':'#d9ecff');tone(360,.1,'square',.03);updateJumpUI();
+}
+
 function moveWithSliding(entity,dx,dy,ignoreLow){
   const steps=Math.max(1,Math.ceil(Math.hypot(dx,dy)/8));
   const sx=dx/steps,sy=dy/steps;
@@ -351,18 +405,7 @@ function circleRectCollision(x,y,r,rect){
   return Math.hypot(x-cx,y-cy)<r;
 }
 
-function jump(){
-  if(!running || player.jumps<=0 || player.jump) return;
-  let dx=player.vx,dy=player.vy;
-  if(Math.hypot(dx,dy)<.1){dx=1;dy=0;}
-  const l=Math.hypot(dx,dy);dx/=l;dy/=l;
-  const distance=progression.jumpDistance*(player.jumpShoes?1.5:1);
-  player.jumpShoes=false;
-  const target=findJumpLanding(player.x,player.y,dx,dy,distance);
-  player.jump={sx:player.x,sy:player.y,ex:target.x,ey:target.y,elapsed:0,duration:.34,height:0};
-  player.jumps--;player.recharge=0;player.inv=.45;stats.jumpsUsed++;registerAction('jump');
-  burst(player.x,player.y,'#e8f7d0');tone(360,.1,'square',.04);updateJumpUI();
-}
+function jump(){jumpHuman(player);}
 
 function findJumpLanding(x,y,dx,dy,distance){
   for(let d=distance;d>=50;d-=10){
@@ -399,7 +442,7 @@ function updateBots(dt){
         b.stuckTime=0;
       }
     }
-    if(!b.jump&&dist(b,player)<b.r+player.r+4&&player.inv<=0&&!player.jump&&b.inv<=0)collidePlayerBot(b);
+    for(const h of [player,player2].filter(Boolean)) if(!b.jump&&dist(b,h)<b.r+h.r+4&&h.inv<=0&&!h.jump&&b.inv<=0)collideHumanBot(h,b);
     handleBotFlags(b);
   }
 }
@@ -434,10 +477,13 @@ function recoverBotFromObstacle(b,goal){
 function chooseBotGoal(b,dt){
   if(duelMode){
     if(b.carrying==='duel')return {x:enemyBase.x+enemyBase.w/2,y:enemyBase.y+enemyBase.h/2,speed:1.15};
-    if(player.carrying==='duel')return {x:player.x,y:player.y,speed:1.22};
+    if(player.carrying==='duel')return {x:targetHuman.x,y:targetHuman.y,speed:1.22};
     return {x:flag.x,y:flag.y,speed:1.08};
   }
-  const losing=player.carrying==='enemy';
+  const humanTarget=(player2&&dist(player2,b)<dist(player,b))?player2:player;
+  const flagCarrier=[player,player2].filter(Boolean).find(h=>h.carrying==='enemy');
+  const targetHuman=flagCarrier||humanTarget;
+  const losing=!!flagCarrier;
   const winning=bots.some(x=>x.carrying==='home');
   b.state=losing?'losing':winning?'winning':'neutral';
   const safeLane=nearestQuietLane(b);
@@ -461,11 +507,11 @@ function chooseBotGoal(b,dt){
   }
   if(b.personality==='strategist'){
     b.commitTimer=(b.commitTimer||0)-dt;
-    const nearestG=nearestGuardianTo(player);
-    const trouble=player.stun>0||player.slow>0||(nearestG&&dist(player,nearestG)<125*mapScale);
+    const nearestG=nearestGuardianTo(targetHuman);
+    const trouble=targetHuman.stun>0||targetHuman.slow>0||(nearestG&&dist(player,nearestG)<125*mapScale);
     if(b.commitTimer<=0||!b.commitGoal||trouble||losing){
       if(trouble||levelElapsed>22)b.commitGoal={x:homeFlag.x,y:homeFlag.y,speed:1.25};
-      else if(losing){const g=nearestG;b.commitGoal={x:g?g.x:player.x,y:g?g.y:player.y,speed:1.16};}
+      else if(losing){const g=nearestG;b.commitGoal={x:g?g.x:targetHuman.x,y:g?g.y:targetHuman.y,speed:1.16};}
       else b.commitGoal={x:WORLD_W*.52,y:safeLane,speed:.9};
       b.commitTimer=3.6+Math.random()*1.2;
     }
@@ -473,19 +519,19 @@ function chooseBotGoal(b,dt){
   }
   if(b.personality==='offensive'){
     if(winning)return {x:homeFlag.x,y:WORLD_H/2,speed:1.32};
-    return {x:player.x,y:player.y,speed:losing?1.38:1.2};
+    return {x:targetHuman.x,y:targetHuman.y,speed:losing?1.38:1.2};
   }
   if(b.personality==='defensive'){
-    if(losing)return {x:enemyBase.x-340*mapScale,y:player.y,speed:1.0};
+    if(losing)return {x:enemyBase.x-340*mapScale,y:targetHuman.y,speed:1.0};
     if(winning)return {x:enemyBase.x-110*mapScale,y:WORLD_H/2,speed:.76};
-    if(player.x>WORLD_W*.57)return {x:player.x,y:player.y,speed:1.05};
+    if(targetHuman.x>WORLD_W*.57)return {x:targetHuman.x,y:targetHuman.y,speed:1.05};
     return {x:enemyBase.x-180*mapScale,y:WORLD_H/2,speed:.78};
   }
   if(b.personality==='prankster'){
     if(losing)return {x:homeFlag.x,y:homeFlag.y,speed:1.22};
-    const g=nearestGuardianTo(player);
-    if(winning)return {x:player.x+player.vx*70,y:player.y+player.vy*70,speed:1.26};
-    return g?{x:(player.x+g.x)/2,y:(player.y+g.y)/2,speed:1.12}:{x:player.x,y:player.y,speed:1.08};
+    const g=nearestGuardianTo(targetHuman);
+    if(winning)return {x:targetHuman.x+targetHuman.vx*70,y:targetHuman.y+targetHuman.vy*70,speed:1.26};
+    return g?{x:(targetHuman.x+g.x)/2,y:(targetHuman.y+g.y)/2,speed:1.12}:{x:targetHuman.x,y:targetHuman.y,speed:1.08};
   }
   return {x:homeFlag.x,y:homeFlag.y,speed:1};
 }
@@ -723,7 +769,7 @@ function updateSloth(g,dt){
   if(dist(g,g.perch)>22*mapScale){g.sleeping=false;navigateEntity(g,g.perch.x,g.perch.y,g.v*.55,dt,true);}else{g.sleeping=true;if(Math.random()<dt*.05){g.perchIndex++;g.perch=perches[g.perchIndex%perches.length];}}
 }
 function guardianContacts(g){
-  if(dist(g,player)<g.r+player.r&&player.inv<=0&&!player.jump)guardianHit(g);
+  for(const h of [player,player2].filter(Boolean)) if(dist(g,h)<g.r+h.r&&h.inv<=0&&!h.jump)guardianHit(g,h);
   for(const b of bots)if(!b.jump&&b.inv<=0&&dist(g,b)<g.r+b.r)guardianHitBot(g,b);
 }
 
@@ -736,24 +782,22 @@ function guardianHitBot(g,b){
   b.stun=g.type==='sloth'?1.2:.45;b.inv=1;shake=6;burst(b.x,b.y,'#bfe8ff');
 }
 
-function collidePlayerBot(b){
-  registerAction('player-bot');
-  const dx=player.x-b.x,dy=player.y-b.y,l=Math.hypot(dx,dy)||1;
-  moveWithSliding(player,dx/l*58,dy/l*58,false);moveWithSliding(b,-dx/l*42,-dy/l*42,false);
-  player.inv=.85;b.inv=.85;b.stun=.35;player.speedBoost=0;b.speedBoost=0;shake=8;
-  // Choque justo: solo pierde medio corazón quien lleve una bandera; si ambos llevan, ambos pierden.
-  if(player.carrying)damageCarrier(player,1);
-  if(b.carrying)damageCarrier(b,1);
-  burst((player.x+b.x)/2,(player.y+b.y)/2,'#ffe16b');tone(120,.12,'square',.06);
+function collidePlayerBot(b){collideHumanBot(player,b);}
+function collideHumanBot(h,b){
+  registerAction('player-bot');const dx=h.x-b.x,dy=h.y-b.y,l=Math.hypot(dx,dy)||1;
+  moveWithSliding(h,dx/l*58,dy/l*58,false);moveWithSliding(b,-dx/l*42,-dy/l*42,false);
+  h.inv=.85;b.inv=.85;b.stun=.35;h.speedBoost=0;b.speedBoost=0;shake=8;
+  if(h.carrying)damageCarrier(h,1);if(b.carrying)damageCarrier(b,1);
+  burst((h.x+b.x)/2,(h.y+b.y)/2,'#ffe16b');tone(120,.12,'square',.06);
 }
 
-function guardianHit(g){
+function guardianHit(g,target=player){
   registerAction('guardian-player');
   const damage=guardianDamage(g.type);
-  if(player.helmet){player.helmet=false;}else if(player.carrying)damageCarrier(player,damage);
-  player.speedBoost=0;
-  knockbackFrom(player,g,g.type==='elephant'?160:g.type==='turtle'?120:85);
-  player.stun=g.type==='sloth'?1.1:.25;player.inv=1;stats.hits++;shake=8;burst(player.x,player.y,'#ffd2e6');
+  if(target.helmet){target.helmet=false;}else if(target.carrying)damageCarrier(target,damage);
+  target.speedBoost=0;
+  knockbackFrom(target,g,g.type==='elephant'?160:g.type==='turtle'?120:85);
+  target.stun=g.type==='sloth'?1.1:.25;target.inv=1;stats.hits++;shake=8;burst(target.x,target.y,target===player?'#ffd2e6':'#cfe1ff');
 }
 function guardianDamage(type){return type==='elephant'?4:(type==='gorilla'||type==='turtle')?2:1;}
 function knockbackFrom(e,source,amount){const dx=e.x-source.x,dy=e.y-source.y,l=Math.hypot(dx,dy)||1;moveWithSliding(e,dx/l*amount,dy/l*amount,false);}
@@ -773,25 +817,26 @@ function dropCarriedFlag(e){
 }
 
 function checkWorld(){
-  for(const b of bananas)if(!b.got&&dist(player,b)<player.r+b.r){
-    b.got=true;player.bananas+=b.value;stats.bananas=player.bananas;
-    player.recharge=Math.min(progression.recharge,player.recharge+(b.value>1?1.5:.55));
-    burst(b.x,b.y,'#ffd72d');tone(880,.08,'triangle',.035);
+  const humans=[player,player2].filter(Boolean);
+  for(const h of humans){
+    for(const b of bananas)if(!b.got&&dist(h,b)<h.r+b.r){b.got=true;h.bananas+=b.value;stats.bananas=humans.reduce((n,x)=>n+x.bananas,0);h.recharge=Math.min(progression.recharge,h.recharge+(b.value>1?1.5:.55));burst(b.x,b.y,'#ffd72d');tone(880,.08,'triangle',.03);}
+    for(const o of objects)if(!o.got&&dist(h,o)<h.r+o.r){o.got=true;applyObjectTo(h,o.type);}
+    if(!h.jump)for(const tr of traps)if(dist(h,tr)<h.r+tr.r){if(tr.type==='mud')h.slow=.35;if(tr.type==='log')moveWithSliding(h,-h.vx*28,-h.vy*28,false);if(tr.type==='vine'&&Math.random()<.08)h.slow=.8;}
   }
+  bananaLabel.textContent=humans.reduce((n,x)=>n+x.bananas,0);
   for(const b of bots){
     for(const banana of bananas)if(!banana.got&&dist(b,banana)<b.r+banana.r){banana.got=true;b.bananas+=banana.value;b.jumpCharge=Math.min(b.jumpRecharge,b.jumpCharge+(banana.value>1?1.5:.55));}
     for(const o of objects)if(!o.got&&dist(b,o)<b.r+o.r){o.got=true;applyObjectTo(b,o.type);}
   }
-  for(const o of objects)if(!o.got&&dist(player,o)<player.r+o.r){o.got=true;applyObjectTo(player,o.type);}
-  if(!player.jump)for(const tr of traps)if(dist(player,tr)<player.r+tr.r){if(tr.type==='mud')player.slow=.35;if(tr.type==='log')moveWithSliding(player,-player.vx*28,-player.vy*28,false);if(tr.type==='vine'&&Math.random()<.08)player.slow=.8;}
   if(duelMode){
-    if(!player.carrying&&!flag.carrier&&dist(player,flag)<player.r+flag.r){player.carrying='duel';player.flagHP=player.flagMaxHP;flag.carrier=player;flag.dropped=false;tone(523,.12,'triangle',.05);}
-    if(player.carrying==='duel'){flag.x=player.x;flag.y=player.y-32-(player.jump?player.jump.height*.2:0);if(rectCircle(homeBase,player))scoreDuel('tina');}
+    for(const h of humans){if(!h.carrying&&!flag.carrier&&dist(h,flag)<h.r+flag.r){h.carrying='duel';h.flagHP=h.flagMaxHP;flag.carrier=h;flag.dropped=false;}if(h.carrying==='duel'){flag.x=h.x;flag.y=h.y-32-(h.jump?h.jump.height*.2:0);if(rectCircle(homeBase,h))scoreDuel('tina');}}
     return;
   }
-  if(!player.carrying&&!flag.carrier&&dist(player,flag)<player.r+flag.r){registerAction('flag');player.carrying='enemy';player.flagHP=player.flagMaxHP||6;flag.carrier=player;flag.dropped=false;tone(523,.12,'triangle',.05);tone(659,.12,'triangle',.04,.08);}
-  if(player.carrying==='enemy'){flag.x=player.x;flag.y=player.y-32-(player.jump?player.jump.height*.2:0);if(rectCircle(homeBase,player))winLevel();}
-  if(homeFlag.dropped&&!homeFlag.carrier&&dist(player,homeFlag)<player.r+homeFlag.r)returnFlag(homeFlag);
+  for(const h of humans){
+    if(!h.carrying&&!flag.carrier&&dist(h,flag)<h.r+flag.r){registerAction('flag');h.carrying='enemy';h.flagHP=h.flagMaxHP||6;flag.carrier=h;flag.dropped=false;tone(523,.12,'triangle',.05);}
+    if(h.carrying==='enemy'){flag.x=h.x;flag.y=h.y-32-(h.jump?h.jump.height*.2:0);if(rectCircle(homeBase,h))winLevel();}
+    if(homeFlag.dropped&&!homeFlag.carrier&&dist(h,homeFlag)<h.r+homeFlag.r)returnFlag(homeFlag);
+  }
 }
 
 function applyObject(t){applyObjectTo(player,t);}
@@ -853,10 +898,11 @@ function formatTime(sec){const m=Math.floor(sec/60),s=Math.floor(sec%60);return 
 function finishByTime(){
   running=false;stopMusic();
   const rivalBananas=bots.reduce((s,b)=>s+b.bananas,0);
-  const humanWins=player.bananas>=rivalBananas;
+  const humanBananas=player.bananas+(player2?.bananas||0);
+  const humanWins=humanBananas>=rivalBananas;
   if(humanWins){
     resultTitle.textContent='🌟 ¡Lo hiciste genial!';
-    resultText.innerHTML=`El tiempo terminó, pero Tina reunió <b>${player.bananas}</b> bananas y ganó el desempate.<br><b>Rango: ¡Gran estratega!</b>`;
+    resultText.innerHTML=`El tiempo terminó, pero El equipo reunió <b>${humanBananas}</b> bananas y ganó el desempate.<br><b>Rango: ¡Gran estratega!</b>`;
     unlocked=Math.max(unlocked,Math.min(18,level+1));localStorage.setItem('tinaFlagUnlocked',unlocked);
     nextBtn.style.display='block';
   }else{
@@ -868,8 +914,9 @@ function finishByTime(){
 }
 
 function updateCamera(dt){
-  const tx=clamp(player.x-VIEW_W/2,0,WORLD_W-VIEW_W);
-  const ty=clamp(player.y-VIEW_H/2,0,WORLD_H-VIEW_H);
+  const focus=player2?{x:(player.x+player2.x)/2,y:(player.y+player2.y)/2}:player;
+  const tx=clamp(focus.x-VIEW_W/2,0,Math.max(0,WORLD_W-VIEW_W));
+  const ty=clamp(focus.y-VIEW_H/2,0,Math.max(0,WORLD_H-VIEW_H));
   const k=1-Math.pow(.001,dt);
   camera.x+=(tx-camera.x)*k;
   camera.y+=(ty-camera.y)*k;
@@ -947,6 +994,7 @@ function drawEntities(){
   if(!flag.carrier)drawFlag(flag.x,flag.y,'enemy');
   if(!duelMode&&!homeFlag.carrier)drawFlag(homeFlag.x,homeFlag.y,'home');
   const jumpHeight=player.jump?player.jump.height:0;drawMonkey(player.x,player.y-jumpHeight,player.r,'#e95d9b','T',jumpHeight);drawPlayerIndicators(player.x,player.y-jumpHeight);
+  if(player2){const h2=player2.jump?player2.jump.height:0;drawMonkey(player2.x,player2.y-h2,player2.r,'#3f79c9','N',h2);if(player2.carrying)drawCarrierHearts(player2,player2.x,player2.y-h2-50);drawBuffIcons(player2,player2.x,player2.y-h2-68);}
   if(player.carrying)drawCarrierHearts(player,player.x,player.y-jumpHeight-50);
   if(player.carrying==='enemy'||player.carrying==='duel')drawFlag(flag.x,flag.y-jumpHeight*.35,'enemy');
   drawBuffIcons(player,player.x,player.y-jumpHeight-68);
@@ -1042,7 +1090,7 @@ function drawMiniMap(){
   const sx=mw/WORLD_W,sy=mh/WORLD_H;
   ctx.fillStyle='#f4cf4f';ctx.fillRect(x+homeBase.x*sx,y+homeBase.y*sy,homeBase.w*sx,homeBase.h*sy);
   ctx.fillStyle='#db6c57';ctx.fillRect(x+enemyBase.x*sx,y+enemyBase.y*sy,enemyBase.w*sx,enemyBase.h*sy);
-  ctx.fillStyle='#ff5ea8';ctx.beginPath();ctx.arc(x+player.x*sx,y+player.y*sy,5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ff5ea8';ctx.beginPath();ctx.arc(x+player.x*sx,y+player.y*sy,5,0,Math.PI*2);ctx.fill();if(player2){ctx.fillStyle='#3f79c9';ctx.beginPath();ctx.arc(x+player2.x*sx,y+player2.y*sy,5,0,Math.PI*2);ctx.fill();}
   ctx.fillStyle='#4d80c7';for(const b of bots){ctx.beginPath();ctx.arc(x+b.x*sx,y+b.y*sy,3.5,0,Math.PI*2);ctx.fill();}
   ctx.strokeStyle='#fff';ctx.strokeRect(x+camera.x*sx,y+camera.y*sy,VIEW_W*sx,VIEW_H*sy);
 }
@@ -1067,7 +1115,7 @@ function buildLevelGrid(){
   }
 }
 
-addEventListener('keydown',e=>{keys[e.key]=true;if(e.code==='Space'){e.preventDefault();jump();}});
+addEventListener('keydown',e=>{keys[e.key]=true;if(e.code==='Space'){e.preventDefault();jump();}if(coopMode&&(e.code==='Enter'||e.code==='NumpadEnter')){e.preventDefault();jumpSecond();}});
 addEventListener('keyup',e=>keys[e.key]=false);
 const joyEl=document.getElementById('joystick'),knob=document.getElementById('joyKnob');
 function joyMove(e){
@@ -1081,7 +1129,8 @@ joyEl.addEventListener('touchend',e=>{if([...e.changedTouches].some(t=>t.identif
 jumpBtn.addEventListener('pointerdown',e=>{e.preventDefault();jump();});
 
 coverPlay.onclick=()=>{cover.classList.add('hide');setTimeout(()=>cover.style.display='none',380);};
-menuPlay.onclick=()=>startLevel(level);
+menuPlay.onclick=()=>{coopMode=false;startLevel(level);};
+const menuCoop=document.getElementById('menuCoop');if(menuCoop)menuCoop.onclick=()=>{coopMode=true;startLevel(level);};
 levelsBtn.onclick=()=>{running=false;stopMusic();hide('menu');show('levels');};
 menuLevels.onclick=levelsBtn.onclick;
 closeLevels.onclick=()=>{hide('levels');show('menu');};
@@ -1098,7 +1147,7 @@ levelsFinal.onclick=()=>{hideFinalVictory();show('levels');};
 
 
 function startDuel(){
-  duelMode=true;duelScore={tina:0,nito:0};duelRound=1;running=false;stopMusic();
+  coopMode=false;player2=null;duelMode=true;duelScore={tina:0,nito:0};duelRound=1;running=false;stopMusic();
   resetDuelWorld();
   const overlay=document.getElementById('duelCountdown');
   const title=document.getElementById('duelCountdownTitle');

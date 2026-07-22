@@ -87,3 +87,5 @@ canvas.polish-hit{animation:polishHit .22s ease}
 @media(max-height:520px){
   .coverStage button{bottom:2.5%;height:15%;min-height:42px}
 }
+.coopButton{background:linear-gradient(135deg,#e95d9b 0 48%,#3f79c9 52% 100%);color:#fff;border:3px solid rgba(255,255,255,.75)}
+.coopHelp{margin:12px 0 18px;padding:14px;border-radius:16px;background:linear-gradient(90deg,rgba(233,93,155,.14),rgba(63,121,201,.14));line-height:1.65}
