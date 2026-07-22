@@ -5,445 +5,1302 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Ta-Te-Ti del Gran Árbol</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Arial,sans-serif;background:linear-gradient(#c7ecf0,#dff2d7);color:#183326}
-body{display:flex;justify-content:center;align-items:center;padding:8px}.app{width:min(820px,100%);background:#f7f0d0;border:4px solid #446b43;border-radius:22px;overflow:hidden;box-shadow:0 18px 48px #18432944}
-header{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:linear-gradient(#315f3c,#21462e);color:#fff8df;padding:10px 14px}
-.title{font-weight:900;font-size:22px;text-shadow:0 2px #183326}.hud{display:flex;gap:8px;flex-wrap:wrap}.pill{background:#fff8df;color:#25442f;border:2px solid #d2b75a;border-radius:999px;padding:7px 10px;font-weight:900}
-main{position:relative;padding:18px;background:linear-gradient(#b9db95,#8fc16f)}
-.board{width:min(560px,92vw);aspect-ratio:1;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px;background:#8b5a2b;border:6px solid #65421f;border-radius:24px;box-shadow:0 10px 0 #4f321c,0 16px 30px #0003}
-.cell{position:relative;border:0;border-radius:18px;background:linear-gradient(#f4e2ad,#ddc487);box-shadow:inset 0 3px #fff7d6,0 5px #a9793f;cursor:pointer;overflow:hidden}
-.cell.dark{background:linear-gradient(#8ab876,#6f9b61);box-shadow:inset 0 3px #acd19f,0 5px #4e7846}.cell.win{animation:pulse .7s infinite alternate}@keyframes pulse{to{filter:brightness(1.35);transform:translateY(-3px)}}
-.monkey{position:absolute;inset:10%;display:flex;align-items:center;justify-content:center}.monkey svg{width:100%;height:100%;filter:drop-shadow(0 5px 3px #0004)}
-.panel{margin:18px auto 0;width:min(560px,92vw);background:#fff8df;border:3px solid #8b5a2b;border-radius:16px;padding:12px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.status{font-weight:900}.controls{display:flex;gap:8px;flex-wrap:wrap}
-button.action{border:0;border-radius:14px;padding:11px 14px;font-weight:900;font-size:15px;cursor:pointer;color:white;background:#3f8f51;box-shadow:0 5px #245d35}
-button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}button.soft{background:#8a6844;box-shadow:0 5px #60482f}
-.overlay{position:fixed;inset:0;background:#0e271d9e;display:flex;align-items:center;justify-content:center;padding:18px;z-index:20}
-.card{width:min(680px,95%);background:#fff8df;border:4px solid #8b5a2b;border-radius:22px;padding:22px;text-align:center;box-shadow:0 10px #5c3a1f}
-.card h1,.card h2{margin:0 0 12px;color:#2b5b39}.menuGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+:root{
+  --deep:#21462e;--deep2:#183326;--leaf:#4b8f53;--leaf2:#8fc16f;
+  --cream:#fff8df;--wood:#8b5a2b;--wood2:#65421f;--gold:#e0ad42;
+  --blue:#4b78a7;--red:#b7644e;--ink:#183326;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(#c7ecf0,#dff2d7);color:var(--ink)}
+body{display:flex;justify-content:center;align-items:center;padding:8px;overflow-x:hidden}
+button{font-family:inherit}
+.app{
+  width:min(1020px,100%);background:#f7f0d0;border:4px solid #446b43;border-radius:22px;
+  overflow:hidden;box-shadow:0 18px 48px #18432944;max-height:100dvh
+}
+header{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+  background:linear-gradient(#315f3c,#21462e);color:#fff8df;padding:10px 14px
+}
+.title{font-weight:900;font-size:22px;text-shadow:0 2px #183326}
+.hud{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:#fff8df;color:#25442f;border:2px solid #d2b75a;border-radius:999px;padding:7px 10px;font-weight:900}
+main{position:relative;padding:16px;background:linear-gradient(#b9db95,#8fc16f)}
+.gameLayout{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:14px;align-items:center}
+.boardWrap{min-width:0;display:flex;align-items:center;justify-content:center}
+.board{
+  width:min(620px,100%);aspect-ratio:1;display:grid;gap:10px;padding:14px;
+  background:#8b5a2b;border:6px solid #65421f;border-radius:24px;
+  box-shadow:0 10px 0 #4f321c,0 16px 30px #0003
+}
+.board.size3{grid-template-columns:repeat(3,1fr)}
+.board.size9{grid-template-columns:repeat(9,1fr);gap:3px;padding:7px;border-width:5px}
+.cell{
+  position:relative;border:0;border-radius:16px;background:linear-gradient(#f4e2ad,#ddc487);
+  box-shadow:inset 0 3px #fff7d6,0 4px #a9793f;cursor:pointer;overflow:hidden;
+  min-width:0;min-height:0;touch-action:manipulation
+}
+.board.size9 .cell{border-radius:6px;box-shadow:inset 0 1px #fff7d6,0 1px #a9793f}
+.cell.dark{background:linear-gradient(#8ab876,#6f9b61);box-shadow:inset 0 3px #acd19f,0 4px #4e7846}
+.board.size9 .cell.dark{box-shadow:inset 0 1px #acd19f,0 1px #4e7846}
+.cell.selected{outline:4px solid #ffe16b;outline-offset:-4px}
+.cell.win{animation:pulse .7s infinite alternate}
+.cell.blocked{filter:saturate(.7)}
+.cell.hint::after{
+  content:"";position:absolute;inset:32%;border-radius:50%;background:#6bb8e6aa;
+  box-shadow:0 0 12px #6bb8e6
+}
+.cell .hazard{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:clamp(14px,3vw,34px);filter:drop-shadow(0 2px 2px #0004);pointer-events:none
+}
+.monkey{position:absolute;inset:8%;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.monkey svg{width:100%;height:100%;filter:drop-shadow(0 4px 3px #0004)}
+.board.size9 .monkey{inset:4%}
+.side{
+  background:#fff8df;border:3px solid #8b5a2b;border-radius:18px;padding:13px;
+  box-shadow:0 6px #65421f;display:flex;flex-direction:column;gap:10px
+}
+.modeBadge{
+  background:#edf7df;border:2px solid #93b76d;border-radius:14px;padding:9px;
+  font-weight:900;text-align:center
+}
+.status{
+  background:#fff3cf;border:2px solid #c28f35;border-radius:14px;padding:10px;
+  font-weight:900;line-height:1.3;min-height:58px
+}
+.challengeInfo{
+  display:none;background:#eef5ff;border:2px solid #7798c7;border-radius:14px;padding:10px;
+  font-size:13px;line-height:1.35
+}
+.challengeInfo strong{display:block;color:#2f4d70;margin-bottom:4px}
+.controls{display:grid;grid-template-columns:1fr;gap:8px}
+.action{
+  border:0;border-radius:14px;padding:11px 13px;font-weight:900;font-size:14px;cursor:pointer;
+  color:#fff;background:#3f8f51;box-shadow:0 5px #245d35;touch-action:manipulation
+}
+.action.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}
+.action.soft{background:#8a6844;box-shadow:0 5px #60482f}
+.action.warn{background:#b7644e;box-shadow:0 5px #7d4032}
+.action.gold{background:#b78321;box-shadow:0 5px #7a5714}
+.action:active{transform:translateY(3px);box-shadow:0 2px #333}
+.action[disabled]{opacity:.5;cursor:not-allowed;transform:none}
+.jumpRow{display:none}
 .footer{text-align:center;background:#183326;color:#dcebd9;padding:8px;font-size:12px;font-weight:700}
 
-.mobile-label{display:none}
-@media(max-width:700px){
-  html,body{height:100%;min-height:100%;overflow:hidden}
-  body{padding:3px;align-items:flex-start}
-  .app{height:100dvh;width:100%;border-width:3px;border-radius:12px;display:flex;flex-direction:column}
-  header{padding:6px 8px;gap:5px;justify-content:center;flex:0 0 auto}
-  .title{font-size:15px;width:100%;text-align:center;line-height:1.05}
-  .hud{gap:5px;justify-content:center}
-  .pill{font-size:11px;padding:4px 7px;border-width:1px}
-  main{padding:6px;display:flex;flex-direction:column;min-height:0;flex:1}
-  .board{
-    width:min(100%,calc(100dvh - 176px));
-    max-width:none;
-    gap:6px;padding:8px;border-width:4px;border-radius:16px;
-    box-shadow:0 6px 0 #4f321c,0 10px 18px #0003
-  }
-  .cell{border-radius:12px}
-  .panel{
-    width:100%;margin:7px auto 0;padding:7px 8px;gap:6px;
-    border-width:2px;border-radius:12px;flex:0 0 auto
-  }
-  .status{font-size:12px;line-height:1.15;width:100%;text-align:center}
-  .controls{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
-  button.action{padding:8px 6px;font-size:12px;border-radius:10px;box-shadow:0 3px #245d35}
-  .desktop-label{display:none}.mobile-label{display:inline}
-  .footer{display:none}
-  .overlay{padding:8px}
-  .card{padding:14px;max-height:94dvh;overflow:auto}
-  .card h1{font-size:22px}.card h2{font-size:20px}
-  .card p{margin:8px 0;font-size:14px}
-  .menuGrid,.levels{grid-template-columns:1fr;gap:8px}
+.overlay{
+  position:fixed;inset:0;background:#0e271d9e;display:flex;align-items:center;justify-content:center;
+  padding:18px;z-index:20
 }
-@media(max-width:900px) and (orientation:landscape){
-  .app{height:100dvh}
-  header{padding:4px 8px;flex-wrap:nowrap}
-  .title{font-size:14px;width:auto;white-space:nowrap}
-  .hud{flex-wrap:nowrap;margin-left:auto}
-  main{
-    display:grid;grid-template-columns:minmax(0,1fr) 180px;
-    align-items:center;gap:7px;padding:5px;overflow:hidden
-  }
-  .board{
-    width:min(calc(100dvh - 54px),calc(100vw - 195px));
-    margin:auto;gap:5px;padding:6px;border-width:4px
-  }
-  .panel{
-    width:100%;margin:0;padding:8px;align-self:center;
-    display:flex;flex-direction:column
-  }
-  .status{font-size:12px}
-  .controls{grid-template-columns:1fr}
-  button.action{min-height:34px}
-  .overlay{padding:6px}
-  .card{width:min(580px,92%);padding:12px;max-height:94dvh}
-  .menuGrid,.levels{grid-template-columns:repeat(2,1fr)}
-  .levels{grid-template-columns:repeat(3,1fr)}
+.card{
+  width:min(760px,95%);max-height:92dvh;overflow:auto;background:#fff8df;border:4px solid #8b5a2b;
+  border-radius:22px;padding:22px;text-align:center;box-shadow:0 10px #5c3a1f
+}
+.card h1,.card h2{margin:0 0 12px;color:#2b5b39}.card p{line-height:1.4}
+.menuGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}
+.modeButton{min-height:78px;font-size:17px}
+.modeButton small{display:block;font-size:12px;margin-top:5px;opacity:.9}
+.characterGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.characterChoice{padding:16px 12px;font-size:18px}
+.characterChoice small{display:block;margin-top:5px;font-size:13px}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.challengeList{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;text-align:left;margin-top:12px}
+.challengeChip{background:#edf7df;border:2px solid #93b76d;border-radius:12px;padding:9px;font-weight:800}
+.finalImage{
+  display:block;width:min(100%,650px);max-height:62vh;object-fit:contain;margin:12px auto;
+  border:3px solid #8b5a2b;border-radius:16px;background:#e9f3df
 }
 
-/* Portada inicial del juego */
+/* Portada */
 .cover-overlay{
   position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
   background:#10291f;padding:0;transition:opacity .35s ease,visibility .35s ease
 }
 .cover-overlay.is-hidden{opacity:0;visibility:hidden;pointer-events:none}
-
-/* Mantiene la portada completa y hace que el área del botón siempre coincida
-   con el botón dibujado, incluso en pantallas verticales o panorámicas. */
 .cover-stage{
-  position:relative;
-  width:min(100vw,calc(100vh * 1.5));
-  aspect-ratio:3 / 2;
-  max-height:100vh;
-  overflow:hidden;
+  position:relative;width:min(100vw,calc(100dvh * 1.5));aspect-ratio:3/2;
+  max-width:100vw;max-height:100dvh;overflow:hidden
 }
 .cover-image{display:block;width:100%;height:100%;object-fit:contain;background:#fff8df}
-
 .cover-play-button{
-  position:absolute;
-  left:29.7%;top:80.1%;width:41.2%;height:16.2%;
-  border:0;background:rgba(255,255,255,0);cursor:pointer;border-radius:24px;
-  -webkit-tap-highlight-color:transparent;
-  transition:transform .18s ease,background .18s ease,box-shadow .18s ease,filter .18s ease;
-  animation:coverButtonBreath 2.3s ease-in-out infinite;
-  overflow:hidden;
+  position:absolute;left:29.7%;top:80.1%;width:41.2%;height:16.2%;
+  border:0;background:transparent;cursor:pointer;border-radius:24px;
+  -webkit-tap-highlight-color:transparent;animation:coverButtonBreath 2.3s ease-in-out infinite
 }
-.cover-play-button::before{
-  content:"";position:absolute;inset:5%;border-radius:18px;
-  border:3px solid rgba(255,255,210,0);
-  box-shadow:0 0 0 rgba(255,255,255,0),inset 0 0 0 rgba(255,255,255,0);
-  transition:border-color .18s ease,box-shadow .18s ease
-}
-.cover-play-button::after{
-  content:"";position:absolute;top:-35%;bottom:-35%;left:-32%;width:24%;
-  background:linear-gradient(105deg,transparent,rgba(255,255,255,.72),transparent);
-  transform:skewX(-18deg);opacity:0;pointer-events:none
-}
-.cover-play-button:hover{
-  background:rgba(255,255,255,.11);
-  box-shadow:0 0 20px rgba(255,255,255,.72),0 0 42px rgba(181,255,84,.58),inset 0 0 25px rgba(255,255,255,.25);
-  filter:brightness(1.08);
-  transform:scale(1.035);
-  animation-play-state:paused
-}
-.cover-play-button:hover::before{
-  border-color:rgba(255,255,220,.72);
-  box-shadow:0 0 15px rgba(255,255,255,.7),inset 0 0 16px rgba(255,255,255,.24)
-}
-.cover-play-button:hover::after{opacity:1;animation:coverButtonShine .85s ease-out}
-.cover-play-button:active{transform:scale(.97);filter:brightness(.94)}
-.cover-play-button:focus-visible{
-  outline:5px solid rgba(255,255,255,.98);outline-offset:4px;
-  box-shadow:0 0 25px rgba(255,255,255,.85),0 0 45px rgba(181,255,84,.65)
-}
-@keyframes coverButtonBreath{
-  0%,100%{filter:brightness(1);transform:scale(1)}
-  50%{filter:brightness(1.08);transform:scale(1.012)}
-}
-@keyframes coverButtonShine{from{left:-32%}to{left:112%}}
-@media(prefers-reduced-motion:reduce){
-  .cover-play-button{animation:none;transition:none}
-  .cover-play-button:hover::after{animation:none;opacity:0}
-}
+.cover-play-button:hover{background:#ffffff1c;box-shadow:0 0 24px #fff9,0 0 42px #b5ff5499}
+@keyframes coverButtonBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.012)}}
 
-
-/* Ajustes generales para mouse, táctil, celulares y tablets */
-html,body{width:100%}
-button,.cell,.cover-play-button{touch-action:manipulation}
-button{-webkit-user-select:none;user-select:none}
-.app{max-height:100dvh}
-
-/* Tablets verticales: aprovecha la altura sin que el tablero ni los botones se salgan. */
-@media (min-width:701px) and (max-width:1100px) and (orientation:portrait) and (hover:none) and (pointer:coarse){
-  html,body{min-height:100dvh}
-  body{padding:6px;align-items:flex-start}
-  .app{
-    width:100%;min-height:100dvh;max-height:none;
-    border-radius:16px;display:flex;flex-direction:column
-  }
-  header{padding:8px 12px;flex:0 0 auto}
-  .title{font-size:19px}
-  main{
-    flex:1;min-height:0;padding:10px;
-    display:flex;flex-direction:column;justify-content:center
-  }
-  .board{
-    width:min(72vw,58dvh,560px);
-    gap:9px;padding:12px;border-width:5px
-  }
-  .panel{
-    width:min(620px,94%);margin-top:12px;padding:10px
-  }
-  button.action{min-height:44px;padding:11px 13px}
-  .card{max-height:92dvh;overflow:auto}
-  .footer{flex:0 0 auto}
-}
-
-/* Tablets y celulares horizontales con pantalla táctil.
-   No depende del ancho: así también funciona en tablets de 1024/1280 px. */
-@media (orientation:landscape) and (hover:none) and (pointer:coarse){
-  html,body{
-    height:100%;min-height:100%;overflow:hidden;
-    padding-left:env(safe-area-inset-left);
-    padding-right:env(safe-area-inset-right)
-  }
-  body{
-    padding-top:max(3px,env(safe-area-inset-top));
-    padding-bottom:max(3px,env(safe-area-inset-bottom));
-    align-items:flex-start
-  }
-  .app{
-    width:100%;height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 6px);
-    max-height:none;border-width:3px;border-radius:12px;
-    display:flex;flex-direction:column
-  }
-  header{
-    padding:4px 8px;gap:5px;flex-wrap:nowrap;flex:0 0 auto
-  }
-  .title{
-    width:auto;font-size:clamp(13px,2vw,18px);
-    white-space:nowrap;line-height:1.05
-  }
-  .hud{margin-left:auto;flex-wrap:nowrap;gap:5px}
-  .pill{font-size:clamp(10px,1.5vw,13px);padding:4px 7px;white-space:nowrap}
-  main{
-    flex:1;min-height:0;overflow:hidden;
-    display:grid;grid-template-columns:minmax(0,1fr) clamp(170px,23vw,235px);
-    align-items:center;gap:8px;padding:5px
-  }
-  .board{
-    width:min(calc(100dvh - 66px),calc(100vw - clamp(190px,26vw,255px)),620px);
-    max-width:100%;margin:auto;gap:5px;padding:7px;border-width:4px;
-    border-radius:16px;box-shadow:0 6px 0 #4f321c,0 10px 18px #0003
-  }
-  .panel{
-    width:100%;max-height:100%;overflow:auto;margin:0;padding:8px;
-    align-self:center;display:flex;flex-direction:column;gap:7px
-  }
-  .status{width:100%;font-size:12px;line-height:1.2;text-align:center}
-  .controls{width:100%;display:grid;grid-template-columns:1fr;gap:6px}
-  button.action{min-height:38px;padding:8px 6px;font-size:12px}
-  .desktop-label{display:inline}.mobile-label{display:none}
+@media(max-width:860px){
+  html,body{height:100%;overflow:hidden}
+  body{padding:0;align-items:stretch}
+  .app{width:100%;height:100dvh;border:0;border-radius:0;display:flex;flex-direction:column}
+  header{padding:5px 8px;flex:0 0 auto}
+  .title{font-size:14px}
+  .pill{font-size:10px;padding:4px 6px}
+  main{flex:1;min-height:0;padding:4px}
+  .gameLayout{height:100%;grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto;gap:5px}
+  .boardWrap{min-height:0}
+  .board{width:min(96vw,66dvh);gap:6px;padding:8px;border-width:4px;border-radius:16px}
+  .board.size9{width:min(96vw,72dvh);gap:2px;padding:4px;border-width:3px}
+  .side{padding:7px;border-width:2px;border-radius:12px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .modeBadge,.status,.challengeInfo{padding:6px;font-size:11px;min-height:0}
+  .controls{grid-column:1/-1;grid-template-columns:repeat(4,1fr);gap:5px}
+  .action{padding:7px 5px;font-size:11px;min-height:36px;box-shadow:0 3px #245d35}
   .footer{display:none}
-  .overlay{
-    padding:max(6px,env(safe-area-inset-top))
-            max(8px,env(safe-area-inset-right))
-            max(6px,env(safe-area-inset-bottom))
-            max(8px,env(safe-area-inset-left))
-  }
-  .card{
-    width:min(650px,94%);padding:12px;max-height:92dvh;overflow:auto
-  }
-  .card h1{font-size:clamp(20px,4.5vh,29px)}
-  .card h2{font-size:clamp(19px,4vh,26px)}
-  .card p{margin:6px 0}
-  .menuGrid{grid-template-columns:repeat(2,1fr);gap:8px}
-  .levels{grid-template-columns:repeat(3,1fr);gap:8px}
+  .overlay{padding:8px}
+  .card{padding:14px;max-height:94dvh}
+  .menuGrid,.challengeList{grid-template-columns:1fr 1fr}
 }
-
-/* En dispositivos táctiles no dejamos que un estado hover "pegado" confunda al jugador. */
-@media (hover:none){
-  .cover-play-button:hover{
-    background:transparent;box-shadow:none;filter:none;transform:none;
-    animation-play-state:running
-  }
-  .cover-play-button:hover::before{border-color:transparent;box-shadow:none}
-  .cover-play-button:hover::after{opacity:0;animation:none}
+@media(max-width:560px) and (orientation:portrait){
+  header{justify-content:center}.title{width:100%;text-align:center}
+  .hud{justify-content:center}
+  .board{width:min(96vw,54dvh)}
+  .board.size9{width:min(96vw,58dvh)}
+  .side{grid-template-columns:1fr}
+  .controls{grid-template-columns:repeat(2,1fr)}
+  .menuGrid,.characterGrid,.levels,.challengeList{grid-template-columns:1fr}
 }
-
-/* Portada: conserva siempre la proporción exacta de la imagen y mantiene
-   la zona táctil sobre el botón dibujado, incluso con barras del navegador. */
-.cover-stage{
-  width:min(100vw,calc(100dvh * 1.5));
-  max-width:100vw;
-  max-height:100dvh;
+@media(orientation:landscape) and (hover:none) and (pointer:coarse){
+  .app{height:100dvh}
+  header{flex-wrap:nowrap}
+  .title{white-space:nowrap}
+  .gameLayout{grid-template-columns:minmax(0,1fr) clamp(175px,24vw,240px);grid-template-rows:1fr}
+  .board{width:min(calc(100dvh - 58px),calc(100vw - 255px))}
+  .board.size9{width:min(calc(100dvh - 58px),calc(100vw - 255px))}
+  .side{display:flex}
+  .controls{grid-template-columns:1fr}
 }
-
+@media(hover:none){.cover-play-button:hover{background:transparent;box-shadow:none}}
 </style>
 </head>
 <body>
+
 <div id="coverOverlay" class="cover-overlay" aria-label="Portada de Ta-Te-Ti">
   <div class="cover-stage">
-    <img class="cover-image" src="../img/tateti.png?v=2" alt="Portada de Ta-Te-Ti del Gran Árbol">
+    <img class="cover-image" src="../img/tateti.png?v=3" alt="Portada de Ta-Te-Ti del Gran Árbol">
     <button id="coverPlayButton" class="cover-play-button" type="button" aria-label="Jugar ahora"></button>
   </div>
 </div>
 
 <div class="app">
-<header><div class="title">🐒 TA-TE-TI DEL GRAN ÁRBOL</div><div class="hud"><div class="pill">Turno: <span id="turnLabel">Monito Marrón</span></div><div class="pill">Marcador: <span id="scoreLabel">0 - 0</span></div></div></header>
+<header>
+  <div class="title">🐒 TA-TE-TI DEL GRAN ÁRBOL</div>
+  <div class="hud">
+    <div class="pill">Turno: <span id="turnLabel">Nito</span></div>
+    <div class="pill">Marcador: <span id="scoreLabel">0 - 0</span></div>
+  </div>
+</header>
+
 <main>
-<div id="board" class="board"></div>
-<div class="panel"><div id="status" class="status">Elegí un modo para comenzar.</div><div class="controls"><button class="action" onclick="restartRound()"><span class="desktop-label">Nueva ronda</span><span class="mobile-label">↻ Ronda</span></button><button class="action secondary" onclick="showMenu()"><span class="desktop-label">Cambiar modo</span><span class="mobile-label">☰ Modo</span></button><button class="action soft" onclick="toggleMusic()">🎵 <span id="musicLabel">Música: sí</span></button></div></div>
+  <div class="gameLayout">
+    <div class="boardWrap"><div id="board" class="board size3"></div></div>
+    <aside class="side">
+      <div id="modeBadge" class="modeBadge">Elegí un modo</div>
+      <div id="status" class="status">Elegí un modo para comenzar.</div>
+      <div id="challengeInfo" class="challengeInfo"></div>
+      <div class="controls">
+        <button class="action" onclick="restartRound()">↻ Nueva ronda</button>
+        <button class="action secondary" onclick="showMenu()">☰ Cambiar modo</button>
+        <button id="jumpButton" class="action gold jumpRow" onclick="activateJump()">🐒 Salto</button>
+        <button class="action soft" onclick="toggleMusic()">🎵 <span id="musicLabel">Música: sí</span></button>
+      </div>
+    </aside>
+  </div>
 </main>
 <div class="footer">Una partida breve y tranquila en la Selva del Gran Árbol.</div>
 </div>
 
-<div id="menuOverlay" class="overlay"><div class="card"><h1>🌳 Ta-Te-Ti del Gran Árbol</h1><p>Elegí cómo querés jugar.</p><div class="menuGrid"><button class="action" onclick="startPvp()">👥 Dos jugadores</button><button class="action secondary" onclick="showLevels()">🤖 Contra la computadora</button></div></div></div>
-<div id="levelsOverlay" class="overlay" style="display:none"><div class="card"><h2>Elegí la dificultad</h2><div class="levels"><button class="action" onclick="startAi('easy')">Fácil</button><button class="action secondary" onclick="startAi('medium')">Medio</button><button class="action soft" onclick="startAi('hard')">Difícil</button></div><div style="margin-top:12px"><button class="action soft" onclick="backToMenu()">Volver</button></div></div></div>
-<div id="endOverlay" class="overlay" style="display:none"><div class="card"><h2 id="endTitle"></h2><p id="endText"></p><div class="menuGrid"><button class="action" onclick="nextRound()">Otra ronda</button><button class="action secondary" onclick="showMenu()">Cambiar modo</button></div></div></div>
+<div id="menuOverlay" class="overlay">
+  <div class="card">
+    <h1>🌳 Ta-Te-Ti del Gran Árbol</h1>
+    <p>Elegí el modo de juego.</p>
+    <div class="menuGrid">
+      <button class="action modeButton" onclick="chooseMode('classic')">🌿 Ta-Te-Ti<small>El clásico de siempre</small></button>
+      <button class="action warn modeButton" onclick="chooseMode('anti')">😈 Anti Ta-Te-Ti<small>Quien forma tres, pierde</small></button>
+      <button class="action secondary modeButton" onclick="chooseMode('mobile')">🔄 Ta-Te-Ti Móvil<small>Después de colocar, las fichas se mueven</small></button>
+      <button class="action gold modeButton" onclick="showChallengeIntro()">🏆 Modo Desafíos<small>Ocho desafíos en un tablero 9 × 9</small></button>
+    </div>
+  </div>
+</div>
+
+<div id="playTypeOverlay" class="overlay" style="display:none">
+  <div class="card">
+    <h2>¿Cómo querés jugar?</h2>
+    <div class="menuGrid">
+      <button class="action" onclick="choosePlayType('pvp')">👥 Dos jugadores</button>
+      <button class="action secondary" onclick="choosePlayType('ai')">🤖 Contra la computadora</button>
+    </div>
+    <div style="margin-top:12px"><button class="action soft" onclick="backToMainMenu()">Volver</button></div>
+  </div>
+</div>
+
+<div id="levelsOverlay" class="overlay" style="display:none">
+  <div class="card">
+    <h2>Elegí la dificultad</h2>
+    <div class="levels">
+      <button class="action" onclick="chooseAiLevel('easy')">Fácil</button>
+      <button class="action secondary" onclick="chooseAiLevel('medium')">Medio</button>
+      <button class="action warn" onclick="chooseAiLevel('hard')">Difícil</button>
+    </div>
+    <p><small>En el modo Desafíos la computadora usa siempre el nivel Medio.</small></p>
+    <button class="action soft" onclick="backToPlayType()">Volver</button>
+  </div>
+</div>
+
+<div id="characterOverlay" class="overlay" style="display:none">
+  <div class="card">
+    <h2>Elegí tu personaje</h2>
+    <p>El otro personaje será tu rival.</p>
+    <div class="characterGrid">
+      <button class="action characterChoice" onclick="selectCharacter('nito')">🐒 Nito<small>Monito varón</small></button>
+      <button class="action secondary characterChoice" onclick="selectCharacter('tina')">🎀 Tina<small>Monita nena</small></button>
+    </div>
+  </div>
+</div>
+
+<div id="challengeIntroOverlay" class="overlay" style="display:none">
+  <div class="card">
+    <h2>🏆 Modo Desafíos</h2>
+    <p>Vas a recorrer ocho tableros especiales. Cada uno agrega una nueva sorpresa, pero la computadora siempre juega con una inteligencia equilibrada.</p>
+    <div class="challengeList">
+      <div class="challengeChip">👑 Rey del Árbol</div>
+      <div class="challengeChip">🍌 Banana Traviesa</div>
+      <div class="challengeChip">🐒 Monitos Saltarines</div>
+      <div class="challengeChip">🍃 Viento del Bosque</div>
+      <div class="challengeChip">🦜 Loro Bromista</div>
+      <div class="challengeChip">🌳 Combinaciones nuevas</div>
+    </div>
+    <p>La complejidad aumenta porque aparecen más mecánicas, no porque la IA se vuelva imposible.</p>
+    <div class="menuGrid">
+      <button class="action gold" onclick="beginChallengeCharacterChoice()">Comenzar</button>
+      <button class="action soft" onclick="backToMainMenu()">Volver</button>
+    </div>
+  </div>
+</div>
+
+<div id="challengeResultOverlay" class="overlay" style="display:none">
+  <div class="card">
+    <h2 id="challengeResultTitle"></h2>
+    <p id="challengeResultText"></p>
+    <div class="menuGrid">
+      <button id="challengeNextButton" class="action gold" onclick="nextChallenge()">Siguiente desafío</button>
+      <button class="action secondary" onclick="retryChallenge()">Reintentar</button>
+    </div>
+  </div>
+</div>
+
+<div id="endOverlay" class="overlay" style="display:none">
+  <div class="card">
+    <h2 id="endTitle"></h2>
+    <p id="endText"></p>
+    <div class="menuGrid">
+      <button class="action" onclick="restartRound()">Otra ronda</button>
+      <button class="action secondary" onclick="showMenu()">Cambiar modo</button>
+    </div>
+  </div>
+</div>
+
+<div id="finalOverlay" class="overlay" style="display:none">
+  <div class="card">
+    <h2>🏆 ¡Completaste los ocho desafíos!</h2>
+    <p>El Gran Árbol guarda un recuerdo especial de tu aventura.</p>
+    <img id="finalImage" class="finalImage" src="../img/finaltateti.png?v=1" alt="Final del modo desafíos de Ta-Te-Ti">
+    <div class="menuGrid">
+      <button class="action gold" onclick="downloadFinalImage()">⬇ Descargar imagen PNG</button>
+      <button class="action secondary" onclick="showMenu()">Volver al menú</button>
+    </div>
+    <p id="downloadStatus" aria-live="polite"></p>
+  </div>
+</div>
 
 <script>
-const boardEl=document.getElementById('board'),statusEl=document.getElementById('status'),turnLabel=document.getElementById('turnLabel'),scoreLabel=document.getElementById('scoreLabel');
-const X='X',O='O',wins=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-let board=Array(9).fill(''),turn=X,mode='pvp',aiLevel='easy',roundOver=false,scores={X:0,O:0},musicOn=true,audioCtx=null,musicTimer=null,musicStep=0,nextAiStarter=X,aiTurnToken=0;
-const MASTER_VOLUME=3.6;
+'use strict';
+
+const boardEl=document.getElementById('board');
+const statusEl=document.getElementById('status');
+const turnLabel=document.getElementById('turnLabel');
+const scoreLabel=document.getElementById('scoreLabel');
+const modeBadge=document.getElementById('modeBadge');
+const challengeInfo=document.getElementById('challengeInfo');
+const jumpButton=document.getElementById('jumpButton');
+
+const X='X',O='O';
+const wins3=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+
+let board=Array(9).fill('');
+let size=3;
+let turn=X;
+let gameMode='classic';
+let playType='pvp';
+let aiLevel='easy';
+let roundOver=false;
+let scores={X:0,O:0};
+let selectedCharacter='nito';
+let humanTeam=X;
+let aiTeam=O;
+let selectedCell=null;
+let placementCounts={X:0,O:0};
+let mobileMoveCount=0;
+let moveCount=0;
+let challengeIndex=0;
+let challengeState=null;
+let aiTurnToken=0;
+
+let musicOn=true,audioCtx=null,musicTimer=null,musicStep=0;
+const MASTER_VOLUME=3.2;
+
+const challenges=[
+  {
+    name:'Rey del Árbol',
+    icon:'👑',
+    description:'Conquistá el centro y dos esquinas. También podés ganar formando cinco en línea.',
+    rules:{king:true}
+  },
+  {
+    name:'Banana Traviesa',
+    icon:'🍌',
+    description:'Una banana bloquea un casillero y cambia de lugar cada cuatro jugadas.',
+    rules:{banana:true}
+  },
+  {
+    name:'Monitos Saltarines',
+    icon:'🐒',
+    description:'Cada jugador puede mover una ficha propia una sola vez durante la partida.',
+    rules:{jump:true}
+  },
+  {
+    name:'Viento del Bosque',
+    icon:'🍃',
+    description:'Cada cuatro jugadas, el viento puede empujar una ficha hacia un casillero vecino.',
+    rules:{wind:true}
+  },
+  {
+    name:'Loro Bromista',
+    icon:'🦜',
+    description:'Cada cinco jugadas, el loro puede intercambiar una ficha de cada equipo.',
+    rules:{parrot:true}
+  },
+  {
+    name:'Corona y Banana',
+    icon:'👑🍌',
+    description:'El centro y las esquinas importan, pero la banana cambia los caminos.',
+    rules:{king:true,banana:true}
+  },
+  {
+    name:'Bosque en Movimiento',
+    icon:'🍃🦜🐒',
+    description:'Viento, loro y un salto especial por jugador.',
+    rules:{wind:true,parrot:true,jump:true}
+  },
+  {
+    name:'Gran Desafío del Árbol',
+    icon:'🌳',
+    description:'Todas las sorpresas aparecen juntas. Ganá formando cinco en línea o conquistando el reino.',
+    rules:{king:true,banana:true,wind:true,parrot:true,jump:true}
+  }
+];
+
+function teamName(team){
+  const nitoTeam=selectedCharacter==='nito'?humanTeam:(humanTeam===X?O:X);
+  const isNito=team===nitoTeam;
+  return isNito?'Nito':'Tina';
+}
 
 function monkeySVG(team){
- const brown=team===X,ring=brown?'#8b5434':'#e0ad42',head=brown?'#5e3827':'#8b572d',face=brown?'#e4b77d':'#f1c983';
- return `<svg viewBox="0 0 100 100"><circle cx="50" cy="52" r="40" fill="${ring}" stroke="#fff2c4" stroke-width="4"/><circle cx="50" cy="48" r="25" fill="${head}"/><circle cx="26" cy="44" r="10" fill="${head}"/><circle cx="74" cy="44" r="10" fill="${head}"/><ellipse cx="50" cy="58" rx="18" ry="14" fill="${face}"/><circle cx="43" cy="45" r="5" fill="#fff"/><circle cx="57" cy="45" r="5" fill="#fff"/><circle cx="43" cy="45" r="2.2" fill="#1d2a23"/><circle cx="57" cy="45" r="2.2" fill="#1d2a23"/><path d="M42 60 Q50 68 58 60" fill="none" stroke="#5b3424" stroke-width="3" stroke-linecap="round"/></svg>`;
-}
-function render(){
- boardEl.innerHTML='';
- board.forEach((v,i)=>{const c=document.createElement('button');c.className='cell '+(((Math.floor(i/3)+i%3)%2)?'dark':'');c.onclick=()=>playAt(i);if(v){const d=document.createElement('div');d.className='monkey';d.innerHTML=monkeySVG(v);c.appendChild(d)}boardEl.appendChild(c)});
- turnLabel.textContent=turn===X?'Monito Marrón':'Monito Dorado';scoreLabel.textContent=`${scores.X} - ${scores.O}`;
-}
-function playAt(i){if(roundOver||board[i]||(mode==='ai'&&turn===O))return;place(i,turn);if(!roundOver&&mode==='ai'&&turn===O){statusEl.textContent='La computadora está pensando...';setTimeout(aiMove,350)}}
-function place(i,p){board[i]=p;pluck();render();const r=getResult(board);if(r){finish(r);return}turn=turn===X?O:X;statusEl.textContent=turn===X?'Turno del Monito Marrón.':'Turno del Monito Dorado.';render()}
-function getResult(b){for(const l of wins){const[a,c,d]=l;if(b[a]&&b[a]===b[c]&&b[a]===b[d])return{winner:b[a],line:l}}if(b.every(Boolean))return{winner:null,line:[]};return null}
-function finish(r){roundOver=true;if(r.winner){scores[r.winner]++;render();[...boardEl.children].forEach((c,i)=>c.classList.toggle('win',r.line.includes(i)));winSound();endTitle.textContent='🍃 ¡Qué buena jugada!';endText.textContent=r.winner===X?'Ganó el Monito Marrón.':'Ganó el Monito Dorado.'}else{drawSound();endTitle.textContent='🌿 ¡Partida empatada!';endText.textContent='Los dos equipos jugaron muy bien.'}setTimeout(()=>endOverlay.style.display='flex',450)}
-function aiMove(token=aiTurnToken){if(token!==aiTurnToken||roundOver||mode!=='ai'||turn!==O)return;const empty=board.map((v,i)=>v?'':i).filter(v=>v!=='');if(!empty.length)return;let m;if(aiLevel==='easy')m=empty[Math.floor(Math.random()*empty.length)];else if(aiLevel==='medium'){m=findWin(O)??findWin(X);if(m===undefined){const p=[4,0,2,6,8,1,3,5,7].filter(i=>!board[i]);m=Math.random()<.75?p[0]:empty[Math.floor(Math.random()*empty.length)]}}else m=bestMove();place(m,O)}
-function findWin(p){for(let i=0;i<9;i++)if(!board[i]){const b=board.slice();b[i]=p;const r=getResult(b);if(r&&r.winner===p)return i}}
-function bestMove(){let bs=-Infinity,m=0;for(let i=0;i<9;i++)if(!board[i]){board[i]=O;const s=minimax(false);board[i]='';if(s>bs){bs=s;m=i}}return m}
-function minimax(max){const r=getResult(board);if(r)return r.winner===O?10:r.winner===X?-10:0;if(max){let b=-Infinity;for(let i=0;i<9;i++)if(!board[i]){board[i]=O;b=Math.max(b,minimax(false));board[i]=''}return b}else{let b=Infinity;for(let i=0;i<9;i++)if(!board[i]){board[i]=X;b=Math.min(b,minimax(true));board[i]=''}return b}}
-function restartRound(){
- aiTurnToken++;
- board=Array(9).fill('');roundOver=false;endOverlay.style.display='none';
- if(mode==='ai'){
-  turn=nextAiStarter;
-  nextAiStarter=nextAiStarter===X?O:X;
- }else{
-  turn=X;
- }
- statusEl.textContent=turn===X?'Turno del Monito Marrón.':'La computadora comienza...';
- render();
- if(mode==='ai'&&turn===O){
-  const token=aiTurnToken;
-  setTimeout(()=>aiMove(token),500);
- }
-}
-function nextRound(){restartRound()}
-function startPvp(){mode='pvp';scores={X:0,O:0};hideOverlays();restartRound();startMusic()}
-function showLevels(){menuOverlay.style.display='none';levelsOverlay.style.display='flex'}
-function backToMenu(){levelsOverlay.style.display='none';menuOverlay.style.display='flex'}
-function startAi(l){mode='ai';aiLevel=l;scores={X:0,O:0};nextAiStarter=X;hideOverlays();restartRound();startMusic()}
-function hideOverlays(){menuOverlay.style.display='none';levelsOverlay.style.display='none';endOverlay.style.display='none'}
-function showMenu(){stopMusic();endOverlay.style.display='none';levelsOverlay.style.display='none';menuOverlay.style.display='flex'}
+  const nitoTeam=selectedCharacter==='nito'?humanTeam:(humanTeam===X?O:X);
+  const isNito=team===nitoTeam;
+  const ring=isNito?'#8b5434':'#e0ad42';
+  const head=isNito?'#5e3827':'#8b572d';
+  const face=isNito?'#e4b77d':'#f1c983';
 
-function initAudio(){
- if(!musicOn)return;
- if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
- if(audioCtx.state==='suspended')audioCtx.resume();
+  return `<svg viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="52" r="40" fill="${ring}" stroke="#fff2c4" stroke-width="4"/>
+    <circle cx="50" cy="48" r="25" fill="${head}"/>
+    <circle cx="26" cy="44" r="10" fill="${head}"/>
+    <circle cx="74" cy="44" r="10" fill="${head}"/>
+    <ellipse cx="50" cy="58" rx="18" ry="14" fill="${face}"/>
+    <circle cx="43" cy="45" r="5" fill="#fff"/><circle cx="57" cy="45" r="5" fill="#fff"/>
+    <circle cx="43" cy="45" r="2.2" fill="#1d2a23"/><circle cx="57" cy="45" r="2.2" fill="#1d2a23"/>
+    <path d="M42 60 Q50 68 58 60" fill="none" stroke="#5b3424" stroke-width="3" stroke-linecap="round"/>
+    ${isNito
+      ?'<path d="M40 27 L47 15 L51 26 L59 17 L60 30" fill="#4b2c21"/>'
+      :'<path d="M34 25 Q42 14 49 27 Q57 14 66 25 Q57 34 50 28 Q42 34 34 25" fill="#e85b7f" stroke="#8f2f4e" stroke-width="2"/>'}
+  </svg>`;
 }
-function tone(f,d,t='sine',v=.03,delay=0){
- if(!musicOn)return;
- initAudio();
- const now=audioCtx.currentTime+delay,o=audioCtx.createOscillator(),g=audioCtx.createGain();
- o.type=t;o.frequency.value=f;
- g.gain.setValueAtTime(0,now);
- g.gain.linearRampToValueAtTime(Math.min(.38,v*MASTER_VOLUME),now+.018);
- g.gain.exponentialRampToValueAtTime(.0001,now+d);
- o.connect(g).connect(audioCtx.destination);o.start(now);o.stop(now+d+.05);
+
+function createEmptyBoard(n){return Array(n*n).fill('')}
+
+function render(){
+  boardEl.className='board '+(size===3?'size3':'size9');
+  boardEl.innerHTML='';
+
+  board.forEach((value,index)=>{
+    const cell=document.createElement('button');
+    cell.className='cell '+(((Math.floor(index/size)+index%size)%2)?'dark':'');
+    if(selectedCell===index) cell.classList.add('selected');
+
+    if(challengeState&&challengeState.winLine&&challengeState.winLine.includes(index)) cell.classList.add('win');
+    if(challengeState&&challengeState.banana===index) cell.classList.add('blocked');
+
+    cell.onclick=()=>playAt(index);
+
+    if(value){
+      const piece=document.createElement('div');
+      piece.className='monkey';
+      piece.innerHTML=monkeySVG(value);
+      cell.appendChild(piece);
+    }
+
+    if(challengeState&&challengeState.banana===index){
+      const hazard=document.createElement('div');
+      hazard.className='hazard';
+      hazard.textContent='🍌';
+      cell.appendChild(hazard);
+    }
+
+    boardEl.appendChild(cell);
+  });
+
+  turnLabel.textContent=teamName(turn);
+  scoreLabel.textContent=gameMode==='challenge'
+    ?`${challengeIndex+1} / 8`
+    :`${scores.X} - ${scores.O}`;
+
+  if(gameMode==='mobile'&&size===3){
+    modeBadge.textContent='🔄 Ta-Te-Ti Móvil';
+  }else if(gameMode==='anti'){
+    modeBadge.textContent='😈 Anti Ta-Te-Ti';
+  }else if(gameMode==='challenge'){
+    const ch=challenges[challengeIndex];
+    modeBadge.textContent=`${ch.icon} Desafío ${challengeIndex+1}: ${ch.name}`;
+  }else{
+    modeBadge.textContent='🌿 Ta-Te-Ti Clásico';
+  }
+
+  if(gameMode==='challenge'){
+    const ch=challenges[challengeIndex];
+    challengeInfo.style.display='block';
+    challengeInfo.innerHTML=`<strong>${ch.icon} ${ch.name}</strong>${ch.description}`;
+    jumpButton.style.display=ch.rules.jump?'block':'none';
+    jumpButton.disabled=!challengeState||challengeState.jumpUsed[turn]||roundOver;
+    jumpButton.textContent=challengeState&&challengeState.jumpMode?'Elegí la ficha a mover':'🐒 Usar salto';
+  }else{
+    challengeInfo.style.display='none';
+    jumpButton.style.display='none';
+  }
+}
+
+function playAt(index){
+  if(roundOver) return;
+  if(playType==='ai'&&turn===aiTeam) return;
+
+  if(gameMode==='mobile'){
+    handleMobileMove(index);
+    return;
+  }
+
+  if(gameMode==='challenge'){
+    handleChallengeMove(index);
+    return;
+  }
+
+  if(board[index]) return;
+  placeStandard(index,turn);
+}
+
+function placeStandard(index,team){
+  board[index]=team;
+  pluck();
+  render();
+
+  const line=getThreeLine(board);
+  if(line){
+    if(gameMode==='anti'){
+      const winner=team===X?O:X;
+      finishStandard({winner,line,loser:team});
+    }else{
+      finishStandard({winner:team,line});
+    }
+    return;
+  }
+
+  if(board.every(Boolean)){
+    finishStandard({winner:null,line:[]});
+    return;
+  }
+
+  switchTurn();
+  afterHumanTurn();
+}
+
+function getThreeLine(currentBoard){
+  for(const line of wins3){
+    const [a,b,c]=line;
+    if(currentBoard[a]&&currentBoard[a]===currentBoard[b]&&currentBoard[a]===currentBoard[c]) return line;
+  }
+  return null;
+}
+
+function handleMobileMove(index){
+  const totalPlaced=placementCounts.X+placementCounts.O;
+
+  if(totalPlaced<6){
+    if(board[index]) return;
+    board[index]=turn;
+    placementCounts[turn]++;
+    pluck();
+
+    const line=getThreeLine(board);
+    if(line){finishStandard({winner:turn,line});return}
+
+    switchTurn();
+    afterHumanTurn();
+    return;
+  }
+
+  if(selectedCell===null){
+    if(board[index]!==turn) return;
+    selectedCell=index;
+    statusEl.textContent='Elegí un casillero vecino vacío.';
+    render();
+    return;
+  }
+
+  if(index===selectedCell){
+    selectedCell=null;
+    render();
+    return;
+  }
+
+  if(board[index]||!isAdjacent3(selectedCell,index)) return;
+
+  board[index]=turn;
+  board[selectedCell]='';
+  selectedCell=null;
+  mobileMoveCount++;
+  pluck();
+
+  const line=getThreeLine(board);
+  if(line){finishStandard({winner:turn,line});return}
+
+  if(mobileMoveCount>=20){
+    finishStandard({winner:null,line:[]});
+    return;
+  }
+
+  switchTurn();
+  afterHumanTurn();
+}
+
+function isAdjacent3(a,b){
+  const ar=Math.floor(a/3),ac=a%3,br=Math.floor(b/3),bc=b%3;
+  return Math.max(Math.abs(ar-br),Math.abs(ac-bc))===1;
+}
+
+function startChallengeRound(){
+  gameMode='challenge';
+  playType='ai';
+  aiLevel='medium';
+  size=9;
+  board=createEmptyBoard(9);
+  roundOver=false;
+  selectedCell=null;
+  moveCount=0;
+  turn=humanTeam;
+  challengeState={
+    banana:null,
+    jumpUsed:{X:false,O:false},
+    jumpMode:false,
+    jumpSelected:null,
+    winLine:[]
+  };
+
+  const rules=challenges[challengeIndex].rules;
+  if(rules.banana) moveBanana(true);
+
+  hideAllOverlays();
+  statusEl.textContent=`Comienza ${teamName(turn)}. Formá cinco en línea.`;
+  render();
+}
+
+function handleChallengeMove(index){
+  const rules=challenges[challengeIndex].rules;
+  if(challengeState.banana===index) return;
+
+  if(challengeState.jumpMode){
+    handleJumpSelection(index);
+    return;
+  }
+
+  if(board[index]) return;
+
+  board[index]=turn;
+  moveCount++;
+  pluck();
+
+  const result=getChallengeResult(turn,rules);
+  if(result){finishChallenge(result);return}
+
+  applyChallengeEvents(rules);
+  if(roundOver) return;
+
+  switchTurn();
+  render();
+  afterHumanTurn();
+}
+
+function getChallengeResult(team,rules){
+  const line=getFiveLine(board,team);
+  if(line) return {winner:team,line,reason:'Formó cinco en línea.'};
+
+  if(rules.king&&controlsKing(team)){
+    const cells=[40,...[0,8,72,80].filter(i=>board[i]===team)];
+    return {winner:team,line:cells,reason:'Conquistó el centro y dos esquinas.'};
+  }
+
+  if(board.filter(Boolean).length>=80-(challengeState.banana!==null?1:0)){
+    return {winner:null,line:[],reason:'El tablero quedó completo.'};
+  }
+
+  return null;
+}
+
+function getFiveLine(currentBoard,team){
+  const directions=[[0,1],[1,0],[1,1],[1,-1]];
+  for(let r=0;r<9;r++){
+    for(let c=0;c<9;c++){
+      if(currentBoard[r*9+c]!==team) continue;
+      for(const [dr,dc] of directions){
+        const line=[];
+        for(let k=0;k<5;k++){
+          const rr=r+dr*k,cc=c+dc*k;
+          if(rr<0||rr>=9||cc<0||cc>=9||currentBoard[rr*9+cc]!==team) break;
+          line.push(rr*9+cc);
+        }
+        if(line.length===5) return line;
+      }
+    }
+  }
+  return null;
+}
+
+function controlsKing(team){
+  if(board[40]!==team) return false;
+  const corners=[0,8,72,80].filter(i=>board[i]===team);
+  return corners.length>=2;
+}
+
+function applyChallengeEvents(rules){
+  if(rules.banana&&moveCount>0&&moveCount%4===0) moveBanana(false);
+  if(rules.wind&&moveCount>0&&moveCount%4===0) applyWind();
+  if(rules.parrot&&moveCount>0&&moveCount%5===0) applyParrot();
+}
+
+function moveBanana(initial=false){
+  const candidates=board.map((v,i)=>!v&&i!==40?i:null).filter(i=>i!==null);
+  if(!candidates.length) return;
+  let next=candidates[Math.floor(Math.random()*candidates.length)];
+  if(!initial&&candidates.length>1){
+    while(next===challengeState.banana) next=candidates[Math.floor(Math.random()*candidates.length)];
+  }
+  challengeState.banana=next;
+  statusEl.textContent=initial?'La Banana Traviesa ya eligió su lugar.':'🍌 ¡La banana cambió de casillero!';
+}
+
+function applyWind(){
+  const occupied=board.map((v,i)=>v?i:null).filter(i=>i!==null);
+  const options=[];
+
+  for(const from of occupied){
+    for(const to of neighborIndexes(from,9)){
+      if(!board[to]&&to!==challengeState.banana) options.push({from,to});
+    }
+  }
+
+  if(!options.length) return;
+  const move=options[Math.floor(Math.random()*options.length)];
+  board[move.to]=board[move.from];
+  board[move.from]='';
+  statusEl.textContent='🍃 El viento movió una ficha.';
+}
+
+function applyParrot(){
+  const xs=board.map((v,i)=>v===X?i:null).filter(i=>i!==null);
+  const os=board.map((v,i)=>v===O?i:null).filter(i=>i!==null);
+  if(!xs.length||!os.length) return;
+
+  const a=xs[Math.floor(Math.random()*xs.length)];
+  const b=os[Math.floor(Math.random()*os.length)];
+  [board[a],board[b]]=[board[b],board[a]];
+  statusEl.textContent='🦜 El loro intercambió dos fichas.';
+}
+
+function neighborIndexes(index,n){
+  const r=Math.floor(index/n),c=index%n,out=[];
+  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+    if(!dr&&!dc) continue;
+    const rr=r+dr,cc=c+dc;
+    if(rr>=0&&rr<n&&cc>=0&&cc<n) out.push(rr*n+cc);
+  }
+  return out;
+}
+
+function activateJump(){
+  if(gameMode!=='challenge'||roundOver) return;
+  const rules=challenges[challengeIndex].rules;
+  if(!rules.jump||challengeState.jumpUsed[turn]) return;
+
+  challengeState.jumpMode=true;
+  challengeState.jumpSelected=null;
+  selectedCell=null;
+  statusEl.textContent='Elegí una ficha tuya para hacerla saltar.';
+  render();
+}
+
+function handleJumpSelection(index){
+  if(challengeState.jumpSelected===null){
+    if(board[index]!==turn) return;
+    challengeState.jumpSelected=index;
+    selectedCell=index;
+    statusEl.textContent='Ahora elegí cualquier casillero vacío.';
+    render();
+    return;
+  }
+
+  if(index===challengeState.jumpSelected){
+    challengeState.jumpMode=false;
+    challengeState.jumpSelected=null;
+    selectedCell=null;
+    render();
+    return;
+  }
+
+  if(board[index]||index===challengeState.banana) return;
+
+  board[index]=turn;
+  board[challengeState.jumpSelected]='';
+  challengeState.jumpUsed[turn]=true;
+  challengeState.jumpMode=false;
+  challengeState.jumpSelected=null;
+  selectedCell=null;
+  moveCount++;
+  pluck();
+
+  const result=getChallengeResult(turn,challenges[challengeIndex].rules);
+  if(result){finishChallenge(result);return}
+
+  applyChallengeEvents(challenges[challengeIndex].rules);
+  switchTurn();
+  render();
+  afterHumanTurn();
+}
+
+function finishChallenge(result){
+  roundOver=true;
+  challengeState.winLine=result.line||[];
+  render();
+
+  const humanWon=result.winner===humanTeam;
+  const draw=!result.winner;
+
+  if(draw){
+    challengeResultTitle.textContent='🌿 ¡Desafío empatado!';
+    challengeResultText.textContent='El tablero quedó completo. Podés intentarlo nuevamente.';
+    challengeNextButton.style.display='none';
+    drawSound();
+  }else if(humanWon){
+    challengeResultTitle.textContent='🏆 ¡Desafío superado!';
+    challengeResultText.textContent=result.reason;
+    challengeNextButton.style.display='block';
+    winSound();
+  }else{
+    challengeResultTitle.textContent='🌿 Esta vez ganó '+teamName(result.winner);
+    challengeResultText.textContent='El desafío sigue disponible para volver a intentarlo.';
+    challengeNextButton.style.display='none';
+    drawSound();
+  }
+
+  setTimeout(()=>challengeResultOverlay.style.display='flex',450);
+}
+
+function nextChallenge(){
+  challengeResultOverlay.style.display='none';
+  challengeIndex++;
+  if(challengeIndex>=challenges.length){
+    finalOverlay.style.display='flex';
+    return;
+  }
+  startChallengeRound();
+}
+
+function retryChallenge(){
+  challengeResultOverlay.style.display='none';
+  startChallengeRound();
+}
+
+function switchTurn(){
+  turn=turn===X?O:X;
+  selectedCell=null;
+  statusEl.textContent=`Turno de ${teamName(turn)}.`;
+  render();
+}
+
+function afterHumanTurn(){
+  render();
+  if(!roundOver&&playType==='ai'&&turn===aiTeam){
+    statusEl.textContent=`${teamName(aiTeam)} está pensando...`;
+    const token=++aiTurnToken;
+    setTimeout(()=>aiMove(token),420);
+  }
+}
+
+function aiMove(token){
+  if(token!==aiTurnToken||roundOver||playType!=='ai'||turn!==aiTeam) return;
+
+  if(gameMode==='challenge'){
+    challengeAiMove();
+    return;
+  }
+
+  if(gameMode==='mobile'){
+    mobileAiMove();
+    return;
+  }
+
+  const empty=board.map((v,i)=>v?'':i).filter(v=>v!=='');
+  if(!empty.length) return;
+
+  let move;
+  if(aiLevel==='easy'){
+    move=empty[Math.floor(Math.random()*empty.length)];
+  }else if(aiLevel==='medium'){
+    move=mediumMove3();
+  }else{
+    move=hardMove3();
+  }
+
+  placeStandard(move,aiTeam);
+}
+
+function mediumMove3(){
+  const win=findImmediate(aiTeam);
+  if(win!==undefined) return win;
+
+  const block=findImmediate(humanTeam);
+  if(block!==undefined) return block;
+
+  const preference=[4,0,2,6,8,1,3,5,7].filter(i=>!board[i]);
+  if(Math.random()<.78&&preference.length) return preference[0];
+
+  const empty=board.map((v,i)=>v?'':i).filter(v=>v!=='');
+  return empty[Math.floor(Math.random()*empty.length)];
+}
+
+function findImmediate(team){
+  for(let i=0;i<9;i++) if(!board[i]){
+    const test=board.slice();
+    test[i]=team;
+    const line=getThreeLine(test);
+    if(line) return i;
+  }
+}
+
+function hardMove3(){
+  let bestScore=-Infinity,best=0;
+  for(let i=0;i<9;i++) if(!board[i]){
+    board[i]=aiTeam;
+    const score=minimax3(false);
+    board[i]='';
+    if(score>bestScore){bestScore=score;best=i}
+  }
+  return best;
+}
+
+function minimax3(maximizing){
+  const line=getThreeLine(board);
+  if(line){
+    const winner=board[line[0]];
+    if(gameMode==='anti') return winner===aiTeam?-10:10;
+    return winner===aiTeam?10:-10;
+  }
+  if(board.every(Boolean)) return 0;
+
+  if(maximizing){
+    let best=-Infinity;
+    for(let i=0;i<9;i++) if(!board[i]){
+      board[i]=aiTeam;
+      best=Math.max(best,minimax3(false));
+      board[i]='';
+    }
+    return best;
+  }
+
+  let best=Infinity;
+  for(let i=0;i<9;i++) if(!board[i]){
+    board[i]=humanTeam;
+    best=Math.min(best,minimax3(true));
+    board[i]='';
+  }
+  return best;
+}
+
+function mobileAiMove(){
+  const totalPlaced=placementCounts.X+placementCounts.O;
+
+  if(totalPlaced<6){
+    const empty=board.map((v,i)=>v?'':i).filter(v=>v!=='');
+    let move=findImmediate(aiTeam)??findImmediate(humanTeam);
+    if(move===undefined){
+      const pref=[4,0,2,6,8,1,3,5,7].filter(i=>!board[i]);
+      move=pref[0]??empty[0];
+    }
+    board[move]=aiTeam;
+    placementCounts[aiTeam]++;
+    pluck();
+
+    const line=getThreeLine(board);
+    if(line){finishStandard({winner:aiTeam,line});return}
+
+    switchTurn();
+    return;
+  }
+
+  const options=[];
+  board.forEach((v,from)=>{
+    if(v!==aiTeam) return;
+    neighborIndexes(from,3).forEach(to=>{
+      if(!board[to]) options.push({from,to});
+    });
+  });
+
+  if(!options.length){finishStandard({winner:null,line:[]});return}
+
+  let chosen=options.find(m=>{
+    const test=board.slice();
+    test[m.to]=aiTeam;test[m.from]='';
+    return getThreeLine(test);
+  });
+
+  if(!chosen){
+    chosen=options.find(m=>{
+      const test=board.slice();
+      test[m.to]=humanTeam;test[m.from]='';
+      return getThreeLine(test);
+    });
+  }
+
+  chosen=chosen||options[Math.floor(Math.random()*options.length)];
+  board[chosen.to]=aiTeam;
+  board[chosen.from]='';
+  mobileMoveCount++;
+  pluck();
+
+  const line=getThreeLine(board);
+  if(line){finishStandard({winner:aiTeam,line});return}
+
+  if(mobileMoveCount>=20){finishStandard({winner:null,line:[]});return}
+
+  switchTurn();
+}
+
+function challengeAiMove(){
+  const rules=challenges[challengeIndex].rules;
+
+  if(rules.jump&&!challengeState.jumpUsed[aiTeam]&&Math.random()<.12){
+    const jump=bestChallengeJump();
+    if(jump){
+      board[jump.to]=aiTeam;
+      board[jump.from]='';
+      challengeState.jumpUsed[aiTeam]=true;
+      moveCount++;
+      pluck();
+
+      const result=getChallengeResult(aiTeam,rules);
+      if(result){finishChallenge(result);return}
+
+      applyChallengeEvents(rules);
+      switchTurn();
+      return;
+    }
+  }
+
+  const move=chooseMediumChallengeMove();
+  if(move===undefined){finishChallenge({winner:null,line:[],reason:'No quedan movimientos.'});return}
+
+  board[move]=aiTeam;
+  moveCount++;
+  pluck();
+
+  const result=getChallengeResult(aiTeam,rules);
+  if(result){finishChallenge(result);return}
+
+  applyChallengeEvents(rules);
+  switchTurn();
+}
+
+function chooseMediumChallengeMove(){
+  const candidates=board.map((v,i)=>!v&&i!==challengeState.banana?i:null).filter(i=>i!==null);
+  if(!candidates.length) return undefined;
+
+  const winning=candidates.find(i=>{
+    const test=board.slice();test[i]=aiTeam;
+    return getFiveLine(test,aiTeam)||(challenges[challengeIndex].rules.king&&controlsKingOnBoard(test,aiTeam));
+  });
+  if(winning!==undefined) return winning;
+
+  const blocking=candidates.find(i=>{
+    const test=board.slice();test[i]=humanTeam;
+    return getFiveLine(test,humanTeam)||(challenges[challengeIndex].rules.king&&controlsKingOnBoard(test,humanTeam));
+  });
+  if(blocking!==undefined) return blocking;
+
+  const scored=candidates.map(i=>({i,score:challengeCellScore(i,aiTeam)})).sort((a,b)=>b.score-a.score);
+  const top=scored.slice(0,Math.min(5,scored.length));
+  return top[Math.floor(Math.random()*top.length)].i;
+}
+
+function controlsKingOnBoard(test,team){
+  if(test[40]!==team) return false;
+  return [0,8,72,80].filter(i=>test[i]===team).length>=2;
+}
+
+function challengeCellScore(index,team){
+  const r=Math.floor(index/9),c=index%9;
+  let score=0;
+  if(index===40) score+=8;
+  if([0,8,72,80].includes(index)) score+=4;
+  score+=4-Math.min(4,Math.abs(r-4)+Math.abs(c-4))*.25;
+
+  const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  for(const [dr,dc] of dirs){
+    let allies=0,enemies=0;
+    for(let k=-4;k<=4;k++){
+      const rr=r+dr*k,cc=c+dc*k;
+      if(rr<0||rr>=9||cc<0||cc>=9) continue;
+      const v=board[rr*9+cc];
+      if(v===team) allies++;
+      else if(v&&v!==team) enemies++;
+    }
+    score+=allies*.7-enemies*.1;
+  }
+  return score+Math.random()*.8;
+}
+
+function bestChallengeJump(){
+  const own=board.map((v,i)=>v===aiTeam?i:null).filter(i=>i!==null);
+  const empty=board.map((v,i)=>!v&&i!==challengeState.banana?i:null).filter(i=>i!==null);
+
+  for(const from of own){
+    for(const to of empty){
+      const test=board.slice();
+      test[to]=aiTeam;test[from]='';
+      if(getFiveLine(test,aiTeam)) return {from,to};
+    }
+  }
+  return null;
+}
+
+function finishStandard(result){
+  roundOver=true;
+  aiTurnToken++;
+
+  if(result.winner){
+    scores[result.winner]++;
+    if(result.line){
+      setTimeout(()=>{
+        [...boardEl.children].forEach((cell,i)=>cell.classList.toggle('win',result.line.includes(i)));
+      },0);
+    }
+    winSound();
+
+    if(gameMode==='anti'){
+      endTitle.textContent='😈 ¡Anti Ta-Te-Ti!';
+      endText.textContent=`${teamName(result.loser)} formó tres y perdió. Ganó ${teamName(result.winner)}.`;
+    }else{
+      endTitle.textContent='🍃 ¡Qué buena jugada!';
+      endText.textContent=`Ganó ${teamName(result.winner)}.`;
+    }
+  }else{
+    drawSound();
+    endTitle.textContent='🌿 ¡Partida empatada!';
+    endText.textContent=gameMode==='mobile'
+      ?'Se realizaron veinte movimientos sin ganador.'
+      :'Los dos equipos jugaron muy bien.';
+  }
+
+  render();
+  setTimeout(()=>endOverlay.style.display='flex',450);
+}
+
+function restartRound(){
+  aiTurnToken++;
+  endOverlay.style.display='none';
+
+  if(gameMode==='challenge'){
+    startChallengeRound();
+    return;
+  }
+
+  size=3;
+  board=createEmptyBoard(3);
+  roundOver=false;
+  selectedCell=null;
+  placementCounts={X:0,O:0};
+  mobileMoveCount=0;
+  turn=humanTeam;
+  statusEl.textContent=`Turno de ${teamName(turn)}.`;
+  render();
+}
+
+function chooseMode(mode){
+  gameMode=mode;
+  menuOverlay.style.display='none';
+  playTypeOverlay.style.display='flex';
+}
+
+function choosePlayType(type){
+  playType=type;
+  playTypeOverlay.style.display='none';
+  if(type==='ai') levelsOverlay.style.display='flex';
+  else characterOverlay.style.display='flex';
+}
+
+function chooseAiLevel(level){
+  aiLevel=level;
+  levelsOverlay.style.display='none';
+  characterOverlay.style.display='flex';
+}
+
+function selectCharacter(character){
+  selectedCharacter=character;
+  humanTeam=X;
+  aiTeam=O;
+  characterOverlay.style.display='none';
+
+  if(gameMode==='challenge'){
+    challengeIndex=0;
+    startChallengeRound();
+  }else{
+    scores={X:0,O:0};
+    restartRound();
+    startMusic();
+  }
+}
+
+function showChallengeIntro(){
+  gameMode='challenge';
+  menuOverlay.style.display='none';
+  challengeIntroOverlay.style.display='flex';
+}
+
+function beginChallengeCharacterChoice(){
+  challengeIntroOverlay.style.display='none';
+  playType='ai';
+  aiLevel='medium';
+  characterOverlay.style.display='flex';
+}
+
+function backToMainMenu(){
+  hideAllOverlays();
+  menuOverlay.style.display='flex';
+}
+
+function backToPlayType(){
+  levelsOverlay.style.display='none';
+  playTypeOverlay.style.display='flex';
+}
+
+function hideAllOverlays(){
+  document.querySelectorAll('.overlay').forEach(el=>el.style.display='none');
+}
+
+function showMenu(){
+  stopMusic();
+  aiTurnToken++;
+  hideAllOverlays();
+  menuOverlay.style.display='flex';
+}
+
+async function downloadFinalImage(){
+  const status=document.getElementById('downloadStatus');
+  const image=document.getElementById('finalImage');
+  status.textContent='Preparando la descarga...';
+
+  try{
+    const response=await fetch(image.src,{cache:'no-store'});
+    if(!response.ok) throw new Error('No se pudo leer la imagen.');
+    const blob=await response.blob();
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url;
+    link.download='finaltateti.png';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    status.textContent='¡Imagen PNG descargada!';
+  }catch(error){
+    status.textContent='Abrí la imagen y mantené presionado para guardarla.';
+    window.open(image.src,'_blank','noopener');
+  }
+}
+
+/* Audio */
+function initAudio(){
+  if(!musicOn)return;
+  if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+}
+function tone(f,d,type='sine',volume=.03,delay=0){
+  if(!musicOn)return;
+  initAudio();
+  const now=audioCtx.currentTime+delay;
+  const oscillator=audioCtx.createOscillator();
+  const gain=audioCtx.createGain();
+  oscillator.type=type;oscillator.frequency.value=f;
+  gain.gain.setValueAtTime(.0001,now);
+  gain.gain.linearRampToValueAtTime(Math.min(.35,volume*MASTER_VOLUME),now+.018);
+  gain.gain.exponentialRampToValueAtTime(.0001,now+d);
+  oscillator.connect(gain).connect(audioCtx.destination);
+  oscillator.start(now);oscillator.stop(now+d+.05);
 }
 function midi(n){return 440*Math.pow(2,(n-69)/12)}
-function brass(note,dur=.34,vol=.022,delay=0){
- if(!musicOn)return;
- initAudio();
- const t=audioCtx.currentTime+delay;
- const master=audioCtx.createGain(),filter=audioCtx.createBiquadFilter();
- filter.type='lowpass';filter.frequency.setValueAtTime(1250,t);filter.frequency.linearRampToValueAtTime(2200,t+.07);
- master.gain.setValueAtTime(0,t);master.gain.linearRampToValueAtTime(Math.min(.38,vol*MASTER_VOLUME),t+.025);
- master.gain.exponentialRampToValueAtTime(.0001,t+dur);
- [0,-7].forEach((det,i)=>{
-  const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-  o.type=i?'sawtooth':'triangle';o.frequency.value=midi(note);o.detune.value=det;
-  g.gain.value=i?.24:.76;o.connect(g).connect(filter);
-  o.start(t);o.stop(t+dur+.06);
- });
- filter.connect(master).connect(audioCtx.destination);
-}
-function piano(note,dur=.25,vol=.009,delay=0){
- tone(midi(note),dur,'triangle',vol,delay);
- tone(midi(note)*2,dur*.72,'sine',vol*.20,delay+.01);
-}
-function brush(delay=0,strong=false){
- if(!musicOn)return;
- initAudio();
- const t=audioCtx.currentTime+delay;
- const len=Math.floor(audioCtx.sampleRate*(strong?.08:.045));
- const b=audioCtx.createBuffer(1,len,audioCtx.sampleRate),data=b.getChannelData(0);
- for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
- const src=audioCtx.createBufferSource(),f=audioCtx.createBiquadFilter(),g=audioCtx.createGain();
- src.buffer=b;f.type='highpass';f.frequency.value=strong?1500:2600;
- g.gain.setValueAtTime((strong?.010:.005)*MASTER_VOLUME,t);g.gain.exponentialRampToValueAtTime(.0001,t+(strong?.08:.045));
- src.connect(f).connect(g).connect(audioCtx.destination);src.start(t);
-}
-
-/* Arreglo original de jazz tradicional de Nueva Orleans
-   sobre la melodía de dominio público "When the Saints Go Marching In". */
-const SAINTS_MELODY=[
-  60,null,64,null,65,null,67,null,
-  60,null,64,null,65,null,67,null,
-  60,null,64,null,65,null,67,null,
-  64,null,60,null,64,null,62,null,
-  64,null,64,62,60,null,60,64,
-  67,null,67,65,null,65,64,null,
-  65,null,67,64,null,62,null,62,
-  60,null,null,null,null,null,null,null
-];
-const JAZZ_CHORDS=[
- [60,64,67,70],[60,64,67,70],
- [65,69,72,75],[60,64,67,70],
- [67,71,74,77],[65,69,72,75],
- [60,64,67,70],[67,71,74,77]
-];
-const WALKING_BASS=[
- 36,40,43,46,41,45,48,45,
- 43,47,50,53,36,40,43,46,
- 41,45,48,51,36,40,43,46,
- 43,47,50,53,36,43,46,47
-];
-const MUSIC_BPM=116;
-const MUSIC_BEAT=60/MUSIC_BPM;
 function playMusicStep(){
- if(!musicOn||!audioCtx)return;
- const s=musicStep%64,halfBeat=MUSIC_BEAT/2;
- const melody=SAINTS_MELODY[s];
- if(melody!==null)brass(melody+12,halfBeat*.82,.020,.025);
- if(s%2===0){
-  const bass=WALKING_BASS[(s/2)%WALKING_BASS.length];
-  piano(bass,MUSIC_BEAT*.75,.013,0);
- }else{
-  const chord=JAZZ_CHORDS[Math.floor(s/8)%JAZZ_CHORDS.length];
-  chord.forEach((n,i)=>piano(n,MUSIC_BEAT*.38,.0055,.018+i*.012));
-  brush(.01,s%4===3);
- }
- musicStep=(musicStep+1)%64;
+  if(!musicOn||!audioCtx)return;
+  const melody=[60,64,65,67,60,64,65,67,60,64,65,67,64,60,64,62];
+  const note=melody[musicStep%melody.length];
+  tone(midi(note+12),.22,'triangle',.012);
+  if(musicStep%2===0) tone(midi(note-24),.30,'sine',.008);
+  musicStep++;
 }
 function startMusic(){
- stopMusic();
- if(!musicOn)return;
- initAudio();musicStep=0;playMusicStep();
- musicTimer=setInterval(playMusicStep,Math.round(MUSIC_BEAT*500));
+  stopMusic();
+  if(!musicOn)return;
+  initAudio();
+  musicStep=0;
+  playMusicStep();
+  musicTimer=setInterval(playMusicStep,520);
 }
 function stopMusic(){if(musicTimer){clearInterval(musicTimer);musicTimer=null}}
 function toggleMusic(){
- musicOn=!musicOn;
- musicLabel.textContent='Música: '+(musicOn?'sí':'no');
- if(musicOn&&menuOverlay.style.display==='none')startMusic();else stopMusic();
+  musicOn=!musicOn;
+  musicLabel.textContent='Música: '+(musicOn?'sí':'no');
+  if(musicOn&&menuOverlay.style.display==='none')startMusic();else stopMusic();
 }
 function pluck(){tone(660,.1,'triangle',.04);tone(880,.12,'triangle',.03,.06)}
 function winSound(){tone(523,.15,'triangle',.05);tone(659,.15,'triangle',.05,.12);tone(784,.25,'triangle',.06,.24)}
 function drawSound(){tone(392,.18,'sine',.04);tone(349.23,.22,'sine',.035,.16)}
+
 const coverOverlay=document.getElementById('coverOverlay');
 const coverPlayButton=document.getElementById('coverPlayButton');
 function openGameFromCover(){
-  if(coverOverlay.classList.contains('is-hidden')) return;
+  if(coverOverlay.classList.contains('is-hidden'))return;
   coverOverlay.classList.add('is-hidden');
-  setTimeout(()=>{coverOverlay.style.display='none'},380);
-  if(musicOn){initAudio();}
+  setTimeout(()=>coverOverlay.style.display='none',380);
+  if(musicOn)initAudio();
 }
 coverPlayButton.addEventListener('click',openGameFromCover);
-coverPlayButton.addEventListener('pointerup',e=>{e.preventDefault();openGameFromCover()});
+coverPlayButton.addEventListener('pointerup',event=>{event.preventDefault();openGameFromCover()});
 
 render();
 </script>
