@@ -12,6 +12,7 @@ let mapScale = 1;
 const CLASSMATES = ['Franchu','Martu','Lucy','Jose','Samy','Ori','Rousy','Vicky chiquita','Vicky grande','Anto','Vitti','Ramirito','Santi','Francis','Leandrus','Feli','Beltru','Lauti'];
 const keys = {};
 const joy = {x:0,y:0,active:false,id:null};
+const joy2 = {x:0,y:0,active:false,id:null};
 let coopMode = false;
 let player2 = null;
 
@@ -68,6 +69,7 @@ function updateUpgradeHud(){
 
 function resetLevel(n = level){
   duelMode=false;
+  document.body.classList.toggle('coop-active', coopMode);
   level = n;
   // Desde el nivel 8 el bosque deja de crecer hacia todos lados: evita mapas enormes y mejora celulares.
   mapScale = Math.min(1.32, Math.pow(1.15, Math.floor((level - 1) / 3)));
@@ -301,8 +303,8 @@ function getInputVector(){
   return {x:dx,y:dy,len:Math.min(1,len)};
 }
 function getSecondInputVector(){
-  let dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0);
-  let dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
+  let dx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0)+joy2.x;
+  let dy=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0)+joy2.y;
   const len=Math.hypot(dx,dy);
   if(len>1){dx/=len;dy/=len;}
   return {x:dx,y:dy,len:Math.min(1,len)};
@@ -420,6 +422,12 @@ function updateJumpUI(){
   jumpCount.textContent=player?player.jumps:progression.jumpCap;
   const frac=player&&player.jumps<progression.jumpCap?player.recharge/progression.recharge:1;
   jumpProgress.style.strokeDashoffset=258*(1-frac);
+  const jumpCount2=document.getElementById('jumpCount2'),jumpProgress2=document.getElementById('jumpProgress2');
+  if(jumpCount2&&jumpProgress2){
+    jumpCount2.textContent=player2?player2.jumps:progression.jumpCap;
+    const frac2=player2&&player2.jumps<progression.jumpCap?player2.recharge/progression.recharge:1;
+    jumpProgress2.style.strokeDashoffset=258*(1-frac2);
+  }
 }
 
 function updateBots(dt){
@@ -994,7 +1002,7 @@ function drawEntities(){
   if(!flag.carrier)drawFlag(flag.x,flag.y,'enemy');
   if(!duelMode&&!homeFlag.carrier)drawFlag(homeFlag.x,homeFlag.y,'home');
   const jumpHeight=player.jump?player.jump.height:0;drawMonkey(player.x,player.y-jumpHeight,player.r,'#e95d9b','T',jumpHeight);drawPlayerIndicators(player.x,player.y-jumpHeight);
-  if(player2){const h2=player2.jump?player2.jump.height:0;drawMonkey(player2.x,player2.y-h2,player2.r,'#3f79c9','N',h2);if(player2.carrying)drawCarrierHearts(player2,player2.x,player2.y-h2-50);drawBuffIcons(player2,player2.x,player2.y-h2-68);}
+  if(player2){const h2=player2.jump?player2.jump.height:0;drawMonkey(player2.x,player2.y-h2,player2.r,'#3f79c9','N',h2);if(player2.carrying)drawCarrierHearts(player2,player2.x,player2.y-h2-50);if(player2.carrying==='enemy'||player2.carrying==='duel')drawFlag(flag.x,flag.y-h2*.35,'enemy');drawBuffIcons(player2,player2.x,player2.y-h2-68);}
   if(player.carrying)drawCarrierHearts(player,player.x,player.y-jumpHeight-50);
   if(player.carrying==='enemy'||player.carrying==='duel')drawFlag(flag.x,flag.y-jumpHeight*.35,'enemy');
   drawBuffIcons(player,player.x,player.y-jumpHeight-68);
@@ -1125,12 +1133,32 @@ function joyMove(e){
 }
 joyEl.addEventListener('touchstart',e=>{const t=e.changedTouches[0];joy.id=t.identifier;joy.active=true;joyMove(e);e.preventDefault();},{passive:false});
 joyEl.addEventListener('touchmove',e=>{joyMove(e);e.preventDefault();},{passive:false});
-joyEl.addEventListener('touchend',e=>{if([...e.changedTouches].some(t=>t.identifier===joy.id)){joy.x=joy.y=0;joy.active=false;joy.id=null;knob.style.transform='translate(0,0)';}},{passive:false});
+function releaseJoy(e){if([...e.changedTouches].some(t=>t.identifier===joy.id)){joy.x=joy.y=0;joy.active=false;joy.id=null;knob.style.transform='translate(0,0)';}}
+joyEl.addEventListener('touchend',releaseJoy,{passive:false});
+joyEl.addEventListener('touchcancel',releaseJoy,{passive:false});
 jumpBtn.addEventListener('pointerdown',e=>{e.preventDefault();jump();});
 
+const joyEl2=document.getElementById('joystick2'),knob2=document.getElementById('joyKnob2'),jumpBtn2=document.getElementById('jumpBtn2');
+function joyMove2(e){
+  if(!joyEl2||!knob2)return;
+  const t=[...e.changedTouches].find(x=>x.identifier===joy2.id);if(!t)return;
+  const r=joyEl2.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,dx=t.clientX-cx,dy=t.clientY-cy,max=r.width*.33,l=Math.hypot(dx,dy)||1,s=Math.min(1,l/max);
+  joy2.x=dx/l*s;joy2.y=dy/l*s;knob2.style.transform=`translate(${joy2.x*max}px,${joy2.y*max}px)`;
+}
+function releaseJoy2(e){
+  if([...e.changedTouches].some(t=>t.identifier===joy2.id)){joy2.x=joy2.y=0;joy2.active=false;joy2.id=null;if(knob2)knob2.style.transform='translate(0,0)';}
+}
+if(joyEl2){
+  joyEl2.addEventListener('touchstart',e=>{const t=e.changedTouches[0];joy2.id=t.identifier;joy2.active=true;joyMove2(e);e.preventDefault();},{passive:false});
+  joyEl2.addEventListener('touchmove',e=>{joyMove2(e);e.preventDefault();},{passive:false});
+  joyEl2.addEventListener('touchend',releaseJoy2,{passive:false});
+  joyEl2.addEventListener('touchcancel',releaseJoy2,{passive:false});
+}
+if(jumpBtn2)jumpBtn2.addEventListener('pointerdown',e=>{e.preventDefault();jumpSecond();});
+
 coverPlay.onclick=()=>{cover.classList.add('hide');setTimeout(()=>cover.style.display='none',380);};
-menuPlay.onclick=()=>{coopMode=false;startLevel(level);};
-const menuCoop=document.getElementById('menuCoop');if(menuCoop)menuCoop.onclick=()=>{coopMode=true;startLevel(level);};
+menuPlay.onclick=()=>{coopMode=false;document.body.classList.remove('coop-active');startLevel(level);};
+const menuCoop=document.getElementById('menuCoop');if(menuCoop)menuCoop.onclick=()=>{coopMode=true;document.body.classList.add('coop-active');startLevel(level);};
 levelsBtn.onclick=()=>{running=false;stopMusic();hide('menu');show('levels');};
 menuLevels.onclick=levelsBtn.onclick;
 closeLevels.onclick=()=>{hide('levels');show('menu');};

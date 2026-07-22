@@ -89,3 +89,44 @@ canvas.polish-hit{animation:polishHit .22s ease}
 }
 .coopButton{background:linear-gradient(135deg,#e95d9b 0 48%,#3f79c9 52% 100%);color:#fff;border:3px solid rgba(255,255,255,.75)}
 .coopHelp{margin:12px 0 18px;padding:14px;border-radius:16px;background:linear-gradient(90deg,rgba(233,93,155,.14),rgba(63,121,201,.14));line-height:1.65}
+
+/* v2.0 Fase 2: controles cooperativos táctiles */
+.coopTouch{display:none!important}
+.controlName{position:absolute;left:50%;bottom:-19px;transform:translateX(-50%);font-size:11px;font-weight:1000;color:#fff;text-shadow:0 2px 4px #000;letter-spacing:.08em;white-space:nowrap}
+body.coop-active .coopTouch{display:block!important}
+body.coop-active .tinaJoy{left:12px;bottom:14px}
+body.coop-active .tinaJump{left:142px;right:auto;bottom:8px}
+body.coop-active .nitoJoy{left:auto;right:12px;bottom:14px}
+body.coop-active .nitoJump{right:142px;left:auto;bottom:8px}
+body.coop-active .tinaJoy .joyRing{border-color:#ffd0e5;background:#ff6eae33}
+body.coop-active .tinaJoy .joyKnob{background:#e95d9bdd}
+body.coop-active .tinaJump .jumpBg{fill:#d85b94}
+body.coop-active .nitoJoy .joyRing{border-color:#d8e8ff;background:#4f8fe133}
+body.coop-active .nitoJoy .joyKnob{background:#3f79c9dd}
+body.coop-active .nitoJump .jumpBg{fill:#3f79c9}
+body.coop-active .jumpBtn small{font-size:10px;white-space:nowrap}
+
+@media(max-width:900px){
+  body.coop-active .joystick{width:112px;height:112px}
+  body.coop-active .joyKnob{left:32px;top:32px;width:48px;height:48px}
+  body.coop-active .jumpBtn{width:82px;height:104px}
+}
+@media(max-width:620px){
+  body.coop-active .joystick{width:92px;height:92px;bottom:11px}
+  body.coop-active .joyKnob{left:27px;top:27px;width:38px;height:38px}
+  body.coop-active .tinaJoy{left:7px}
+  body.coop-active .nitoJoy{right:7px}
+  body.coop-active .tinaJump{left:101px;bottom:2px}
+  body.coop-active .nitoJump{right:101px;bottom:2px}
+  body.coop-active .jumpBtn{width:72px;height:94px}
+  body.coop-active .jumpBtn svg{height:78px}
+  body.coop-active .jumpBtn small{font-size:8px;margin-top:-7px}
+  body.coop-active .controlName{font-size:9px;bottom:-16px}
+}
+@media(max-width:430px){
+  body.coop-active .joystick{width:78px;height:78px}
+  body.coop-active .joyKnob{left:23px;top:23px;width:32px;height:32px;border-width:3px}
+  body.coop-active .tinaJump{left:82px}
+  body.coop-active .nitoJump{right:82px}
+  body.coop-active .jumpBtn{width:62px}
+}

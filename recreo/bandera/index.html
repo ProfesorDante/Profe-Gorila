@@ -28,13 +28,20 @@
       <div class="gameShell">
         <canvas id="game" width="1440" height="810" aria-label="Juego toma la bandera"></canvas>
         <div id="toast" class="toast"></div>
-        <div class="mobileControls">
-          <div id="joystick" class="joystick" aria-label="Joystick virtual">
-            <div class="joyRing"></div><div id="joyKnob" class="joyKnob"></div>
+        <div class="mobileControls" aria-label="Controles táctiles de Tina">
+          <div id="joystick" class="joystick tinaJoy" aria-label="Joystick de Tina">
+            <div class="joyRing"></div><div id="joyKnob" class="joyKnob"></div><span class="controlName">TINA</span>
           </div>
-          <button id="jumpBtn" class="jumpBtn" aria-label="Saltar">
+          <button id="jumpBtn" class="jumpBtn tinaJump" aria-label="Saltar con Tina">
             <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="jumpBg"/><circle id="jumpProgress" cx="50" cy="50" r="41" class="jumpProgress"/><text id="jumpCount" x="50" y="59">1</text></svg>
-            <small>SALTAR</small>
+            <small>TINA · SALTAR</small>
+          </button>
+          <div id="joystick2" class="joystick nitoJoy coopTouch" aria-label="Joystick de Nito">
+            <div class="joyRing"></div><div id="joyKnob2" class="joyKnob"></div><span class="controlName">NITO</span>
+          </div>
+          <button id="jumpBtn2" class="jumpBtn nitoJump coopTouch" aria-label="Saltar con Nito">
+            <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" class="jumpBg"/><circle id="jumpProgress2" cx="50" cy="50" r="41" class="jumpProgress"/><text id="jumpCount2" x="50" y="59">1</text></svg>
+            <small>NITO · SALTAR</small>
           </button>
         </div>
       </div>
@@ -86,7 +93,7 @@
 
   <div id="help" class="overlay">
     <section class="card wide">
-      <h2>Cómo jugar</h2><div class="coopHelp"><b>COOPERATIVO EN PC</b><br>🩷 Tina: W A S D + ESPACIO<br>💙 Nito: FLECHAS + ENTER<br>Comparten cámara, una sola bandera y la misma misión.</div>
+      <h2>Cómo jugar</h2><div class="coopHelp"><b>COOPERATIVO</b><br>🩷 Tina: W A S D + ESPACIO, o controles rosas de la izquierda.<br>💙 Nito: FLECHAS + ENTER, o controles azules de la derecha.<br>Comparten cámara, una sola bandera y la misma misión.</div>
       <p>Tomá la bandera rival y volvé a la base de Tina. El bosque ahora es más grande y tiene caminos inspirados en un laberinto, pero con espacios amplios para esquivar. Si chocás con un rival mientras llevás la bandera, ambos rebotan y la bandera cae. El salto es animado y permite atravesar obstáculos bajos.</p>
       <ul>
         <li>Centro: ruta corta, con tres guardianes y más recompensas.</li>

@@ -102,3 +102,12 @@ Esta fase agrega la base funcional del modo de dos jugadores:
 
 Todavía no incluye controles dobles táctiles para celular. Esa será la siguiente fase,
 acompañada por la optimización específica del modo cooperativo móvil.
+
+V2.0 FASE 2 — COOPERATIVO EN CELULAR
+- Corregida la bandera de Nito: ahora se ve sobre su cabeza cuando la transporta.
+- Controles táctiles dobles en modo 2 jugadores.
+- Tina: joystick y salto rosados a la izquierda.
+- Nito: joystick y salto azules a la derecha.
+- Cada joystick admite un dedo diferente al mismo tiempo.
+- Se agregó manejo de touchcancel para evitar que un control quede trabado.
+- En 1 jugador se conservan los controles móviles clásicos.
