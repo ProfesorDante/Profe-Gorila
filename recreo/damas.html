@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Damas del Gran Árbol</title>
 <!-- Sprite Pass: contraste de fichas marrón cacao y dorado cálido -->
 <style>
@@ -47,6 +47,11 @@ button.secondary{background:#4b78a7;box-shadow:0 5px #2f4d70}
 button.soft{background:#8a6844;box-shadow:0 5px #60482f}
 button.warn{background:#b7644e;box-shadow:0 5px #7d4032}
 button.expert{background:#5e467f;box-shadow:0 5px #3d2c55}
+button.championship{background:#b78321;box-shadow:0 5px #7a5714}
+button.profe{background:#263f66;box-shadow:0 5px #182742}
+.champProgress{margin-top:12px;background:#f4ead0;border:2px solid #b78b3f;border-radius:14px;padding:10px;font-weight:900}
+.champImage{display:block;width:min(100%,640px);max-height:62vh;object-fit:contain;margin:12px auto 0;border-radius:16px;border:3px solid #8b5a2b;background:#e9f3df}
+.scoreLine{font-size:18px;font-weight:900;color:#315f3c}
 button:active{transform:translateY(3px);box-shadow:0 2px #333}
 .controls{display:grid;grid-template-columns:1fr;gap:8px}
 small.note{color:#5b704e;line-height:1.35}
@@ -265,6 +270,7 @@ small.note{color:#5b704e;line-height:1.35}
     <div class="menuGrid">
       <button onclick="prepareTeamChoice('pvp')">👥 Dos jugadores</button>
       <button class="secondary" onclick="showAiLevels()">🤖 Contra la computadora</button>
+      <button class="championship" onclick="prepareChampionship()">🏆 Modo Campeonato</button>
       <button class="soft" onclick="showTeacher()">🦍 Reglas</button>
       <button class="soft" onclick="toggleMusic()">🎵 <span id="menuMusicText">Música activada</span></button>
     </div>
@@ -281,6 +287,44 @@ small.note{color:#5b704e;line-height:1.35}
       <button class="expert" onclick="prepareTeamChoice('ai','expert')">🧠 Experto</button>
     </div>
     <div class="voiceRow"><button class="soft" onclick="hideAi()">Volver</button></div>
+  </div>
+</div>
+
+
+<div class="overlay" id="champOverlay" style="display:none">
+  <div class="card">
+    <h2>🏆 Modo Campeonato</h2>
+    <p>Jugás dos partidas contra cada dificultad y, al final, una partida especial contra el Profe Gorila.</p>
+    <div class="champProgress">2 × Fácil · 2 × Medio · 2 × Difícil · 2 × Experto · 1 × Profe</div>
+    <p>Elegí a Nito o a Tina. El personaje elegido se mantiene durante todo el campeonato.</p>
+    <div class="teamGrid">
+      <button class="teamChoice" onclick="startChampionship('nito')">🐒 Jugar con Nito<small>Equipo Hoja</small></button>
+      <button class="teamChoice secondary" onclick="startChampionship('tina')">🎀 Jugar con Tina<small>Equipo Dorado</small></button>
+    </div>
+    <div class="voiceRow"><button class="soft" onclick="hideChampionship()">Volver</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="champResultOverlay" style="display:none">
+  <div class="card">
+    <h2 id="champResultTitle">Resultado de la partida</h2>
+    <p id="champResultText"></p>
+    <div class="champProgress" id="champProgressText"></div>
+    <button onclick="continueChampionship()">Continuar campeonato</button>
+  </div>
+</div>
+
+<div class="overlay" id="champFinalOverlay" style="display:none">
+  <div class="card">
+    <h2>🏆 ¡Campeonato terminado!</h2>
+    <p class="scoreLine" id="champFinalScore"></p>
+    <img id="champFinalImage" class="champImage" src="" alt="Final del campeonato">
+    <p id="champDownloadStatus" aria-live="polite"></p>
+    <div class="voiceRow">
+      <button class="championship" onclick="downloadChampionshipPng()">⬇ Descargar recuerdo PNG</button>
+      <button onclick="restartChampionship()">Jugar el campeonato otra vez</button>
+      <button class="secondary" onclick="showMenu()">Volver al menú</button>
+    </div>
   </div>
 </div>
 
@@ -331,6 +375,14 @@ let mode='pvp', aiLevel='easy', gameOver=false;
 let humanPlayer=GREEN, aiPlayer=GOLD, pendingMode='pvp', pendingAiLevel='easy';
 let musicOn=true, audioCtx=null, musicTimer=null, currentModeSnapshot={mode:'pvp',aiLevel:'easy'};
 let nextStarter=GREEN;
+let championshipActive=false;
+let championshipCharacter='nito';
+let championshipIndex=0;
+let championshipWins=0;
+let championshipLosses=0;
+let championshipLastResult='';
+let championshipBeatProfe=false;
+const championshipSchedule=['easy','easy','medium','medium','hard','hard','expert','expert','profe'];
 
 function initBoard(startingPlayer=GREEN){
   board=Array.from({length:8},()=>Array(8).fill(EMPTY));
@@ -350,6 +402,9 @@ function dirsFor(p){
 }
 
 function inBounds(r,c){return r>=0&&r<8&&c>=0&&c<8}
+function levelName(level){
+  return ({easy:'Fácil',medium:'Medio',hard:'Difícil',expert:'Experto',profe:'VAS CONTRA EL PROFE'})[level]||level;
+}
 
 function capturesFor(r,c,b=board){
   const p=b[r][c], out=[];
@@ -473,7 +528,6 @@ function makeMove(m,fromAi=false){
     legalMoves=follow;
     setStatus('La captura continúa.');
     updateAll();
-    if(mode==='ai'&&turn===aiPlayer) setTimeout(aiTurn,300+Math.random()*300);
     return;
   }
 
@@ -507,10 +561,23 @@ function checkEnd(){
   const moves=allMovesFor(turn);
   if(g===0||y===0||moves.length===0){
     gameOver=true;
-    let winner;
-    if(g===0) winner='Tina · Equipo Dorado';
-    else if(y===0) winner='Nito · Equipo Hoja';
-    else winner=turn===GREEN?'Tina · Equipo Dorado':'Nito · Equipo Hoja';
+    let winnerPlayer;
+    if(g===0) winnerPlayer=GOLD;
+    else if(y===0) winnerPlayer=GREEN;
+    else winnerPlayer=turn===GREEN?GOLD:GREEN;
+
+    const winner=winnerPlayer===GREEN?'Nito · Equipo Hoja':'Tina · Equipo Dorado';
+
+    if(championshipActive){
+      const humanWon=winnerPlayer===humanPlayer;
+      championshipLastResult=humanWon?'win':'loss';
+      if(humanWon) championshipWins++; else championshipLosses++;
+      if(championshipSchedule[championshipIndex]==='profe') championshipBeatProfe=humanWon;
+      showChampionshipRoundResult(winner);
+      playWin();
+      return;
+    }
+
     document.getElementById('endTitle').textContent='🌿 ¡Partida terminada!';
     document.getElementById('endText').textContent=`Ganó ${winner}.`;
     document.getElementById('endOverlay').style.display='flex';
@@ -528,30 +595,34 @@ function countPieces(player){
 }
 
 function selectCell(r,c){
-  if(gameOver) return;
-  if(mode==='ai'&&turn===aiPlayer) return;
+  if(gameOver) return false;
+  if(mode==='ai'&&turn===aiPlayer) return false;
 
   const clickedMove=legalMoves.find(m=>m.to.r===r&&m.to.c===c);
-  if(clickedMove){makeMove(clickedMove);return;}
+  if(clickedMove){makeMove(clickedMove);return true;}
 
-  // Durante una captura múltiple no se puede cambiar de ficha.
   if(mustContinue&&(r!==mustContinue.r||c!==mustContinue.c)){
     setStatus('La misma ficha debe continuar capturando.');
     draw();
-    return;
+    return false;
   }
 
   const p=board[r][c];
   const belongs=(turn===GREEN&&isGreen(p))||(turn===GOLD&&isGold(p));
-  if(!belongs) return;
+  if(!belongs) return false;
 
-  const all=allMovesFor(turn);
-  const moves=all.filter(m=>m.from.r===r&&m.from.c===c);
-  if(moves.length){
-    selected={r,c};legalMoves=moves;
-    setStatus(moves[0].capture?'Captura disponible.':'Elegí un casillero iluminado.');
+  const moves=allMovesFor(turn).filter(m=>m.from.r===r&&m.from.c===c);
+  if(!moves.length){
+    if(allMovesFor(turn).some(m=>m.capture)) setStatus('Hay una captura obligatoria con otra ficha que está brillando.');
     draw();
+    return false;
   }
+
+  selected={r,c};
+  legalMoves=moves;
+  setStatus(moves[0].capture?'Captura disponible: elegí el casillero azul.':'Elegí un casillero iluminado.');
+  draw();
+  return true;
 }
 
 function aiTurn(){
@@ -565,11 +636,15 @@ function aiTurn(){
     move=chooseMedium(moves);
   }else if(aiLevel==='hard'){
     move=chooseHard(moves);
-  }else{
+  }else if(aiLevel==='expert'){
     move=chooseExpert(moves);
+  }else{
+    move=chooseProfe(moves);
   }
   makeMove(move,true);
-  if(!gameOver&&turn===aiPlayer) setTimeout(aiTurn,300+Math.random()*300);
+  if(!gameOver&&turn===aiPlayer&&mustContinue){
+    setTimeout(aiTurn,260+Math.random()*220);
+  }
 }
 
 function chooseMedium(moves){
@@ -627,6 +702,32 @@ function expertMoveBonus(m,b){
   return s;
 }
 
+function chooseProfe(moves){
+  const totalPieces=countPieces(GREEN)+countPieces(GOLD);
+  const depth=totalPieces<=8?9:totalPieces<=14?8:6;
+  let best=-Infinity,bestMoves=[];
+  for(const m of moves){
+    const nb=applyMoveToBoard(board,m);
+    const val=minimax(nb,depth,false,-Infinity,Infinity)+profeMoveBonus(m,board);
+    if(val>best+.001){best=val;bestMoves=[m]}
+    else if(Math.abs(val-best)<=.001) bestMoves.push(m);
+  }
+  bestMoves.sort((a,b)=>profeMoveBonus(b,board)-profeMoveBonus(a,board));
+  return bestMoves[0]||moves[0];
+}
+
+function profeMoveBonus(m,b){
+  const p=b[m.from.r][m.from.c];
+  let s=expertMoveBonus(m,b);
+  if(m.capture) s+=2.5;
+  if(isKing(p)) s+=.4;
+  if(m.to.c===0||m.to.c===7) s+=.5;
+  const nb=applyMoveToBoard(b,m);
+  const replies=allMovesFor(humanPlayer,nb);
+  s-=replies.filter(x=>x.capture).length*1.2;
+  return s;
+}
+
 function minimax(b,depth,maximizing,alpha,beta){
   if(depth===0) return evaluateForAi(b);
   const player=maximizing?aiPlayer:humanPlayer;
@@ -672,7 +773,7 @@ function evaluateForAi(b){
     const p=b[r][c];
     if(!p) continue;
     const belongsAi=(aiPlayer===GREEN&&isGreen(p))||(aiPlayer===GOLD&&isGold(p));
-    const center=(r>=2&&r<=5&&c>=2&&c<=5)?.18:0;
+    const center=(r>=2&&r<=5&&c>=2&&c<=5)?0.18:0;
     score+=belongsAi?center:-center;
   }
   return score;
@@ -865,25 +966,32 @@ function pointerBoardPosition(e){
 
 canvas.addEventListener('pointerdown',e=>{
   if(gameOver||(mode==='ai'&&turn===aiPlayer)) return;
+  e.preventDefault();
   const pos=pointerBoardPosition(e);
   if(!inBounds(pos.r,pos.c)) return;
 
+  const destination=legalMoves.find(m=>m.to.r===pos.r&&m.to.c===pos.c);
+  if(destination){makeMove(destination);return;}
+
   const p=board[pos.r][pos.c];
   const belongs=(turn===GREEN&&isGreen(p))||(turn===GOLD&&isGold(p));
-  if(belongs){
-    selectCell(pos.r,pos.c);
-    const moves=legalMoves.filter(m=>m.from.r===pos.r&&m.from.c===pos.c);
-    if(moves.length){
-      drag={pointerId:e.pointerId,from:{r:pos.r,c:pos.c},piece:p,startX:pos.x,startY:pos.y,x:pos.x,y:pos.y,active:false};
-      canvas.setPointerCapture(e.pointerId);
-    }
-  }else{
-    selectCell(pos.r,pos.c);
-  }
+  if(!belongs){selectCell(pos.r,pos.c);return;}
+
+  const selectableMoves=allMovesFor(turn).filter(m=>m.from.r===pos.r&&m.from.c===pos.c);
+  if(!selectableMoves.length){selectCell(pos.r,pos.c);return;}
+
+  selected={r:pos.r,c:pos.c};
+  legalMoves=selectableMoves;
+  setStatus(selectableMoves[0].capture?'Captura disponible: elegí el casillero azul.':'Elegí un casillero iluminado.');
+  draw();
+
+  drag={pointerId:e.pointerId,from:{r:pos.r,c:pos.c},piece:p,startX:pos.x,startY:pos.y,x:pos.x,y:pos.y,active:false};
+  try{canvas.setPointerCapture(e.pointerId)}catch(err){}
 });
 
 canvas.addEventListener('pointermove',e=>{
   if(!drag||drag.pointerId!==e.pointerId) return;
+  e.preventDefault();
   const pos=pointerBoardPosition(e);
   drag.x=pos.x;drag.y=pos.y;
   if(!drag.active&&Math.hypot(pos.x-drag.startX,pos.y-drag.startY)>Math.max(8,pos.size*.10)) drag.active=true;
@@ -910,11 +1018,182 @@ canvas.addEventListener('pointerup',e=>finishPointer(e,false));
 canvas.addEventListener('pointercancel',e=>finishPointer(e,true));
 canvas.addEventListener('lostpointercapture',()=>{if(drag){drag=null;draw();}});
 
+
+function prepareChampionship(){
+  document.getElementById('menuOverlay').style.display='none';
+  document.getElementById('champOverlay').style.display='flex';
+}
+function hideChampionship(){
+  document.getElementById('champOverlay').style.display='none';
+  document.getElementById('menuOverlay').style.display='flex';
+}
+function startChampionship(character){
+  championshipActive=true;
+  championshipCharacter=character;
+  championshipIndex=0;
+  championshipWins=0;
+  championshipLosses=0;
+  championshipBeatProfe=false;
+  humanPlayer=character==='nito'?GREEN:GOLD;
+  aiPlayer=humanPlayer===GREEN?GOLD:GREEN;
+  mode='ai';
+  document.getElementById('champOverlay').style.display='none';
+  startChampionshipRound();
+}
+function startChampionshipRound(){
+  if(championshipIndex>=championshipSchedule.length){finishChampionship();return;}
+  aiLevel=championshipSchedule[championshipIndex];
+  currentModeSnapshot={mode:'ai',aiLevel,humanPlayer,championship:true};
+  beginNewMatch();
+  setStatus(aiLevel==='profe'?'🦍 VAS CONTRA EL PROFE':`🏆 Campeonato · Partida ${championshipIndex+1}/9 · ${levelName(aiLevel)}`);
+}
+function showChampionshipRoundResult(winner){
+  const level=levelName(championshipSchedule[championshipIndex]);
+  const humanWon=championshipLastResult==='win';
+  document.getElementById('champResultTitle').textContent=humanWon?'🌿 ¡Ganaste la partida!':'La partida terminó';
+  document.getElementById('champResultText').textContent=`${winner} ganó la partida contra el nivel ${level}.`;
+  document.getElementById('champProgressText').textContent=`Progreso: ${championshipIndex+1}/9 · Victorias: ${championshipWins} · Derrotas: ${championshipLosses}`;
+  document.getElementById('champResultOverlay').style.display='flex';
+}
+function continueChampionship(){
+  document.getElementById('champResultOverlay').style.display='none';
+  championshipIndex++;
+  if(championshipIndex>=championshipSchedule.length) finishChampionship();
+  else startChampionshipRound();
+}
+function finishChampionship(){
+  gameOver=true;
+  const image=document.getElementById('champFinalImage');
+  image.src=championshipCharacter==='nito'?'../img/damasnito.png?v=1':'../img/damastina.png?v=1';
+  image.alt=championshipCharacter==='nito'?'Final del campeonato jugando con Nito':'Final del campeonato jugando con Tina';
+  document.getElementById('champFinalScore').textContent=
+    `Resultado final: ${championshipWins} victorias y ${championshipLosses} derrotas en 9 partidas. `+
+    (championshipBeatProfe?'¡También venciste al Profe Gorila!':'El Profe Gorila ganó la partida final.');
+  document.getElementById('champDownloadStatus').textContent='';
+  document.getElementById('champFinalOverlay').style.display='flex';
+}
+
+function roundedRectPath(context,x,y,w,h,r){
+  const radius=Math.min(r,w/2,h/2);
+  context.beginPath();
+  context.moveTo(x+radius,y);
+  context.arcTo(x+w,y,x+w,y+h,radius);
+  context.arcTo(x+w,y+h,x,y+h,radius);
+  context.arcTo(x,y+h,x,y,radius);
+  context.arcTo(x,y,x+w,y,radius);
+  context.closePath();
+}
+
+function fitCanvasText(context,text,maxWidth,startSize,minSize=18){
+  let size=startSize;
+  while(size>minSize){
+    context.font=`900 ${size}px Arial, Helvetica, sans-serif`;
+    if(context.measureText(text).width<=maxWidth) break;
+    size-=2;
+  }
+  return size;
+}
+
+async function downloadChampionshipPng(){
+  const status=document.getElementById('champDownloadStatus');
+  const image=document.getElementById('champFinalImage');
+  status.textContent='Preparando la imagen...';
+
+  try{
+    if(!image.complete||!image.naturalWidth){
+      await new Promise((resolve,reject)=>{
+        image.addEventListener('load',resolve,{once:true});
+        image.addEventListener('error',reject,{once:true});
+      });
+    }
+
+    const sourceW=image.naturalWidth;
+    const sourceH=image.naturalHeight;
+    const footerH=Math.max(250,Math.round(sourceH*.28));
+    const exportCanvas=document.createElement('canvas');
+    exportCanvas.width=sourceW;
+    exportCanvas.height=sourceH+footerH;
+    const exportCtx=exportCanvas.getContext('2d');
+
+    exportCtx.fillStyle='#f3ead0';
+    exportCtx.fillRect(0,0,exportCanvas.width,exportCanvas.height);
+    exportCtx.drawImage(image,0,0,sourceW,sourceH);
+
+    const pad=Math.max(28,Math.round(sourceW*.045));
+    const panelX=pad;
+    const panelY=sourceH+Math.round(footerH*.10);
+    const panelW=sourceW-pad*2;
+    const panelH=footerH-Math.round(footerH*.20);
+
+    roundedRectPath(exportCtx,panelX,panelY,panelW,panelH,Math.max(20,Math.round(sourceW*.025)));
+    exportCtx.fillStyle='#fff8df';
+    exportCtx.fill();
+    exportCtx.lineWidth=Math.max(4,Math.round(sourceW*.006));
+    exportCtx.strokeStyle='#8b5a2b';
+    exportCtx.stroke();
+
+    exportCtx.textAlign='center';
+    exportCtx.textBaseline='middle';
+    exportCtx.fillStyle='#244d36';
+
+    const title='CAMPEONATO DE DAMAS DEL GRAN ÁRBOL';
+    const titleSize=fitCanvasText(exportCtx,title,panelW*.88,Math.round(sourceW*.052),24);
+    exportCtx.font=`900 ${titleSize}px Arial, Helvetica, sans-serif`;
+    exportCtx.fillText(title,sourceW/2,panelY+panelH*.24);
+
+    const character=championshipCharacter==='nito'?'Nito · Equipo Hoja':'Tina · Equipo Dorado';
+    const result=`${championshipWins} victorias · ${championshipLosses} derrotas · ${character}`;
+    const resultSize=fitCanvasText(exportCtx,result,panelW*.90,Math.round(sourceW*.036),20);
+    exportCtx.font=`900 ${resultSize}px Arial, Helvetica, sans-serif`;
+    exportCtx.fillStyle='#315f3c';
+    exportCtx.fillText(result,sourceW/2,panelY+panelH*.53);
+
+    const profeText=championshipBeatProfe?'🦍 ¡Venció al Profe Gorila!':'🦍 Completó el desafío contra el Profe Gorila';
+    const profeSize=fitCanvasText(exportCtx,profeText,panelW*.90,Math.round(sourceW*.032),18);
+    exportCtx.font=`800 ${profeSize}px Arial, Helvetica, sans-serif`;
+    exportCtx.fillStyle=championshipBeatProfe?'#8a5c12':'#5e467f';
+    exportCtx.fillText(profeText,sourceW/2,panelY+panelH*.75);
+
+    const dateText=new Intl.DateTimeFormat('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date());
+    exportCtx.font=`700 ${Math.max(16,Math.round(sourceW*.021))}px Arial, Helvetica, sans-serif`;
+    exportCtx.fillStyle='#5b704e';
+    exportCtx.fillText(dateText,sourceW/2,panelY+panelH*.90);
+
+    const blob=await new Promise(resolve=>exportCanvas.toBlob(resolve,'image/png'));
+    if(!blob) throw new Error('No se pudo crear el archivo PNG.');
+
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    const characterFile=championshipCharacter==='nito'?'Nito':'Tina';
+    link.href=url;
+    link.download=`Campeonato_Damas_${characterFile}.png`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    status.textContent='¡Imagen PNG preparada!';
+  }catch(error){
+    console.error(error);
+    status.textContent='No se pudo descargar automáticamente. Mantené presionada la imagen para guardarla.';
+    try{window.open(image.src,'_blank','noopener')}catch(e){}
+  }
+}
+
+function restartChampionship(){
+  document.getElementById('champFinalOverlay').style.display='none';
+  startChampionship(championshipCharacter);
+}
+
 function beginNewMatch(){
   const starter=nextStarter;
   nextStarter=nextStarter===GREEN?GOLD:GREEN;
   initBoard(starter);
-  setStatus(starter===GREEN?'Comienza Nito · Equipo Hoja.':'Comienza Tina · Equipo Dorado.');
+  if(championshipActive){
+    const label=levelName(championshipSchedule[championshipIndex]);
+    setStatus(label==='VAS CONTRA EL PROFE'?'🦍 VAS CONTRA EL PROFE':`🏆 Campeonato · Partida ${championshipIndex+1}/9 · ${label}`);
+  }else{
+    setStatus(starter===GREEN?'Comienza Nito · Equipo Hoja.':'Comienza Tina · Equipo Dorado.');
+  }
   if(mode==='ai'&&starter===aiPlayer) setTimeout(aiTurn,450+Math.random()*250);
 }
 function enterFromCover(){
@@ -935,6 +1214,7 @@ function cancelTeamChoice(){
   else document.getElementById('menuOverlay').style.display='flex';
 }
 function chooseTeam(character){
+  championshipActive=false;
   mode=pendingMode;
   aiLevel=pendingAiLevel;
   humanPlayer=character==='nito'?GREEN:GOLD;
@@ -953,9 +1233,13 @@ function hideMenus(){
   document.getElementById('teamOverlay').style.display='none';
 }
 function showMenu(){
+  championshipActive=false;
   document.getElementById('endOverlay').style.display='none';
   document.getElementById('teamOverlay').style.display='none';
   document.getElementById('aiOverlay').style.display='none';
+  document.getElementById('champOverlay').style.display='none';
+  document.getElementById('champResultOverlay').style.display='none';
+  document.getElementById('champFinalOverlay').style.display='none';
   document.getElementById('menuOverlay').style.display='flex';
 }
 function showTeacher(){document.getElementById('teacherOverlay').style.display='flex'}
