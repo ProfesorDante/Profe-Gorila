@@ -132,3 +132,11 @@ ACTUALIZACIÓN COOPERATIVA 2.0.4
 - Tina anota en la base izquierda y Nito en la base derecha.
 - Los golpes, objetos y estados se aplican al jugador correcto.
 - Se corrigió un wrapper que hacía perder objetos al Jugador 1 cuando golpeaban al Jugador 2.
+
+
+ACTUALIZACIÓN 2.0.5
+- Corregido el congelamiento del duelo en modo un jugador al tomar la bandera.
+- Nito usa color azul durante el duelo.
+- La IA de Nito persigue objetivos definidos y deja de cambiar de rumbo aleatoriamente.
+- El modo cooperativo abre primero la selección de niveles desbloqueados.
+- Los peligros del duelo afectan correctamente a Tina y Nito por separado.

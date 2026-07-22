@@ -490,9 +490,34 @@ function recoverBotFromObstacle(b,goal){
 
 function chooseBotGoal(b,dt){
   if(duelMode){
-    if(b.carrying==='duel')return {x:enemyBase.x+enemyBase.w/2,y:enemyBase.y+enemyBase.h/2,speed:1.15};
-    if(player.carrying==='duel')return {x:targetHuman.x,y:targetHuman.y,speed:1.22};
-    return {x:flag.x,y:flag.y,speed:1.08};
+    const targetHuman=player;
+
+    // Nito deja de elegir objetivos al azar: disputa la bandera,
+    // persigue al portador y vuelve a su base con una ruta clara.
+    if(b.carrying==='duel'){
+      const goalY=enemyBase.y+enemyBase.h/2;
+      return {x:enemyBase.x+enemyBase.w*.52,y:goalY,speed:1.24};
+    }
+
+    if(targetHuman.carrying==='duel'){
+      const lead=72*mapScale;
+      const predictedX=targetHuman.x+(targetHuman.vx||0)*lead;
+      const predictedY=targetHuman.y+(targetHuman.vy||0)*lead;
+      return {
+        x:clamp(predictedX,80,WORLD_W-80),
+        y:clamp(predictedY,80,WORLD_H-80),
+        speed:1.30
+      };
+    }
+
+    // Si la bandera está libre, Nito la busca por el camino más directo.
+    // Cuando está muy cerca, reduce los cambios bruscos de dirección.
+    const nearFlag=dist(b,flag)<170*mapScale;
+    return {
+      x:flag.x,
+      y:flag.y,
+      speed:nearFlag?1.10:1.20
+    };
   }
   const humanTarget=(player2&&dist(player2,b)<dist(player,b))?player2:player;
   const flagCarrier=[player,player2].filter(Boolean).find(h=>h.carrying==='enemy');
@@ -1199,7 +1224,12 @@ function buildLevelGrid(){
   for(let i=1;i<=19;i++){
     const b=document.createElement('button');b.textContent=i===19?'★ EL DUELO':i+'\n'+CLASSMATES[i-1];
     if(i>unlocked)b.classList.add('locked');b.disabled=i>unlocked;
-    b.onclick=()=>{level=i;hide('levels');startLevel(i);};levelGrid.appendChild(b);
+    b.onclick=()=>{
+      level=i;
+      hide('levels');
+      startLevel(i);
+    };
+    levelGrid.appendChild(b);
   }
 }
 
@@ -1238,7 +1268,16 @@ if(jumpBtn2)jumpBtn2.addEventListener('pointerdown',e=>{e.preventDefault();jumpS
 
 coverPlay.onclick=()=>{cover.classList.add('hide');setTimeout(()=>cover.style.display='none',380);};
 menuPlay.onclick=()=>{coopMode=false;document.body.classList.remove('coop-active');startLevel(level);};
-const menuCoop=document.getElementById('menuCoop');if(menuCoop)menuCoop.onclick=()=>{coopMode=true;document.body.classList.add('coop-active');startLevel(level);};
+const menuCoop=document.getElementById('menuCoop');
+if(menuCoop)menuCoop.onclick=()=>{
+  coopMode=true;
+  document.body.classList.add('coop-active');
+  running=false;
+  stopMusic();
+  buildLevelGrid();
+  hide('menu');
+  show('levels');
+};
 levelsBtn.onclick=()=>{running=false;stopMusic();hide('menu');show('levels');};
 menuLevels.onclick=levelsBtn.onclick;
 closeLevels.onclick=()=>{hide('levels');show('menu');};
@@ -1291,7 +1330,7 @@ function resetDuelWorld(){
   }else{
     coopMode=false;
     player2=null;
-    bots=[{id:'nito',name:'Nito',personality:'duelist',x:nitoSpawn.x,y:nitoSpawn.y,spawnX:nitoSpawn.x,spawnY:nitoSpawn.y,r:22,speed:240,stun:0,inv:0,bananas:0,navPath:[],navTimer:0,stuckTime:0,lastX:nitoSpawn.x,lastY:nitoSpawn.y,jumps:progression.jumpCap,jumpCap:progression.jumpCap,jumpRecharge:progression.recharge,jumpCharge:0,jump:null,vx:-1,vy:0,carrying:null,flagHP:0,flagMaxHP:10,state:'neutral',decisionTimer:0,recoveryTimer:0}];
+    bots=[{id:'nito',name:'Nito',color:'#3f79c9',personality:'duelist',x:nitoSpawn.x,y:nitoSpawn.y,spawnX:nitoSpawn.x,spawnY:nitoSpawn.y,r:22,speed:240,stun:0,inv:0,bananas:0,navPath:[],navTimer:0,stuckTime:0,lastX:nitoSpawn.x,lastY:nitoSpawn.y,jumps:progression.jumpCap,jumpCap:progression.jumpCap,jumpRecharge:progression.recharge,jumpCharge:0,jump:null,vx:-1,vy:0,carrying:null,flagHP:0,flagMaxHP:10,state:'neutral',decisionTimer:0,recoveryTimer:0}];
   }
   guardians=[];
   // Molestias simétricas: obligan a variar la ruta sin favorecer a nadie.
@@ -1327,7 +1366,7 @@ function makeDuelArena(){
   return a;
 }
 function updateDuelHazards(dt){
-  const actors=[player,...bots].filter(Boolean);
+  const actors=[player,player2,...bots].filter(Boolean);
   for(const e of actors){
     e.duelTrapCooldown=Math.max(0,(e.duelTrapCooldown||0)-dt);
     if(e.jump||e.duelTrapCooldown>0)continue;
