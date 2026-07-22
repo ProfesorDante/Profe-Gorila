@@ -52,6 +52,24 @@ button.profe{background:#263f66;box-shadow:0 5px #182742}
 .champProgress{margin-top:12px;background:#f4ead0;border:2px solid #b78b3f;border-radius:14px;padding:10px;font-weight:900}
 .champImage{display:block;width:min(100%,640px);max-height:62vh;object-fit:contain;margin:12px auto 0;border-radius:16px;border:3px solid #8b5a2b;background:#e9f3df}
 .scoreLine{font-size:18px;font-weight:900;color:#315f3c}
+.opponentCard{
+  background:#fff3cf;border:2px solid #c28f35;border-radius:16px;padding:12px 10px;
+  display:flex;align-items:center;justify-content:center;gap:12px;text-align:left
+}
+.opponentFace{font-size:48px;line-height:1;filter:drop-shadow(0 3px 2px rgba(0,0,0,.18))}
+.opponentInfo strong{display:block;font-size:17px;color:#315f3c}
+.opponentInfo span{display:block;font-size:13px;color:#6e5a30;font-weight:800;margin-top:2px}
+@media(max-width:860px){
+  .mobileOpponent{
+    display:flex;position:absolute;left:8px;top:8px;z-index:7;
+    background:rgba(255,248,223,.94);border:2px solid #c28f35;border-radius:999px;
+    padding:5px 9px;align-items:center;gap:6px;font-weight:900
+  }
+  .mobileOpponent .opponentFace{font-size:26px}
+  .mobileOpponent .opponentInfo strong{font-size:12px}
+  .mobileOpponent .opponentInfo span{display:none}
+}
+@media(min-width:861px){.mobileOpponent{display:none}}
 button:active{transform:translateY(3px);box-shadow:0 2px #333}
 .controls{display:grid;grid-template-columns:1fr;gap:8px}
 small.note{color:#5b704e;line-height:1.35}
@@ -219,6 +237,10 @@ small.note{color:#5b704e;line-height:1.35}
 
 <main>
   <div class="boardWrap">
+    <div class="mobileOpponent" id="mobileOpponent" style="display:none">
+      <div class="opponentFace" id="mobileOpponentFace">🦥</div>
+      <div class="opponentInfo"><strong id="mobileOpponentName">Perezoso</strong></div>
+    </div>
     <div class="mobileGameBar" aria-label="Opciones de partida">
       <button onclick="showMenu()" aria-label="Nueva partida" title="Nueva partida">↻</button>
       <button class="secondary" onclick="toggleMusic()" aria-label="Activar o desactivar música" title="Música">🎵</button>
@@ -229,6 +251,13 @@ small.note{color:#5b704e;line-height:1.35}
   <aside class="side">
     <h2>Partida</h2>
     <div class="status" id="status">Elegí un modo para comenzar.</div>
+    <div class="opponentCard" id="opponentCard" style="display:none">
+      <div class="opponentFace" id="opponentFace">🦥</div>
+      <div class="opponentInfo">
+        <strong id="opponentName">Perezoso</strong>
+        <span id="opponentSubtitle">Tu rival actual</span>
+      </div>
+    </div>
     <div class="controls">
       <button onclick="showMenu()">Nueva partida</button>
       <button class="secondary" onclick="toggleMusic()">🎵 <span id="musicText">Música: sí</span></button>
@@ -294,8 +323,8 @@ small.note{color:#5b704e;line-height:1.35}
 <div class="overlay" id="champOverlay" style="display:none">
   <div class="card">
     <h2>🏆 Modo Campeonato</h2>
-    <p>Jugás dos partidas contra cada dificultad y, al final, una partida especial contra el Profe Gorila.</p>
-    <div class="champProgress">2 × Fácil · 2 × Medio · 2 × Difícil · 2 × Experto · 1 × Profe</div>
+    <p>Superá una serie de rivales cada vez más hábiles y descubrí hasta dónde podés llegar.</p>
+    <div class="champProgress">Cada victoria te acerca al desafío final.</div>
     <p>Elegí a Nito o a Tina. El personaje elegido se mantiene durante todo el campeonato.</p>
     <div class="teamGrid">
       <button class="teamChoice" onclick="startChampionship('nito')">🐒 Jugar con Nito<small>Equipo Hoja</small></button>
@@ -383,6 +412,13 @@ let championshipLosses=0;
 let championshipLastResult='';
 let championshipBeatProfe=false;
 const championshipSchedule=['easy','easy','medium','medium','hard','hard','expert','expert','profe'];
+const opponentData={
+  easy:{name:'Perezoso',face:'🦥'},
+  medium:{name:'Loro',face:'🦜'},
+  hard:{name:'Jaguar',face:'🐆'},
+  expert:{name:'Elefante',face:'🐘'},
+  profe:{name:'Profe Gorila',face:'🦍'}
+};
 
 function initBoard(startingPlayer=GREEN){
   board=Array.from({length:8},()=>Array(8).fill(EMPTY));
@@ -404,6 +440,24 @@ function dirsFor(p){
 function inBounds(r,c){return r>=0&&r<8&&c>=0&&c<8}
 function levelName(level){
   return ({easy:'Fácil',medium:'Medio',hard:'Difícil',expert:'Experto',profe:'VAS CONTRA EL PROFE'})[level]||level;
+}
+
+function updateOpponentDisplay(level,showDifficulty=false){
+  const data=opponentData[level];
+  if(!data) return;
+  const card=document.getElementById('opponentCard');
+  const mobile=document.getElementById('mobileOpponent');
+  document.getElementById('opponentFace').textContent=data.face;
+  document.getElementById('opponentName').textContent=data.name;
+  document.getElementById('opponentSubtitle').textContent=showDifficulty?`Dificultad: ${levelName(level)}`:'Tu rival actual';
+  document.getElementById('mobileOpponentFace').textContent=data.face;
+  document.getElementById('mobileOpponentName').textContent=data.name;
+  card.style.display='flex';
+  mobile.style.display='flex';
+}
+function hideOpponentDisplay(){
+  document.getElementById('opponentCard').style.display='none';
+  document.getElementById('mobileOpponent').style.display='none';
 }
 
 function capturesFor(r,c,b=board){
@@ -1045,13 +1099,14 @@ function startChampionshipRound(){
   aiLevel=championshipSchedule[championshipIndex];
   currentModeSnapshot={mode:'ai',aiLevel,humanPlayer,championship:true};
   beginNewMatch();
-  setStatus(aiLevel==='profe'?'🦍 VAS CONTRA EL PROFE':`🏆 Campeonato · Partida ${championshipIndex+1}/9 · ${levelName(aiLevel)}`);
+  updateOpponentDisplay(aiLevel,false);
+  setStatus(aiLevel==='profe'?'🦍 VAS CONTRA EL PROFE':`🏆 Campeonato · Partida ${championshipIndex+1}/9`);
 }
 function showChampionshipRoundResult(winner){
-  const level=levelName(championshipSchedule[championshipIndex]);
+  const rival=opponentData[championshipSchedule[championshipIndex]];
   const humanWon=championshipLastResult==='win';
   document.getElementById('champResultTitle').textContent=humanWon?'🌿 ¡Ganaste la partida!':'La partida terminó';
-  document.getElementById('champResultText').textContent=`${winner} ganó la partida contra el nivel ${level}.`;
+  document.getElementById('champResultText').textContent=`${winner} ganó la partida contra ${rival.name}.`;
   document.getElementById('champProgressText').textContent=`Progreso: ${championshipIndex+1}/9 · Victorias: ${championshipWins} · Derrotas: ${championshipLosses}`;
   document.getElementById('champResultOverlay').style.display='flex';
 }
@@ -1190,7 +1245,8 @@ function beginNewMatch(){
   initBoard(starter);
   if(championshipActive){
     const label=levelName(championshipSchedule[championshipIndex]);
-    setStatus(label==='VAS CONTRA EL PROFE'?'🦍 VAS CONTRA EL PROFE':`🏆 Campeonato · Partida ${championshipIndex+1}/9 · ${label}`);
+    updateOpponentDisplay(championshipSchedule[championshipIndex],false);
+    setStatus(label==='VAS CONTRA EL PROFE'?'🦍 VAS CONTRA EL PROFE':`🏆 Campeonato · Partida ${championshipIndex+1}/9`);
   }else{
     setStatus(starter===GREEN?'Comienza Nito · Equipo Hoja.':'Comienza Tina · Equipo Dorado.');
   }
@@ -1203,6 +1259,7 @@ function enterFromCover(){
 }
 function prepareTeamChoice(nextMode,level='easy'){
   pendingMode=nextMode;
+  if(nextMode==='pvp') hideOpponentDisplay();
   pendingAiLevel=level;
   document.getElementById('menuOverlay').style.display='none';
   document.getElementById('aiOverlay').style.display='none';
@@ -1221,6 +1278,7 @@ function chooseTeam(character){
   aiPlayer=humanPlayer===GREEN?GOLD:GREEN;
   currentModeSnapshot={mode,aiLevel,humanPlayer};
   hideMenus();
+  if(mode==='ai') updateOpponentDisplay(aiLevel,true); else hideOpponentDisplay();
   beginNewMatch();
   startMusic();
 }
@@ -1234,6 +1292,7 @@ function hideMenus(){
 }
 function showMenu(){
   championshipActive=false;
+  hideOpponentDisplay();
   document.getElementById('endOverlay').style.display='none';
   document.getElementById('teamOverlay').style.display='none';
   document.getElementById('aiOverlay').style.display='none';
