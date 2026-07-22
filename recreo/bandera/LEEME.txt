@@ -52,3 +52,23 @@ V17 — Pulido de decisiones y clima
 - Noche más clara e idéntica en PC y celular.
 - Lluvia visible y activa en celular con menor carga gráfica.
 - Portada adaptable y botón de inicio siempre tocable.
+
+V18 — DUELO DISPUTADO Y NOCHE CORREGIDA
+- En el Gran Duelo, cualquier golpe hace soltar la bandera.
+- Se agregaron obstáculos bajos, trampas simétricas y pelotas libres a la arena final.
+- Las trampas afectan por igual a Tina y a Nito.
+- La noche usa una máscara independiente: fondo oscuro y halos realmente claros.
+
+V19 — Noche más profunda y lluvia móvil legible
+- La noche oscurece más el fondo.
+- Tina conserva un halo jugable; bots y guardianes ven menos.
+- El jaguar mantiene el halo más amplio, porque es el único guardián que ve bien de noche.
+- En celulares se retira la cortina visual de gotas: permanecen charcos, objetos, sapo, deslizamiento y cielo nublado.
+
+
+V20 — Noche total
+- Tina solo puede ver dentro de su propio halo.
+- Los bots y los guardianes ya no generan halos visibles para el jugador.
+- El jaguar conserva su ventaja nocturna en la IA, pero no revela su posición iluminando el mapa.
+- Vela, luciérnaga y linterna siguen ampliando la visión de Tina.
+- Fuera del halo queda apenas una referencia mínima del escenario para evitar una desorientación absoluta.

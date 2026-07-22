@@ -279,6 +279,7 @@ function update(dt){
   updateDirector(dt);
   updateParticles(dt);
   updateCamera(dt);
+  if(duelMode) updateDuelHazards(dt);
   checkWorld();
 }
 
@@ -757,6 +758,12 @@ function guardianHit(g){
 function guardianDamage(type){return type==='elephant'?4:(type==='gorilla'||type==='turtle')?2:1;}
 function knockbackFrom(e,source,amount){const dx=e.x-source.x,dy=e.y-source.y,l=Math.hypot(dx,dy)||1;moveWithSliding(e,dx/l*amount,dy/l*amount,false);}
 function damageCarrier(e,amount){
+  // En el Gran Duelo, cualquier golpe obliga a soltar la bandera.
+  // Esto convierte cada cruce en una verdadera disputa por la posesión.
+  if(duelMode && e.carrying==='duel'){
+    dropCarriedFlag(e);
+    return;
+  }
   e.flagHP=Math.max(0,(e.flagHP ?? e.flagMaxHP ?? 6)-amount);
   if(e.flagHP<=0)dropCarriedFlag(e);
 }
@@ -1110,7 +1117,25 @@ function resetDuelWorld(){
   player={id:'tina',x:280*mapScale,y:WORLD_H/2,r:22,vx:1,vy:0,speed:240,jumps:progression.jumpCap,recharge:0,jump:null,inv:0,stun:0,bananas:0,carrying:null,flagHP:0,flagMaxHP:10,slow:0,speedBoost:0};
   const nitoSpawn={x:WORLD_W-280*mapScale,y:WORLD_H/2};
   bots=[{id:'nito',name:'Nito',personality:'duelist',x:nitoSpawn.x,y:nitoSpawn.y,spawnX:nitoSpawn.x,spawnY:nitoSpawn.y,r:22,speed:240,stun:0,inv:0,bananas:0,navPath:[],navTimer:0,stuckTime:0,lastX:nitoSpawn.x,lastY:nitoSpawn.y,jumps:progression.jumpCap,jumpCap:progression.jumpCap,jumpRecharge:progression.recharge,jumpCharge:0,jump:null,vx:-1,vy:0,carrying:null,flagHP:0,flagMaxHP:10,state:'neutral',decisionTimer:0,recoveryTimer:0}];
-  guardians=[];traps=[];bananas=[];objects=[];homeFlag={kind:'home',x:-9999,y:-9999,homeX:-9999,homeY:-9999,r:1,carrier:null,dropped:false};
+  guardians=[];
+  // Molestias simétricas: obligan a variar la ruta sin favorecer a nadie.
+  traps=[
+    {x:560*mapScale,y:300*mapScale,r:24,type:'mud',duel:true},
+    {x:(1850-560)*mapScale,y:300*mapScale,r:24,type:'mud',duel:true},
+    {x:560*mapScale,y:680*mapScale,r:24,type:'vine',duel:true},
+    {x:(1850-560)*mapScale,y:680*mapScale,r:24,type:'vine',duel:true},
+    {x:825*mapScale,y:365*mapScale,r:24,type:'log',duel:true},
+    {x:(1850-825)*mapScale,y:615*mapScale,r:24,type:'log',duel:true}
+  ];
+  bananas=[];
+  // Pelotas libres: nadie las recoge; ambos pueden patearlas y cortar una escapada.
+  objects=[
+    {x:760*mapScale,y:490*mapScale,r:20,type:'football',got:false,revealed:true,vx:0,vy:0,ballCooldown:0,lastKicker:null},
+    {x:(1850-760)*mapScale,y:490*mapScale,r:20,type:'basketball',got:false,revealed:true,vx:0,vy:0,ballCooldown:0,lastKicker:null},
+    {x:925*mapScale,y:285*mapScale,r:20,type:'volleyball',got:false,revealed:true,vx:0,vy:0,ballCooldown:0,lastKicker:null},
+    {x:925*mapScale,y:695*mapScale,r:20,type:'softball',got:false,revealed:true,vx:0,vy:0,ballCooldown:0,lastKicker:null}
+  ];
+  homeFlag={kind:'home',x:-9999,y:-9999,homeX:-9999,homeY:-9999,r:1,carrier:null,dropped:false};
   flag={kind:'enemy',x:WORLD_W/2,y:WORLD_H/2,homeX:WORLD_W/2,homeY:WORLD_H/2,r:20,carrier:null,dropped:false};
   obstacles=makeDuelArena();particles=[];stats={jumpsUsed:0,hits:0,bananas:0};timeLeft=9999;levelElapsed=0;director=null;
   camera.x=clamp(WORLD_W/2-VIEW_W/2,0,WORLD_W-VIEW_W);camera.y=clamp(WORLD_H/2-VIEW_H/2,0,WORLD_H-VIEW_H);draw();
@@ -1119,9 +1144,35 @@ function makeDuelArena(){
   const a=[];const add=(x,y,w,h,type='hedge',low=false,breakable=false)=>a.push({x:x*mapScale,y:y*mapScale,w:w*mapScale,h:h*mapScale,type,low,breakable});
   add(0,0,1850,48,'trees');add(0,932,1850,48,'trees');add(0,0,48,980,'trees');add(1802,0,48,980,'trees');
   // Arena completamente simétrica: diagonales y cuatro decisiones alrededor del centro.
-  [[410,180,250,62],[1190,180,250,62],[410,738,250,62],[1190,738,250,62],[680,330,90,150,'rock'],[1080,330,90,150,'rock'],[680,500,90,150,'rock'],[1080,500,90,150,'rock'],[870,180,110,90,'flowers'],[870,710,110,90,'flowers']].forEach(x=>add(...x));
+  [[410,180,250,62],[1190,180,250,62],[410,738,250,62],[1190,738,250,62],[680,330,90,150,'rock'],[1080,330,90,150,'rock'],[680,500,90,150,'rock'],[1080,500,90,150,'rock'],[870,180,110,90,'flowers'],[870,710,110,90,'flowers'],
+   // Cortes bajos y simétricos: se pueden saltar, pero eliminan la carrera recta perfecta.
+   [790,410,125,46,'log',true],[935,524,125,46,'log',true],
+   [510,455,95,70,'rock'],[1245,455,95,70,'rock']].forEach(x=>add(...x));
   return a;
 }
+function updateDuelHazards(dt){
+  const actors=[player,...bots].filter(Boolean);
+  for(const e of actors){
+    e.duelTrapCooldown=Math.max(0,(e.duelTrapCooldown||0)-dt);
+    if(e.jump||e.duelTrapCooldown>0)continue;
+    for(const tr of traps){
+      if(!tr.duel||dist(e,tr)>=e.r+tr.r)continue;
+      e.duelTrapCooldown=.55;
+      if(tr.type==='mud'){
+        e.slow=Math.max(e.slow||0,.48);
+      }else if(tr.type==='vine'){
+        e.stun=Math.max(e.stun||0,.36);
+      }else if(tr.type==='log'){
+        const vx=e.vx||1,vy=e.vy||0;
+        moveWithSliding(e,-vx*42,-vy*42,false);
+        e.stun=Math.max(e.stun||0,.16);
+      }
+      burst(e.x,e.y,'#f6d37a');
+      break;
+    }
+  }
+}
+
 function beginDuelRound(){
   running=true;last=performance.now();startMusic();requestAnimationFrame(loop);
 }

@@ -1060,3 +1060,118 @@ function v17RefreshViewport(){
 v17RefreshViewport();
 addEventListener('resize',v17RefreshViewport,{passive:true});
 addEventListener('orientationchange',()=>setTimeout(v17RefreshViewport,120),{passive:true});
+
+
+/* =========================================================
+   V18 — NOCHE CORRECTA: máscara oscura con ventanas de luz
+   ========================================================= */
+let v18NightCanvas=null, v18NightCtx=null;
+nightOverlay=function(){
+  if(!v18NightCanvas){
+    v18NightCanvas=document.createElement('canvas');
+    v18NightCtx=v18NightCanvas.getContext('2d');
+  }
+  if(v18NightCanvas.width!==VIEW_W||v18NightCanvas.height!==VIEW_H){
+    v18NightCanvas.width=VIEW_W;v18NightCanvas.height=VIEW_H;
+  }
+  const nctx=v18NightCtx;
+  nctx.clearRect(0,0,VIEW_W,VIEW_H);
+  // El mapa queda oscuro; las zonas alrededor de los personajes recuperan su color real.
+  nctx.globalCompositeOperation='source-over';
+  nctx.fillStyle='rgba(4,12,24,.48)';
+  nctx.fillRect(0,0,VIEW_W,VIEW_H);
+  nctx.globalCompositeOperation='destination-out';
+  const lights=[player,...bots,...guardians].filter(Boolean);
+  for(const e of lights){
+    const ex=e.x-camera.x,ey=e.y-camera.y;
+    const isPlayer=e===player;
+    const radius=isPlayer?(player.activeGear==='candle'?250:player.activeGear==='firefly'?230:205):150;
+    const gr=nctx.createRadialGradient(ex,ey,12,ex,ey,radius);
+    gr.addColorStop(0,'rgba(0,0,0,1)');
+    gr.addColorStop(.55,'rgba(0,0,0,.86)');
+    gr.addColorStop(1,'rgba(0,0,0,0)');
+    nctx.fillStyle=gr;nctx.beginPath();nctx.arc(ex,ey,radius,0,Math.PI*2);nctx.fill();
+  }
+  if(player.activeGear==='flashlight'){
+    const px=player.x-camera.x,py=player.y-camera.y,a=Math.atan2(player.vy||0,player.vx||1);
+    nctx.save();nctx.translate(px,py);nctx.rotate(a);nctx.fillStyle='rgba(0,0,0,.92)';
+    nctx.beginPath();nctx.moveTo(0,0);nctx.lineTo(390,-130);nctx.lineTo(390,130);nctx.closePath();nctx.fill();nctx.restore();
+  }
+  nctx.globalCompositeOperation='source-over';
+  ctx.drawImage(v18NightCanvas,0,0);
+};
+
+/* =========================================================
+   V20 — NOCHE TOTAL: TINA SOLO VE SU PROPIO HALO
+   ========================================================= */
+nightOverlay=function(){
+  if(!v18NightCanvas){
+    v18NightCanvas=document.createElement('canvas');
+    v18NightCtx=v18NightCanvas.getContext('2d');
+  }
+  if(v18NightCanvas.width!==VIEW_W||v18NightCanvas.height!==VIEW_H){
+    v18NightCanvas.width=VIEW_W;v18NightCanvas.height=VIEW_H;
+  }
+  const nctx=v18NightCtx;
+  nctx.clearRect(0,0,VIEW_W,VIEW_H);
+  nctx.globalCompositeOperation='source-over';
+
+  // Noche cerrada: fuera del alcance visual de Tina apenas se distingue el mapa.
+  // El jaguar sigue viendo con normalidad por su IA, pero NO revela su posición
+  // mediante un halo visible para el jugador.
+  nctx.fillStyle='rgba(1,5,13,.88)';
+  nctx.fillRect(0,0,VIEW_W,VIEW_H);
+  nctx.globalCompositeOperation='destination-out';
+
+  const px=player.x-camera.x,py=player.y-camera.y;
+  let radius=184;
+  if(player.activeGear==='candle')radius=240;
+  else if(player.activeGear==='firefly')radius=220;
+
+  // Única ventana de visión: el halo de Tina.
+  const gr=nctx.createRadialGradient(px,py,12,px,py,radius);
+  gr.addColorStop(0,'rgba(0,0,0,1)');
+  gr.addColorStop(.52,'rgba(0,0,0,.98)');
+  gr.addColorStop(.80,'rgba(0,0,0,.62)');
+  gr.addColorStop(1,'rgba(0,0,0,0)');
+  nctx.fillStyle=gr;
+  nctx.beginPath();nctx.arc(px,py,radius,0,Math.PI*2);nctx.fill();
+
+  // La linterna amplía la visión hacia la dirección en la que se mueve Tina.
+  if(player.activeGear==='flashlight'){
+    const a=Math.atan2(player.vy||0,player.vx||1);
+    nctx.save();nctx.translate(px,py);nctx.rotate(a);
+    const cone=nctx.createLinearGradient(0,0,430,0);
+    cone.addColorStop(0,'rgba(0,0,0,.98)');
+    cone.addColorStop(.72,'rgba(0,0,0,.78)');
+    cone.addColorStop(1,'rgba(0,0,0,0)');
+    nctx.fillStyle=cone;
+    nctx.beginPath();nctx.moveTo(0,0);nctx.lineTo(430,-138);nctx.lineTo(430,138);nctx.closePath();nctx.fill();
+    nctx.restore();
+  }
+
+  nctx.globalCompositeOperation='source-over';
+  ctx.drawImage(v18NightCanvas,0,0);
+};
+
+rainOverlay=function(){
+  ctx.save();
+  if(V16_MOBILE){
+    // En celular se conserva toda la jugabilidad de lluvia (charcos, sapo,
+    // deslizamiento y objetos), pero se elimina la cortina de gotas que
+    // podía tapar personajes y objetos en algunos navegadores móviles.
+    ctx.fillStyle='rgba(65,82,88,.10)';
+    ctx.fillRect(0,0,VIEW_W,VIEW_H);
+    ctx.restore();
+    return;
+  }
+  const count=78;
+  ctx.strokeStyle='rgba(205,240,255,.68)';ctx.lineWidth=2;
+  for(let i=0;i<count;i++){
+    const x=(i*97+levelElapsed*510)%VIEW_W;
+    const y=(i*61+levelElapsed*760)%VIEW_H;
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-11,y+25);ctx.stroke();
+    if(i%9===0){ctx.globalAlpha=.42;ctx.beginPath();ctx.ellipse(x-11,y+25,8,3,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
+  }
+  ctx.restore();
+};
