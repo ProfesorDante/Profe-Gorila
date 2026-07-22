@@ -72,3 +72,19 @@ V20 — Noche total
 - El jaguar conserva su ventaja nocturna en la IA, pero no revela su posición iluminando el mapa.
 - Vela, luciérnaga y linterna siguen ampliando la visión de Tina.
 - Fuera del halo queda apenas una referencia mínima del escenario para evitar una desorientación absoluta.
+
+============================================================
+V21 — COLORES Y GUARDIANES
+============================================================
+- Los bots rivales ahora usan colores diferentes.
+- Azul queda reservado para Nito y rosa para Tina.
+- El jaguar realiza un salto ofensivo de distancia media con 2 s de espera.
+- El gorila salta con criterio y evita gastar saltos consecutivos sin ventaja.
+- El sapo usa el emoji reconocible y salta para reposicionarse antes de disparar.
+- El loro vuela, flota visualmente e ignora por completo el terreno.
+
+
+=== Hoja de ruta v2.0 ===
+- Menú preparado para modo cooperativo.
+- Controles documentados para Tina y Nito.
+- Próximo paso: cámara compartida, segundo jugador y optimización móvil.

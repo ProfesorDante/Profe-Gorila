@@ -943,7 +943,7 @@ function drawBase(r,color,label){
 function drawEntities(){
   for(const tr of traps)drawTrap(tr);for(const b of bananas)if(!b.got)drawBanana(b);for(const o of objects)if(!o.got)drawObject(o);
   for(const g of guardians){drawGuardian(g);if(g.carryingFlag)drawFlag(g.carryingFlag.x,g.carryingFlag.y,g.carryingFlag.kind);}
-  for(const b of bots){const bh=b.jump?b.jump.height:0;drawMonkey(b.x,b.y-bh,b.r,'#4d80c7',b.name[0],bh);drawBotJumpDots(b,b.x,b.y-bh);if(b.carrying)drawCarrierHearts(b,b.x,b.y-bh-48);drawBuffIcons(b,b.x,b.y-bh-68);}
+  for(const b of bots){const bh=b.jump?b.jump.height:0;drawMonkey(b.x,b.y-bh,b.r,b.color||'#e07a2f',b.name[0],bh);drawBotJumpDots(b,b.x,b.y-bh);if(b.carrying)drawCarrierHearts(b,b.x,b.y-bh-48);drawBuffIcons(b,b.x,b.y-bh-68);}
   if(!flag.carrier)drawFlag(flag.x,flag.y,'enemy');
   if(!duelMode&&!homeFlag.carrier)drawFlag(homeFlag.x,homeFlag.y,'home');
   const jumpHeight=player.jump?player.jump.height:0;drawMonkey(player.x,player.y-jumpHeight,player.r,'#e95d9b','T',jumpHeight);drawPlayerIndicators(player.x,player.y-jumpHeight);

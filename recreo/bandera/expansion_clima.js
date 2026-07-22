@@ -1175,3 +1175,176 @@ rainOverlay=function(){
   }
   ctx.restore();
 };
+
+
+/* =========================================================
+   V21 — IDENTIDAD DE BOTS Y ACTUACIÓN DE GUARDIANES
+   ========================================================= */
+
+/* Los rivales usan colores propios. Azul queda reservado para Nito y rosa
+   para Tina. La paleta evita deliberadamente ambos colores. */
+const V21_BOT_COLORS=['#e07a2f','#3f9b4f','#8a58b5','#d6a51f','#c94b3f','#7b5a3a'];
+const _makeBotV21=makeBot;
+makeBot=function(i){
+  const b=_makeBotV21(i);
+  b.color=V21_BOT_COLORS[i%V21_BOT_COLORS.length];
+  return b;
+};
+
+/* El loro vuela: su navegación ignora barro, charcos, nieve, troncos,
+   piedras y cualquier otra colisión de terreno. */
+const _navigateEntityV21=navigateEntity;
+navigateEntity=function(o,x,y,speed,dt,stayMiddle=false){
+  if(o&&o.type==='parrot'){
+    const dx=x-o.x,dy=y-o.y,l=Math.hypot(dx,dy)||1;
+    o.x=clamp(o.x+dx/l*speed*dt,55,WORLD_W-55);
+    o.y=clamp(o.y+dy/l*speed*dt,55,WORLD_H-55);
+    o.vx=dx/l;o.vy=dy/l;
+    return;
+  }
+  return _navigateEntityV21(o,x,y,speed,dt,stayMiddle);
+};
+
+/* Gorila: salta con intención. El salto debe mejorar claramente la distancia
+   o salvar un obstáculo; además respeta una pausa entre decisiones para no
+   gastar todos los saltos seguidos. */
+maybeGorillaJump=function(g,target,dt){
+  if(g.jumps<g.jumpCap){
+    g.jumpCharge=(g.jumpCharge||0)+dt;
+    if(g.jumpCharge>=g.jumpRecharge){g.jumpCharge=0;g.jumps++;}
+  }
+  g.smartJumpCooldown=Math.max(0,(g.smartJumpCooldown||0)-dt);
+  if(g.jumps<=0||g.jump||g.smartJumpCooldown>0||!target)return;
+
+  const d0=dist(g,target);
+  if(d0<105*mapScale||d0>285*mapScale)return;
+  let dx=target.x-g.x,dy=target.y-g.y,l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;
+  const landing=findEntityJumpLanding(g.x,g.y,dx,dy,progression.jumpDistance,g.r);
+  const d1=Math.hypot(target.x-landing.x,target.y-landing.y);
+  const blocked=!lineClear(g,target,g.r,false);
+  const targetEscaping=((target.vx||0)*dx+(target.vy||0)*dy)>.18;
+  const useful=d1<d0-58*mapScale;
+
+  if((blocked&&d1<d0-20*mapScale)||(targetEscaping&&useful)){
+    g.jump={sx:g.x,sy:g.y,ex:landing.x,ey:landing.y,elapsed:0,duration:.38,height:0};
+    g.jumps--;g.jumpCharge=0;g.inv=.5;g.smartJumpCooldown=1.25;
+  }
+};
+
+/* Jaguar: el salto no sirve para desplazarse ni perseguir. Es un ataque de
+   distancia media, con dos segundos de espera entre emboscadas. */
+function v21StartJaguarPounce(g,target){
+  const dx=target.x-g.x,dy=target.y-g.y,l=Math.hypot(dx,dy)||1;
+  const distance=Math.min(205*mapScale,Math.max(125*mapScale,l*.82));
+  const ex=clamp(g.x+dx/l*distance,55,WORLD_W-55);
+  const ey=clamp(g.y+dy/l*distance,55,WORLD_H-55);
+  g.pounce={sx:g.x,sy:g.y,ex,ey,elapsed:0,duration:.34,height:0,target};
+  g.pounceCooldown=2;
+  g.inv=.42;
+  burst(g.x,g.y,'#ffd166');tone(135,.09,'sawtooth',.04);
+}
+function v21UpdateJaguarPounce(g,dt){
+  const j=g.pounce;j.elapsed+=dt;
+  const t=Math.min(1,j.elapsed/j.duration);
+  const ease=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
+  g.x=j.sx+(j.ex-j.sx)*ease;g.y=j.sy+(j.ey-j.sy)*ease;
+  j.height=Math.sin(Math.PI*t)*58;
+  if(t>=1){g.x=j.ex;g.y=j.ey;g.pounce=null;burst(g.x,g.y,'#f5c451');}
+}
+
+/* Sapo: hace un salto corto de reposicionamiento una sola vez antes de cada
+   disparo. No lo usa para perseguir. */
+function v21StartFrogHop(g,target){
+  const dx=target.x-g.x,dy=target.y-g.y,l=Math.hypot(dx,dy)||1;
+  // Un pequeño desplazamiento lateral mejora el ángulo sin convertirlo en perseguidor.
+  const side=Math.random()<.5?-1:1;
+  const hx=dx/l*.55-dy/l*.45*side,hy=dy/l*.55+dx/l*.45*side;
+  const distance=82*mapScale;
+  const landing=findEntityJumpLanding(g.x,g.y,hx,hy,distance,g.r);
+  g.frogHop={sx:g.x,sy:g.y,ex:landing.x,ey:landing.y,elapsed:0,duration:.30,height:0};
+  g.frogHoppedForShot=true;
+  tone(205,.06,'sine',.025);
+}
+function v21UpdateFrogHop(g,dt){
+  const j=g.frogHop;j.elapsed+=dt;const t=Math.min(1,j.elapsed/j.duration);
+  g.x=j.sx+(j.ex-j.sx)*t;g.y=j.sy+(j.ey-j.sy)*t;j.height=Math.sin(Math.PI*t)*42;
+  if(t>=1){g.x=j.ex;g.y=j.ey;g.frogHop=null;}
+}
+
+/* Reemplazo final del comportamiento de guardianes climáticos. Conserva las
+   reglas anteriores del sapo, pingüino y jaguar, pero suma sus saltos V21. */
+updateSpecialGuardian=function(g,dt){
+  g.phase+=dt;
+  g.pounceCooldown=Math.max(0,(g.pounceCooldown||0)-dt);
+  if(g.stun>0){g.stun-=dt;return;}
+
+  if(g.type==='frog'){
+    if(g.frogHop){v21UpdateFrogHop(g,dt);guardianContacts(g);return;}
+    if(g.frogAimTimer>0&&g.swallowedItem){
+      g.frogAimTimer-=dt;
+      const t=g.frogTarget&&[player,...bots].includes(g.frogTarget)?g.frogTarget:nearestEntity(g);g.frogTarget=t;
+      // Salta justo antes de disparar, una sola vez por objeto guardado.
+      if(t&&!g.frogHoppedForShot&&g.frogAimTimer<=.72){v21StartFrogHop(g,t);guardianContacts(g);return;}
+      if(t&&g.frogAimTimer>.72)navigateEntity(g,t.x,t.y,g.v*.28,dt,false);
+      if(g.frogAimTimer<=0){frogSpit(g,t,false);g.frogHoppedForShot=false;}
+    }else if(!g.swallowedItem){
+      g.frogHoppedForShot=false;
+      g.tongueClock=(g.tongueClock||0)-dt;
+      const o=objects.filter(o=>!o.got&&o.revealed&&!BALL_TYPES.has(o.type)&&dist(g,o)<285*mapScale).sort((a,b)=>dist(g,a)-dist(g,b))[0];
+      if(o&&g.tongueClock<=0){
+        g.tongueClock=2.1;o.got=true;g.swallowedItem={type:o.type};g.frogAimTimer=2+Math.random()*3;g.frogTarget=nearestEntity(g);tone(175,.08,'square',.03);burst(g.x,g.y,'#9ee776');
+      }else{
+        const t=nearestEntity(g);if(t)navigateEntity(g,t.x,t.y,g.v*.72,dt,false);
+      }
+    }
+  }else if(g.type==='penguin'){
+    g.missileClock=(g.missileClock||0)-dt;
+    const carriers=[player,...bots].filter(e=>e.carrying),fallback=[player,...bots].filter(Boolean);
+    const t=(carriers.length?carriers:fallback).sort((a,b)=>dist(g,a)-dist(g,b))[0];
+    if(g.missileClock<=0&&g.windup<=0&&g.missile<=0){g.missileClock=3.25;g.windup=.68;g.target=t;g.missileClosest=Infinity;tone(540,.08,'triangle',.03);}
+    if(g.windup>0){g.windup-=dt;if(g.windup<=0){g.missile=1.05;g.missileClosest=Infinity;tone(760,.08,'sawtooth',.035);}return;}
+    if(g.missile>0){
+      g.missile-=dt;const target=g.target||t;if(target){const d0=dist(g,target);g.missileClosest=Math.min(g.missileClosest||Infinity,d0);const dx=target.x-g.x,dy=target.y-g.y,l=Math.hypot(dx,dy)||1;moveWithSliding(g,dx/l*g.v*2.9*dt,dy/l*g.v*2.9*dt,false);}
+      if(g.missile<=0&&target&&target.jump&&(g.missileClosest||999)<105*mapScale){const n=nearestAnyEntity(target)||target;g.target=n;g.windup=.38;g.missileClock=2.8;burst(g.x,g.y,'#ff7f6c');tone(220,.11,'square',.04);}
+    }else{const tx=WORLD_W/2+Math.cos(g.phase*.7)*320*mapScale,ty=WORLD_H/2+Math.sin(g.phase*.9)*220*mapScale;navigateEntity(g,tx,ty,g.v*.65,dt,false);}
+  }else if(g.type==='leopard'){
+    if(g.pounce){v21UpdateJaguarPounce(g,dt);guardianContacts(g);return;}
+    const carriers=[player,...bots].filter(e=>e.carrying);
+    let t;
+    if(g.leopardRage>0){
+      g.leopardRage-=dt;t=(carriers.length?carriers:[player,...bots]).sort((a,b)=>dist(g,a)-dist(g,b))[0];
+    }else if(carriers.length===1)t=carriers[0];
+    else if(carriers.length>1)t=carriers.reduce((a,b)=>scoringDistance(b)<scoringDistance(a)?b:a,carriers[0]);
+    else t=nearestEntity(g);
+    if(t){
+      const d=dist(g,t);
+      if(g.pounceCooldown<=0&&d>=125*mapScale&&d<=285*mapScale&&lineClear(g,t,g.r,false))v21StartJaguarPounce(g,t);
+      else navigateEntity(g,t.x,t.y,g.v*(g.leopardRage>0?1.55:(t.carrying?1.22:1)),dt,false);
+    }
+  }
+  guardianContacts(g);
+};
+
+/* Representación final: el sapo vuelve al emoji claramente reconocible; el
+   loro flota y los saltos del sapo/jaguar tienen altura visible. */
+const _drawGuardianV21=drawGuardian;
+drawGuardian=function(g){
+  if(g.type==='frog'){
+    const h=g.frogHop?g.frogHop.height:0;
+    ctx.save();ctx.translate(g.x,g.y-h);
+    if(g.frogAimTimer>0){ctx.globalAlpha=.22+.12*Math.sin(levelElapsed*10);ctx.fillStyle='#ffcf62';ctx.beginPath();ctx.arc(0,0,39,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;}
+    ctx.font='46px serif';ctx.textAlign='center';ctx.fillText('🐸',0,15);
+    if(g.swallowedItem){ctx.font='19px serif';ctx.fillText(IICON[g.swallowedItem.type]||'●',0,18);}
+    if(g.frogAimTimer>0&&g.frogTarget){ctx.strokeStyle='#ff7c9b';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(18,1);const dx=g.frogTarget.x-g.x,dy=g.frogTarget.y-g.y,l=Math.hypot(dx,dy)||1;ctx.lineTo(dx/l*52,dy/l*52);ctx.stroke();}
+    ctx.restore();return;
+  }
+  if(g.type==='parrot'){
+    const bob=Math.sin(levelElapsed*5+g.phase)*7;
+    ctx.save();ctx.translate(g.x,g.y-10-bob);ctx.font='46px serif';ctx.textAlign='center';ctx.fillText('🦜',0,15);ctx.restore();return;
+  }
+  if(g.type==='leopard'&&g.pounce){
+    ctx.save();ctx.translate(g.x,g.y-g.pounce.height);ctx.font='48px serif';ctx.textAlign='center';ctx.fillText('🐆',0,15);ctx.restore();return;
+  }
+  _drawGuardianV21(g);
+};
+
