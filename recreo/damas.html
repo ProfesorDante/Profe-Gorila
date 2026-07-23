@@ -283,6 +283,78 @@ body.theme-profe .pill{border-color:#d5af4f}
 body.theme-profe .side h2,
 body.theme-profe .scoreLine{color:#8a6a16}
 
+
+/* Desafío del Gran Árbol */
+.challengeRoad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+.challengeRoad span{background:#f3ead0;border:2px solid #b78b3f;border-radius:12px;padding:9px 5px;font-weight:900;font-size:13px}
+.challengeIntroCard{position:relative;overflow:hidden;border-color:var(--accent)}
+.challengeIntroCard::before{
+  content:"";position:absolute;inset:0;opacity:.12;pointer-events:none;
+  background:repeating-linear-gradient(135deg,transparent 0 18px,#fff 18px 30px)
+}
+.challengeIntroPanel{
+  position:relative;z-index:2;background:#fffdf0;border:3px solid var(--accent);
+  border-radius:20px;padding:18px;box-shadow:0 10px 28px #0003
+}
+.challengeBigIcon{font-size:64px;filter:drop-shadow(0 5px 3px #0002)}
+.challengeStep{font-weight:1000;letter-spacing:1px;color:var(--accent);margin-top:5px}
+.challengeOpponent{font-weight:900;background:#f4ead0;border-radius:999px;padding:8px 12px;display:inline-block}
+.challengeRule{font-weight:900;border:2px solid var(--accent);background:#fff7d9;border-radius:14px;padding:13px}
+.challengeHud{
+  position:absolute;left:50%;bottom:8px;transform:translateX(-50%);z-index:9;
+  min-width:220px;text-align:center;background:rgba(255,253,240,.94);
+  border:2px solid var(--accent);border-radius:999px;padding:6px 12px;font-weight:1000;
+  box-shadow:0 4px 12px #0003;pointer-events:none
+}
+body.challenge-king{
+  --scene-top:#fff2ad;--scene-bottom:#72b65f;--frame:#8c6b22;
+  --light-square:#f2e5ac;--dark-square:#4f8a49;
+  --green-piece:#2577bd;--green-piece-stroke:#cceaff;
+  --gold-piece:#efc12b;--gold-piece-stroke:#fff4aa;--accent:#a77b12;
+}
+body.challenge-race{
+  --scene-top:#cdefff;--scene-bottom:#6aaad0;--frame:#315f83;
+  --light-square:#e2f2f7;--dark-square:#4b8cae;
+  --green-piece:#174f86;--green-piece-stroke:#bde3ff;
+  --gold-piece:#e64d43;--gold-piece-stroke:#ffc8c1;--accent:#27688e;
+}
+body.challenge-frozen{
+  --scene-top:#effcff;--scene-bottom:#91d8ed;--frame:#477c97;
+  --light-square:#eafaff;--dark-square:#6cb5cc;
+  --green-piece:#315d9e;--green-piece-stroke:#d5efff;
+  --gold-piece:#b26cc6;--gold-piece-stroke:#f2d9ff;--accent:#397d9f;
+}
+body.challenge-inverse{
+  --scene-top:#ffd3c8;--scene-bottom:#9b3d3d;--frame:#57272b;
+  --light-square:#f0c7b0;--dark-square:#7e3037;
+  --green-piece:#f0c632;--green-piece-stroke:#fff4aa;
+  --gold-piece:#2f83cc;--gold-piece-stroke:#cdeaff;--accent:#8d2934;
+}
+body.challenge-sudden{
+  --scene-top:#fff2b8;--scene-bottom:#d57b2f;--frame:#6f381b;
+  --light-square:#f8e2ab;--dark-square:#b4572e;
+  --green-piece:#d13a31;--green-piece-stroke:#ffc2bc;
+  --gold-piece:#f5ce35;--gold-piece-stroke:#fff3a1;--accent:#a84b1d;
+}
+body.challenge-extreme{
+  --scene-top:#dfd4ff;--scene-bottom:#5c3a86;--frame:#312045;
+  --light-square:#d9cdee;--dark-square:#62458b;
+  --green-piece:#66bce6;--green-piece-stroke:#d9f5ff;
+  --gold-piece:#ef6d9e;--gold-piece-stroke:#ffd7e6;--accent:#58347e;
+}
+body.challenge-crazy{
+  --scene-top:#c6f5dc;--scene-bottom:#254f4b;--frame:#17372f;
+  --light-square:#d8e8b0;--dark-square:#2e7061;
+  --green-piece:#f0b62f;--green-piece-stroke:#fff0a3;
+  --gold-piece:#d653a7;--gold-piece-stroke:#ffd4ef;--accent:#246b5b;
+}
+body[class*="challenge-"] header{background:linear-gradient(color-mix(in srgb,var(--accent),#fff 12%),color-mix(in srgb,var(--accent),#000 28%))}
+@media(max-width:600px){
+  .challengeRoad{grid-template-columns:repeat(2,1fr)}
+  .challengeBigIcon{font-size:48px}
+  .challengeHud{bottom:5px;font-size:12px;min-width:180px}
+}
+
 </style>
 </head>
 <body>
@@ -302,6 +374,7 @@ body.theme-profe .scoreLine{color:#8a6a16}
       <div class="opponentFace" id="mobileOpponentFace">🦥</div>
       <div class="opponentInfo"><strong id="mobileOpponentName">Perezoso</strong></div>
     </div>
+    <div id="challengeHud" class="challengeHud" style="display:none"></div>
     <div class="mobileGameBar" aria-label="Opciones de partida">
       <button onclick="showMenu()" aria-label="Nueva partida" title="Nueva partida">↻</button>
       <button class="secondary" onclick="toggleMusic()" aria-label="Activar o desactivar música" title="Música">🎵</button>
@@ -361,6 +434,7 @@ body.theme-profe .scoreLine{color:#8a6a16}
       <button onclick="prepareTeamChoice('pvp')">👥 Dos jugadores</button>
       <button class="secondary" onclick="showAiLevels()">🤖 Contra la computadora</button>
       <button class="championship" onclick="prepareChampionship()">🏆 Modo Campeonato</button>
+      <button class="expert" onclick="prepareGrandTreeChallenge()">🌟 Desafío del Gran Árbol</button>
       <button class="soft" onclick="showTeacher()">🦍 Reglas</button>
       <button class="soft" onclick="toggleMusic()">🎵 <span id="menuMusicText">Música activada</span></button>
     </div>
@@ -413,6 +487,60 @@ body.theme-profe .scoreLine{color:#8a6a16}
     <div class="voiceRow">
       <button class="championship" onclick="downloadChampionshipPng()">⬇ Descargar recuerdo PNG</button>
       <button onclick="restartChampionship()">Jugar el campeonato otra vez</button>
+      <button class="secondary" onclick="showMenu()">Volver al menú</button>
+    </div>
+  </div>
+</div>
+
+
+<div class="overlay" id="challengeOverlay" style="display:none">
+  <div class="card challengeCard">
+    <h2>🌟 Desafío del Gran Árbol</h2>
+    <p>Superá siete variantes de damas, ordenadas de menor a mayor complejidad.</p>
+    <div class="challengeRoad">
+      <span>👑 Rey</span><span>🏁 Carrera</span><span>❄️ Congeladas</span>
+      <span>🔄 Inversas</span><span>⚡ Todo o Nada</span><span>💥 Extremas</span><span>🌪️ Locas</span>
+    </div>
+    <p>Elegí a Nito o a Tina. Tu personaje se mantiene durante todo el recorrido.</p>
+    <div class="teamGrid">
+      <button class="teamChoice" onclick="startGrandTreeChallenge('nito')">🐒 Jugar con Nito<small>Equipo Hoja</small></button>
+      <button class="teamChoice secondary" onclick="startGrandTreeChallenge('tina')">🎀 Jugar con Tina<small>Equipo Dorado</small></button>
+    </div>
+    <div class="voiceRow"><button class="soft" onclick="hideGrandTreeChallenge()">Volver</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="challengeIntroOverlay" style="display:none">
+  <div id="challengeIntroCard" class="card challengeIntroCard">
+    <div class="challengeIntroPanel">
+      <div id="challengeIntroIcon" class="challengeBigIcon">👑</div>
+      <div id="challengeIntroStep" class="challengeStep">DESAFÍO 1 DE 7</div>
+      <h2 id="challengeIntroTitle">Rey del Tablero</h2>
+      <div id="challengeIntroOpponent" class="challengeOpponent">🦥 Te enfrentás a Perezoso</div>
+      <p id="challengeIntroRule" class="challengeRule"></p>
+      <button onclick="beginPresentedChallenge()">Comenzar desafío</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="challengeResultOverlay" style="display:none">
+  <div class="card">
+    <h2 id="challengeResultTitle">Resultado del desafío</h2>
+    <p id="challengeResultText"></p>
+    <div class="champProgress" id="challengeProgressText"></div>
+    <button onclick="continueGrandTreeChallenge()">Continuar</button>
+  </div>
+</div>
+
+<div class="overlay" id="challengeFinalOverlay" style="display:none">
+  <div class="card">
+    <h2>🌳 ¡Desafío del Gran Árbol completado!</h2>
+    <p class="scoreLine" id="challengeFinalScore"></p>
+    <img id="challengeFinalImage" class="champImage" src="../img/damasdesafio.png?v=1" alt="Recuerdo del Desafío del Gran Árbol">
+    <p id="challengeDownloadStatus" aria-live="polite"></p>
+    <div class="voiceRow">
+      <button class="championship" onclick="downloadChallengeImage()">⬇ Descargar imagen</button>
+      <button onclick="restartGrandTreeChallenge()">Jugar otra vez</button>
       <button class="secondary" onclick="showMenu()">Volver al menú</button>
     </div>
   </div>
@@ -473,6 +601,35 @@ let championshipLosses=0;
 let championshipLastResult='';
 let championshipBeatProfe=false;
 const championshipSchedule=['easy','medium','hard','expert','profe'];
+
+let challengeActive=false;
+let challengeCharacter='nito';
+let challengeIndex=0;
+let challengeWins=0;
+let challengeLosses=0;
+let challengeType='';
+let challengeCaptures={1:0,2:0};
+let challengeControl={1:0,2:0};
+let frozenCells={1:null,2:null};
+let extremeDestroyAt=null;
+const controlSquares=[{r:3,c:2},{r:3,c:4},{r:4,c:3}];
+const challengeSchedule=[
+  {type:'king',title:'Rey del Tablero',icon:'👑',level:'easy',face:'🦥',opponent:'Perezoso',
+   rule:'Tres casilleros centrales brillan. Al terminar tu turno con una ficha sobre cualquiera de ellos ganás 1 punto. El primero en llegar a 10 gana.'},
+  {type:'race',title:'Carrera de Damas',icon:'🏁',level:'medium',face:'🦜',opponent:'Loro',
+   rule:'Gana el primer jugador que capture cinco fichas rivales.'},
+  {type:'frozen',title:'Damas Congeladas',icon:'❄️',level:'hard',face:'🐆',opponent:'Jaguar',
+   rule:'En cada turno se congela una ficha al azar de cada equipo. Las fichas congeladas no pueden moverse durante ese turno.'},
+  {type:'inverse',title:'Damas Inversas',icon:'🔄',level:'expert',face:'🐘',opponent:'Elefante',
+   rule:'Gana quien logra quedarse sin fichas o sin movimientos. La clave es obligar al rival a capturarte.'},
+  {type:'sudden',title:'Todo o Nada',icon:'⚡',level:'expert',face:'🦅',opponent:'Águila',
+   rule:'Cada equipo comienza con solo dos filas de fichas. La primera captura decide toda la partida.'},
+  {type:'extreme',title:'Damas Extremas',icon:'💥',level:'profe',face:'🐊',opponent:'Cocodrilo',
+   rule:'Cuando una ficha captura, también desaparece al terminar su combo. Si encadena varias capturas, completa todo el recorrido antes de desaparecer.'},
+  {type:'crazy',title:'Damas Locas',icon:'🌪️',level:'profe',face:'🦍',opponent:'Profe Gorila',
+   rule:'Al terminar cada turno, una ficha cualquiera cambia de posición al azar. Adaptarse al caos es parte del desafío.'}
+];
+
 const opponentData={
   easy:{name:'Perezoso',face:'🦥'},
   medium:{name:'Loro',face:'🦜'},
@@ -481,10 +638,10 @@ const opponentData={
   profe:{name:'Profe Gorila',face:'🦍'}
 };
 
-function initBoard(startingPlayer=GREEN){
+function initBoard(startingPlayer=GREEN,rows=3){
   board=Array.from({length:8},()=>Array(8).fill(EMPTY));
-  for(let r=0;r<3;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=GOLD;
-  for(let r=5;r<8;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=GREEN;
+  for(let r=0;r<rows;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=GOLD;
+  for(let r=8-rows;r<8;r++) for(let c=0;c<8;c++) if((r+c)%2===1) board[r][c]=GREEN;
   turn=startingPlayer;selected=null;legalMoves=[];mustContinue=null;pendingPromotion=null;drag=null;promotionFx=null;gameOver=false;
   updateAll();
 }
@@ -611,6 +768,7 @@ function allMovesFor(player,b=board){
   for(let r=0;r<8;r++) for(let c=0;c<8;c++){
     const p=b[r][c];
     if((player===GREEN&&isGreen(p))||(player===GOLD&&isGold(p))){
+      if(b===board&&isFrozenOrigin(r,c,player)) continue;
       captures.push(...capturesFor(r,c,b));
       normals.push(...normalMovesFor(r,c,b));
     }
@@ -635,28 +793,50 @@ function applyMoveToBoard(b,m,promote=true){
 
 function makeMove(m,fromAi=false){
   if(gameOver) return;
-  // En una captura encadenada, una ficha común no se convierte en dama
-  // hasta que termina toda la jugada. Así nunca puede empezar a comer hacia
-  // atrás solamente por haber alcanzado la última fila a mitad del salto.
+  const movingPlayer=turn;
   const movingPiece=board[m.from.r][m.from.c];
   const reachesCrown=(movingPiece===GREEN&&m.to.r===0)||(movingPiece===GOLD&&m.to.r===7);
   board=applyMoveToBoard(board,m,!m.capture);
-  if(m.capture) playCaptureSound(); else playMoveSound();
+
+  if(m.capture){
+    playCaptureSound();
+    if(challengeActive){
+      challengeCaptures[movingPlayer]++;
+      updateChallengeHud();
+      if(challengeType==='sudden'){
+        updateAll();
+        finishChallengeRound(movingPlayer,'realizó la primera captura');
+        return;
+      }
+      if(challengeType==='race'&&challengeCaptures[movingPlayer]>=5){
+        updateAll();
+        finishChallengeRound(movingPlayer,'capturó cinco fichas');
+        return;
+      }
+      if(challengeType==='extreme') extremeDestroyAt={r:m.to.r,c:m.to.c};
+    }
+  }else playMoveSound();
+
   if(m.capture&&reachesCrown) pendingPromotion={r:m.to.r,c:m.to.c,piece:movingPiece};
 
   selected=null;legalMoves=[];drag=null;
   const follow=m.capture?capturesFor(m.to.r,m.to.c):[];
   if(m.capture&&follow.length){
     mustContinue={r:m.to.r,c:m.to.c};
+    if(extremeDestroyAt) extremeDestroyAt={r:m.to.r,c:m.to.c};
     if(pendingPromotion){pendingPromotion.r=m.to.r;pendingPromotion.c=m.to.c;}
     selected=mustContinue;
     legalMoves=follow;
-    setStatus('La captura continúa.');
+    setStatus(challengeType==='extreme'?'💥 Completá el combo antes de que desaparezca tu ficha.':'La captura continúa.');
     updateAll();
     return;
   }
 
-  if(pendingPromotion){
+  if(challengeActive&&challengeType==='extreme'&&extremeDestroyAt){
+    board[extremeDestroyAt.r][extremeDestroyAt.c]=EMPTY;
+    extremeDestroyAt=null;
+    pendingPromotion=null;
+  }else if(pendingPromotion){
     const {r,c,piece}=pendingPromotion;
     if(board[r][c]===piece){
       board[r][c]=piece===GREEN?GREEN_K:GOLD_K;
@@ -671,7 +851,13 @@ function makeMove(m,fromAi=false){
   }
 
   mustContinue=null;
+
+  if(challengeActive&&challengeType==='king'&&awardKingPoint(movingPlayer)) return;
+  if(challengeActive&&challengeType==='crazy') randomRelocatePiece();
+
   turn=turn===GREEN?GOLD:GREEN;
+  if(challengeActive&&challengeType==='frozen') assignFrozenPieces();
+
   updateAll();
   checkEnd();
 
@@ -684,13 +870,30 @@ function makeMove(m,fromAi=false){
 function checkEnd(){
   const g=countPieces(GREEN), y=countPieces(GOLD);
   const moves=allMovesFor(turn);
+
+  if(challengeActive&&challengeType==='inverse'){
+    if(g===0||y===0||moves.length===0){
+      let winnerPlayer;
+      if(g===0) winnerPlayer=GREEN;
+      else if(y===0) winnerPlayer=GOLD;
+      else winnerPlayer=turn;
+      finishChallengeRound(winnerPlayer,'logró quedarse sin fichas o sin movimientos');
+    }
+    return;
+  }
+
   if(g===0||y===0||moves.length===0){
-    gameOver=true;
     let winnerPlayer;
     if(g===0) winnerPlayer=GOLD;
     else if(y===0) winnerPlayer=GREEN;
     else winnerPlayer=turn===GREEN?GOLD:GREEN;
 
+    if(challengeActive){
+      finishChallengeRound(winnerPlayer);
+      return;
+    }
+
+    gameOver=true;
     const winner=winnerPlayer===GREEN?'Nito · Equipo Hoja':'Tina · Equipo Dorado';
 
     if(championshipActive){
@@ -890,6 +1093,9 @@ function rawTeamScore(b,player){
   return s;
 }
 function evaluateForAi(b){
+  if(challengeActive&&challengeType==='inverse'){
+    return rawTeamScore(b,humanPlayer)-rawTeamScore(b,aiPlayer);
+  }
   let score=rawTeamScore(b,aiPlayer)-rawTeamScore(b,humanPlayer);
   const aiMoves=allMovesFor(aiPlayer,b),humanMoves=allMovesFor(humanPlayer,b);
   score+=(aiMoves.length-humanMoves.length)*.10;
@@ -909,6 +1115,7 @@ function updateAll(){
   greenCount.textContent=countPieces(GREEN);
   goldCount.textContent=countPieces(GOLD);
   turnLabel.textContent=turn===GREEN?'Nito · Equipo Hoja':'Tina · Equipo Dorado';
+  if(challengeActive) updateChallengeHud();
 
   const moves=allMovesFor(turn);
   const captureRequired=moves.some(m=>m.capture);
@@ -949,6 +1156,18 @@ function draw(){
     ctx.fillStyle=(r+c)%2===0?(css.getPropertyValue('--light-square').trim()||'#e9d8a4'):(css.getPropertyValue('--dark-square').trim()||'#5f8b4e');
     ctx.fillRect(c*size,r*size,size,size);
   }
+  if(challengeActive&&challengeType==='king'){
+    const glow=.65+.25*Math.sin(Date.now()/190);
+    for(const s of controlSquares){
+      ctx.save();
+      ctx.fillStyle=`rgba(255,235,72,${.28+.22*glow})`;
+      ctx.shadowColor='#fff26b';ctx.shadowBlur=size*.25;
+      ctx.fillRect(s.c*size+size*.08,s.r*size+size*.08,size*.84,size*.84);
+      ctx.strokeStyle='#fff7a5';ctx.lineWidth=Math.max(3,size*.05);
+      ctx.strokeRect(s.c*size+size*.11,s.r*size+size*.11,size*.78,size*.78);
+      ctx.restore();
+    }
+  }
   if(selected){
     ctx.fillStyle='rgba(255,245,120,.45)';
     ctx.fillRect(selected.c*size,selected.r*size,size,size);
@@ -986,6 +1205,22 @@ function draw(){
     }
     drawPiece(board[r][c],c*size+size/2,r*size+size/2,pieceSize);
   }
+  if(challengeActive&&challengeType==='frozen'){
+    for(const player of [GREEN,GOLD]){
+      const f=frozenCells[player];
+      if(!f||!board[f.r][f.c]) continue;
+      ctx.save();
+      const x=f.c*size+size/2,y=f.r*size+size/2;
+      ctx.fillStyle='rgba(190,242,255,.42)';
+      ctx.strokeStyle='#dffaff';ctx.lineWidth=Math.max(3,size*.04);
+      ctx.shadowColor='#a8edff';ctx.shadowBlur=size*.18;
+      ctx.beginPath();ctx.arc(x,y,size*.39,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.font=`${Math.round(size*.30)}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillStyle='#eaffff';ctx.fillText('❄️',x,y);
+      ctx.restore();
+    }
+  }
+
   if(drag&&drag.active){
     ctx.save();
     ctx.globalAlpha=.94;
@@ -996,7 +1231,7 @@ function draw(){
   ctx.restore();
 
   // Mantiene vivo el brillo sin alterar la lógica del juego.
-  if((forced.size||legalMoves.length||promotionFx) && !gameOver) requestAnimationFrame(draw);
+  if((forced.size||legalMoves.length||promotionFx||(challengeActive&&challengeType==='king')) && !gameOver) requestAnimationFrame(draw);
 }
 
 function drawLeavesBackground(W,H){
@@ -1167,6 +1402,197 @@ canvas.addEventListener('pointercancel',e=>finishPointer(e,true));
 canvas.addEventListener('lostpointercapture',()=>{if(drag){drag=null;draw();}});
 
 
+
+function currentChallenge(){return challengeSchedule[challengeIndex]||null}
+
+function applyChallengeTheme(type){
+  document.body.classList.remove('challenge-king','challenge-race','challenge-frozen','challenge-inverse','challenge-sudden','challenge-extreme','challenge-crazy');
+  if(type) document.body.classList.add(`challenge-${type}`);
+  draw();
+}
+function clearChallengeState(){
+  challengeType='';
+  challengeCaptures={1:0,2:0};
+  challengeControl={1:0,2:0};
+  frozenCells={1:null,2:null};
+  extremeDestroyAt=null;
+  const hud=document.getElementById('challengeHud');
+  if(hud) hud.style.display='none';
+  applyChallengeTheme('');
+}
+function prepareGrandTreeChallenge(){
+  document.getElementById('menuOverlay').style.display='none';
+  document.getElementById('challengeOverlay').style.display='flex';
+}
+function hideGrandTreeChallenge(){
+  document.getElementById('challengeOverlay').style.display='none';
+  document.getElementById('menuOverlay').style.display='flex';
+}
+function startGrandTreeChallenge(character){
+  championshipActive=false;
+  challengeActive=true;
+  challengeCharacter=character;
+  challengeIndex=0;
+  challengeWins=0;
+  challengeLosses=0;
+  humanPlayer=character==='nito'?GREEN:GOLD;
+  aiPlayer=humanPlayer===GREEN?GOLD:GREEN;
+  mode='ai';
+  document.getElementById('challengeOverlay').style.display='none';
+  presentChallenge();
+}
+function presentChallenge(){
+  if(challengeIndex>=challengeSchedule.length){finishGrandTreeChallenge();return;}
+  const ch=currentChallenge();
+  challengeType=ch.type;
+  applyDifficultyTheme(ch.level);
+  applyChallengeTheme(ch.type);
+  document.getElementById('challengeIntroIcon').textContent=ch.icon;
+  document.getElementById('challengeIntroStep').textContent=`DESAFÍO ${challengeIndex+1} DE ${challengeSchedule.length}`;
+  document.getElementById('challengeIntroTitle').textContent=ch.title;
+  document.getElementById('challengeIntroOpponent').textContent=`${ch.face} Te enfrentás a ${ch.opponent}`;
+  document.getElementById('challengeIntroRule').textContent=ch.rule;
+  document.getElementById('challengeIntroOverlay').style.display='flex';
+}
+function beginPresentedChallenge(){
+  document.getElementById('challengeIntroOverlay').style.display='none';
+  const ch=currentChallenge();
+  challengeType=ch.type;
+  aiLevel=ch.level;
+  currentModeSnapshot={mode:'ai',aiLevel,humanPlayer,challenge:true,challengeType};
+  beginChallengeMatch();
+}
+function beginChallengeMatch(){
+  const starter=nextStarter;
+  nextStarter=nextStarter===GREEN?GOLD:GREEN;
+  initBoard(starter,challengeType==='sudden'?2:3);
+  challengeCaptures={1:0,2:0};
+  challengeControl={1:0,2:0};
+  extremeDestroyAt=null;
+  applyChallengeTheme(challengeType);
+  const ch=currentChallenge();
+  updateOpponentDisplay(ch.level,false);
+  document.getElementById('opponentFace').textContent=ch.face;
+  document.getElementById('opponentName').textContent=ch.opponent;
+  document.getElementById('mobileOpponentFace').textContent=ch.face;
+  document.getElementById('mobileOpponentName').textContent=ch.opponent;
+  if(challengeType==='frozen') assignFrozenPieces();
+  updateChallengeHud();
+  setStatus(`${ch.icon} ${ch.title} · Desafío ${challengeIndex+1}/${challengeSchedule.length}`);
+  if(mode==='ai'&&starter===aiPlayer) setTimeout(aiTurn,500);
+}
+function updateChallengeHud(){
+  const hud=document.getElementById('challengeHud');
+  if(!challengeActive){hud.style.display='none';return;}
+  hud.style.display='block';
+  if(challengeType==='king'){
+    hud.textContent=`👑 Nito ${challengeControl[GREEN]}/10 · Tina ${challengeControl[GOLD]}/10`;
+  }else if(challengeType==='race'){
+    hud.textContent=`🏁 Capturas: Nito ${challengeCaptures[GREEN]}/5 · Tina ${challengeCaptures[GOLD]}/5`;
+  }else{
+    const ch=currentChallenge();
+    hud.textContent=`${ch.icon} ${ch.title} · ${challengeIndex+1}/${challengeSchedule.length}`;
+  }
+}
+function finishChallengeRound(winnerPlayer,reason=''){
+  if(gameOver) return;
+  gameOver=true;
+  const humanWon=winnerPlayer===humanPlayer;
+  if(humanWon) challengeWins++; else challengeLosses++;
+  const winner=winnerPlayer===GREEN?'Nito · Equipo Hoja':'Tina · Equipo Dorado';
+  document.getElementById('challengeResultTitle').textContent=humanWon?'🌟 ¡Desafío superado!':'El desafío terminó';
+  document.getElementById('challengeResultText').textContent=`Ganó ${winner}${reason?` · ${reason}`:''}.`;
+  document.getElementById('challengeProgressText').textContent=
+    `Recorrido: ${challengeIndex+1}/${challengeSchedule.length} · Victorias: ${challengeWins} · Derrotas: ${challengeLosses}`;
+  document.getElementById('challengeResultOverlay').style.display='flex';
+  playWin();
+}
+function continueGrandTreeChallenge(){
+  document.getElementById('challengeResultOverlay').style.display='none';
+  challengeIndex++;
+  if(challengeIndex>=challengeSchedule.length) finishGrandTreeChallenge();
+  else presentChallenge();
+}
+function finishGrandTreeChallenge(){
+  challengeActive=false;
+  gameOver=true;
+  document.getElementById('challengeHud').style.display='none';
+  document.getElementById('challengeFinalScore').textContent=
+    `Completaste los 7 desafíos con ${challengeWins} victorias y ${challengeLosses} derrotas.`;
+  const image=document.getElementById('challengeFinalImage');
+  image.src='../img/damasdesafio.png?v=1';
+  document.getElementById('challengeDownloadStatus').textContent='';
+  document.getElementById('challengeFinalOverlay').style.display='flex';
+}
+function restartGrandTreeChallenge(){
+  document.getElementById('challengeFinalOverlay').style.display='none';
+  startGrandTreeChallenge(challengeCharacter);
+}
+async function downloadChallengeImage(){
+  const image=document.getElementById('challengeFinalImage');
+  const status=document.getElementById('challengeDownloadStatus');
+  status.textContent='Preparando la imagen...';
+  try{
+    const response=await fetch(image.src);
+    if(!response.ok) throw new Error('No se pudo leer la imagen');
+    const blob=await response.blob();
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url;link.download='damasdesafio.png';
+    document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+    status.textContent='¡Imagen preparada!';
+  }catch(error){
+    status.textContent='Abrí la imagen y mantenela presionada para guardarla.';
+    window.open(image.src,'_blank','noopener');
+  }
+}
+function assignFrozenPieces(){
+  frozenCells={1:null,2:null};
+  for(const player of [GREEN,GOLD]){
+    const candidates=[];
+    for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+      const p=board[r][c];
+      if((player===GREEN&&isGreen(p))||(player===GOLD&&isGold(p))) candidates.push({r,c});
+    }
+    if(candidates.length) frozenCells[player]=candidates[Math.floor(Math.random()*candidates.length)];
+  }
+  // Nunca congela por completo al jugador que debe mover.
+  if(allMovesFor(turn).length===0) frozenCells[turn]=null;
+}
+function isFrozenOrigin(r,c,player){
+  if(!challengeActive||challengeType!=='frozen') return false;
+  const f=frozenCells[player];
+  return !!f&&f.r===r&&f.c===c;
+}
+function randomRelocatePiece(){
+  const pieces=[],empties=[];
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    if(board[r][c]) pieces.push({r,c});
+    else if((r+c)%2===1) empties.push({r,c});
+  }
+  if(!pieces.length||!empties.length) return;
+  const from=pieces[Math.floor(Math.random()*pieces.length)];
+  const to=empties[Math.floor(Math.random()*empties.length)];
+  board[to.r][to.c]=board[from.r][from.c];
+  board[from.r][from.c]=EMPTY;
+  promotionFx={r:to.r,c:to.c,start:performance.now()};
+}
+function awardKingPoint(player){
+  if(challengeType!=='king') return false;
+  const controls=controlSquares.some(s=>{
+    const p=board[s.r][s.c];
+    return player===GREEN?isGreen(p):isGold(p);
+  });
+  if(controls) challengeControl[player]++;
+  updateChallengeHud();
+  if(challengeControl[player]>=10){
+    finishChallengeRound(player,'alcanzó 10 puntos en el centro');
+    return true;
+  }
+  return false;
+}
+
 function prepareChampionship(){
   document.getElementById('menuOverlay').style.display='none';
   document.getElementById('champOverlay').style.display='flex';
@@ -1176,6 +1602,8 @@ function hideChampionship(){
   document.getElementById('menuOverlay').style.display='flex';
 }
 function startChampionship(character){
+  challengeActive=false;
+  clearChallengeState();
   championshipActive=true;
   championshipCharacter=character;
   championshipIndex=0;
@@ -1348,6 +1776,10 @@ function beginNewMatch(){
   if(mode==='ai'&&starter===aiPlayer) setTimeout(aiTurn,450+Math.random()*250);
 }
 function enterFromCover(){
+  championshipActive=false;
+  challengeActive=false;
+  clearChallengeState();
+  document.querySelectorAll('.overlay').forEach(el=>el.style.display='none');
   document.getElementById('coverOverlay').style.display='none';
   document.getElementById('menuOverlay').style.display='flex';
   if(musicOn) startMusic();
@@ -1367,6 +1799,8 @@ function cancelTeamChoice(){
 }
 function chooseTeam(character){
   championshipActive=false;
+  challengeActive=false;
+  clearChallengeState();
   mode=pendingMode;
   aiLevel=pendingAiLevel;
   humanPlayer=character==='nito'?GREEN:GOLD;
@@ -1384,9 +1818,12 @@ function hideMenus(){
   document.getElementById('menuOverlay').style.display='none';
   document.getElementById('aiOverlay').style.display='none';
   document.getElementById('teamOverlay').style.display='none';
+  document.getElementById('challengeOverlay').style.display='none';
 }
 function showMenu(){
   championshipActive=false;
+  challengeActive=false;
+  clearChallengeState();
   hideOpponentDisplay();
   document.getElementById('endOverlay').style.display='none';
   document.getElementById('teamOverlay').style.display='none';
@@ -1394,6 +1831,10 @@ function showMenu(){
   document.getElementById('champOverlay').style.display='none';
   document.getElementById('champResultOverlay').style.display='none';
   document.getElementById('champFinalOverlay').style.display='none';
+  document.getElementById('challengeOverlay').style.display='none';
+  document.getElementById('challengeIntroOverlay').style.display='none';
+  document.getElementById('challengeResultOverlay').style.display='none';
+  document.getElementById('challengeFinalOverlay').style.display='none';
   document.getElementById('menuOverlay').style.display='flex';
 }
 function showTeacher(){document.getElementById('teacherOverlay').style.display='flex'}
@@ -1588,6 +2029,8 @@ window.addEventListener('resize',refreshMobileLayout);
 window.addEventListener('orientationchange',()=>setTimeout(refreshMobileLayout,120));
 
 initBoard(GREEN);
+document.getElementById('menuOverlay').style.display='none';
+document.getElementById('coverOverlay').style.display='flex';
 </script>
 </body>
 </html>
