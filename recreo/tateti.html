@@ -1228,6 +1228,18 @@ function aiMove(token){
 function mediumAntiMove(){
   const empty=board.map((v,i)=>v?'':i).filter(v=>v!=='');
 
+  // Apertura especial del nivel medio en Ta-Te-Ti Inverso:
+  // solamente en la primera jugada de la computadora disputa uno de
+  // los cuatro centros laterales (arriba, izquierda, derecha o abajo).
+  // Después de esa apertura continúa usando exactamente la misma IA.
+  const aiHasPlayed=board.some(cell=>cell===aiTeam);
+  if(!aiHasPlayed){
+    const sideCenters=[1,3,5,7].filter(i=>!board[i]);
+    if(sideCenters.length){
+      return sideCenters[Math.floor(Math.random()*sideCenters.length)];
+    }
+  }
+
   // Nunca busca formar tres: primero descarta todas las jugadas
   // que harían perder inmediatamente a la computadora.
   const safe=empty.filter(i=>{
@@ -1853,15 +1865,46 @@ function resetToMainMenu(){
 
 const coverOverlay=document.getElementById('coverOverlay');
 const coverPlayButton=document.getElementById('coverPlayButton');
-function openGameFromCover(){
-  if(coverOverlay.classList.contains('is-hidden'))return;
+let coverOpening=false;
+
+function openGameFromCover(event){
+  if(event){
+    event.preventDefault();
+    event.stopPropagation();
+    if(typeof event.stopImmediatePropagation==='function')event.stopImmediatePropagation();
+  }
+  if(coverOpening||coverOverlay.style.display==='none')return;
+
+  coverOpening=true;
+  coverPlayButton.disabled=true;
   resetToMainMenu();
-  coverOverlay.classList.add('is-hidden');
-  setTimeout(()=>coverOverlay.style.display='none',380);
+
+  // La portada se vuelve transparente, pero durante unos instantes sigue
+  // capturando el toque. Así el mismo gesto no atraviesa hacia un botón
+  // del menú en celulares o tablets.
+  coverOverlay.style.transition='opacity .28s ease';
+  coverOverlay.style.opacity='0';
+  coverOverlay.style.visibility='visible';
+  coverOverlay.style.pointerEvents='auto';
+
+  setTimeout(()=>{
+    coverOverlay.style.display='none';
+    coverOverlay.style.pointerEvents='none';
+    coverOpening=false;
+  },420);
+
   if(musicOn)initAudio();
 }
-coverPlayButton.addEventListener('click',openGameFromCover);
-coverPlayButton.addEventListener('pointerup',event=>{event.preventDefault();openGameFromCover()});
+
+coverPlayButton.addEventListener('pointerup',openGameFromCover);
+
+coverPlayButton.addEventListener('click',event=>{
+  if(event.detail===0)openGameFromCover(event);
+  else{
+    event.preventDefault();
+    event.stopPropagation();
+  }
+});
 
 window.addEventListener('pageshow',()=>{
   if(coverOverlay.style.display==='none'||coverOverlay.classList.contains('is-hidden')){
