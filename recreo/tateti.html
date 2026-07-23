@@ -176,16 +176,25 @@ body.theme-challenge main{background:linear-gradient(#b9db95,#8fc16f)}
 .modeButton.mobileMode{background:#438bb5;box-shadow:0 5px #285c88}
 
 .roundCard{
-  position:relative;overflow:hidden
+  position:relative;overflow:hidden;padding:22px
 }
 .roundCard::before{
-  content:"";position:absolute;inset:0;opacity:.12;pointer-events:none;
+  content:"";position:absolute;inset:0;opacity:.09;pointer-events:none;
   background:repeating-linear-gradient(45deg,#fff 0 12px,#000 12px 24px)
+}
+.roundCard>*{position:relative;z-index:2}
+.roundCenterPanel{
+  position:relative;z-index:2;
+  width:min(590px,100%);margin:0 auto;padding:18px;
+  border-radius:20px;background:#fffdf2;
+  border:3px solid currentColor;
+  box-shadow:0 10px 28px #0003, inset 0 2px #fff;
 }
 .roundIcon{font-size:64px;line-height:1;margin:4px 0 10px;filter:drop-shadow(0 5px 2px #0002)}
 .roundRule{
-  position:relative;margin:12px auto;padding:12px;border-radius:14px;max-width:520px;
-  font-weight:900;font-size:18px;background:#fff9;border:2px solid currentColor
+  position:relative;margin:12px auto;padding:13px;border-radius:14px;max-width:520px;
+  font-weight:900;font-size:18px;background:#fff7dc;border:2px solid currentColor;
+  box-shadow:0 5px 14px #0002
 }
 .roundClassic{background:linear-gradient(#eef8df,#c9e6a8);border-color:#4d874b!important;color:#285735}
 .roundAnti{background:linear-gradient(#fff1c4,#f5c16f);border-color:#d87926!important;color:#753b16}
@@ -196,6 +205,13 @@ body.theme-challenge main{background:linear-gradient(#b9db95,#8fc16f)}
   font-weight:1000;letter-spacing:.5px;box-shadow:0 4px #5b1c17
 }
 
+
+@media(max-width:560px){
+  .roundCard{padding:10px}
+  .roundCenterPanel{padding:13px;border-radius:16px}
+  .roundIcon{font-size:48px}
+  .roundRule{font-size:15px;padding:10px}
+}
 
 /* Ajuste móvil: la partida ocupa la pantalla y los controles aparecen al finalizar */
 @media(max-width:860px){
@@ -482,12 +498,14 @@ body.theme-challenge main{background:linear-gradient(#b9db95,#8fc16f)}
 
 <div id="tournamentIntroOverlay" class="overlay" style="display:none">
   <div id="tournamentIntroCard" class="card roundCard roundClassic">
-    <div id="tournamentIntroIcon" class="roundIcon">🌿</div>
-    <div id="tournamentIntroEyebrow"><strong>RONDA 1</strong></div>
-    <h2 id="tournamentIntroTitle">TA-TE-TI</h2>
-    <div id="tournamentIntroRule" class="roundRule">Formá una línea de tres fichas.</div>
-    <div id="tournamentIntroScore" class="tournamentScore"></div>
-    <button id="tournamentStartButton" class="action gold" onclick="startPresentedTournamentRound()">Comenzar partida</button>
+    <div class="roundCenterPanel">
+      <div id="tournamentIntroIcon" class="roundIcon">🌿</div>
+      <div id="tournamentIntroEyebrow"><strong>RONDA 1</strong></div>
+      <h2 id="tournamentIntroTitle">TA-TE-TI</h2>
+      <div id="tournamentIntroRule" class="roundRule">Formá una línea de tres fichas.</div>
+      <div id="tournamentIntroScore" class="tournamentScore"></div>
+      <button id="tournamentStartButton" class="action gold" onclick="startPresentedTournamentRound()">Comenzar partida</button>
+    </div>
   </div>
 </div>
 
@@ -731,7 +749,7 @@ function render(){
     jumpButton.disabled=!challengeState||challengeState.jumpUsed[turn]||roundOver;
     jumpButton.textContent=challengeState&&challengeState.jumpMode?'Elegí la ficha a mover':'🐒 Usar salto';
   }else{challengeInfo.style.display='none';jumpButton.style.display='none'}
-  if(gameMode==='tournament'){const labels={classic:'Ta-Te-Ti',anti:'Ta-Te-Ti Inverso',mobile:'Ta-Te-Ti Móvil'};tournamentPanel.style.display='block';tournamentPanel.innerHTML=`<strong>🏆 Copa a 10 puntos</strong><br>${teamName(X)} ${tournamentScores.X} · ${teamName(O)} ${tournamentScores.O}<br><small>Partida ${tournamentRound+1}: ${labels[tournamentSubMode]}</small>`}else tournamentPanel.style.display='none';
+  if(gameMode==='tournament'){const labels={classic:'Ta-Te-Ti',anti:'Ta-Te-Ti Inverso',mobile:'Ta-Te-Ti Móvil'};tournamentPanel.style.display='block';tournamentPanel.innerHTML=`<strong>🏆 Copa a 12 puntos</strong><br>${teamName(X)} ${tournamentScores.X} · ${teamName(O)} ${tournamentScores.O}<br><small>Partida ${tournamentRound+1}: ${labels[tournamentSubMode]}</small>`}else tournamentPanel.style.display='none';
   updateOpponentCard();
 }
 
@@ -1477,7 +1495,7 @@ function continueTournament(){
     return;
   }
 
-  if(!tournamentSuddenDeath&&tournamentScores.X>=10&&tournamentScores.O>=10&&tournamentScores.X===tournamentScores.O){
+  if(!tournamentSuddenDeath&&tournamentScores.X>=12&&tournamentScores.O>=12&&tournamentScores.X===tournamentScores.O){
     tournamentSuddenDeath=true;
     tournamentRound++;
     tournamentModeIndex=(tournamentModeIndex+1)%3;
@@ -1486,8 +1504,8 @@ function continueTournament(){
     return;
   }
 
-  if(!tournamentSuddenDeath&&(tournamentScores.X>=10||tournamentScores.O>=10)){
-    showTournamentFinal(tournamentScores.X>=10?X:O);
+  if(!tournamentSuddenDeath&&(tournamentScores.X>=12||tournamentScores.O>=12)){
+    showTournamentFinal(tournamentScores.X>=12?X:O);
     return;
   }
 
@@ -1511,7 +1529,7 @@ function presentTournamentRound(isFirstTiebreak=false){
     :`<strong>RONDA ${tournamentRound+1}</strong>`;
   tournamentIntroTitle.textContent=isFirstTiebreak?'¡PRÓXIMA VICTORIA GANA!':data.title;
   tournamentIntroRule.textContent=isFirstTiebreak
-    ?'Los dos llegaron a 10 puntos. Los empates hacen continuar el torneo; la próxima victoria decide al campeón.'
+    ?'Los dos llegaron a 12 puntos. Los empates hacen continuar el torneo; la próxima victoria decide al campeón.'
     :data.rule;
   tournamentIntroScore.innerHTML=`<span>${teamName(X)}</span><strong>${tournamentScores.X} - ${tournamentScores.O}</strong><span>${teamName(O)}</span>`;
   tournamentStartButton.textContent=isFirstTiebreak?'Jugar desempate':'Comenzar partida';
@@ -1718,10 +1736,26 @@ function pluck(){tone(660,.1,'triangle',.04);tone(880,.12,'triangle',.03,.06)}
 function winSound(){tone(523,.15,'triangle',.05);tone(659,.15,'triangle',.05,.12);tone(784,.25,'triangle',.06,.24)}
 function drawSound(){tone(392,.18,'sine',.04);tone(349.23,.22,'sine',.035,.16)}
 
+
+function resetToMainMenu(){
+  aiTurnToken++;
+  stopMusic();
+  gameMode='classic';
+  playType='pvp';
+  tournamentSuddenDeath=false;
+  tournamentPendingWinner=null;
+  document.querySelectorAll('.overlay').forEach(el=>el.style.display='none');
+  menuOverlay.style.display='flex';
+  applyVisualTheme();
+  modeBadge.textContent='Elegí un modo';
+  statusEl.textContent='Elegí un modo para comenzar.';
+}
+
 const coverOverlay=document.getElementById('coverOverlay');
 const coverPlayButton=document.getElementById('coverPlayButton');
 function openGameFromCover(){
   if(coverOverlay.classList.contains('is-hidden'))return;
+  resetToMainMenu();
   coverOverlay.classList.add('is-hidden');
   setTimeout(()=>coverOverlay.style.display='none',380);
   if(musicOn)initAudio();
@@ -1729,7 +1763,14 @@ function openGameFromCover(){
 coverPlayButton.addEventListener('click',openGameFromCover);
 coverPlayButton.addEventListener('pointerup',event=>{event.preventDefault();openGameFromCover()});
 
+window.addEventListener('pageshow',()=>{
+  if(coverOverlay.style.display==='none'||coverOverlay.classList.contains('is-hidden')){
+    resetToMainMenu();
+  }
+});
+
 render();
+resetToMainMenu();
 </script>
 </body>
 </html>
