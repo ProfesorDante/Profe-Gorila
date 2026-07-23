@@ -363,6 +363,72 @@ body.theme-challenge main{background:linear-gradient(#b9db95,#8fc16f)}
   .controls{grid-template-columns:1fr}
 }
 @media(hover:none){.cover-play-button:hover{background:transparent;box-shadow:none}}
+
+/* Feedback visual: cada efecto explica lo que ocurrió */
+.cell.winClassic{
+  animation:classicCelebrate .72s cubic-bezier(.2,.8,.25,1) both;
+  outline:4px solid #fff18a;
+  outline-offset:-4px;
+}
+.cell.antiLoss{
+  animation:antiMistake .72s ease-in-out both;
+  outline:5px solid #d93b32;
+  outline-offset:-5px;
+  background:linear-gradient(#ffb4a8,#d85e4f)!important;
+  box-shadow:inset 0 0 0 4px #ffd6cf,0 0 22px #d92f2faa!important;
+}
+.cell.antiLoss .monkey{
+  animation:antiPieceShrink .72s ease-in-out both;
+  filter:saturate(.65) brightness(.82);
+}
+.board.antiMistakeBoard{
+  animation:antiBoardShake .42s ease-in-out;
+}
+.monkey.moveSlide{
+  animation:pieceSlide .18s ease-out both;
+}
+@keyframes classicCelebrate{
+  0%{transform:translateY(0) scale(1)}
+  35%{transform:translateY(-8px) scale(1.035)}
+  62%{transform:translateY(1px) scale(1.015)}
+  100%{transform:translateY(0) scale(1.035);filter:brightness(1.18)}
+}
+@keyframes antiMistake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-5px)}
+  40%{transform:translateX(5px)}
+  60%{transform:translateX(-3px)}
+  80%{transform:translateX(3px)}
+}
+@keyframes antiPieceShrink{
+  0%{transform:scale(1)}
+  42%{transform:scale(.72) rotate(-4deg)}
+  70%{transform:scale(.80) rotate(3deg)}
+  100%{transform:scale(.76);opacity:.78}
+}
+@keyframes antiBoardShake{
+  0%,100%{transform:translateX(0)}
+  25%{transform:translateX(-6px)}
+  50%{transform:translateX(6px)}
+  75%{transform:translateX(-3px)}
+}
+@keyframes pieceSlide{
+  from{transform:translate(var(--move-x),var(--move-y));opacity:.78}
+  to{transform:translate(0,0);opacity:1}
+}
+
+/* La presentación anticipa el lenguaje de la siguiente ronda */
+.roundCard::after{
+  position:absolute;inset:auto 0 8px 0;z-index:1;
+  text-align:center;pointer-events:none;opacity:.34;font-size:28px;letter-spacing:18px;
+}
+.roundClassic::after{content:"🍃  🍃  🍃";animation:roundLeaves 2.4s ease-in-out infinite}
+.roundAnti::after{content:"↺  🍂  ↻";animation:roundSwirl 1.9s ease-in-out infinite}
+.roundMobile::after{content:"↔  ↕  ↔";animation:roundMove 1.5s ease-in-out infinite}
+@keyframes roundLeaves{0%,100%{transform:translateY(-3px)}50%{transform:translateY(5px)}}
+@keyframes roundSwirl{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes roundMove{0%,100%{transform:translateX(-5px)}50%{transform:translateX(5px)}}
+
 </style>
 </head>
 <body class="theme-classic">
@@ -563,6 +629,8 @@ let aiTurnToken=0;
 let nextStarter=X;
 let tournamentScores={X:0,O:0},tournamentRound=0,tournamentModeIndex=0,tournamentSubMode='classic',tournamentSuddenDeath=false,tournamentPendingWinner=null;
 let dragState=null,suppressNextClick=false;
+let resultFeedback=null;
+let mobileSlideFx=null;
 let currentOpponent={emoji:'🦉',name:'Profesor Búho',phrase:'Piensa antes de mover.'};
 
 let musicOn=true,audioCtx=null,musicTimer=null,musicStep=0;
@@ -699,7 +767,7 @@ function createEmptyBoard(n){return Array(n*n).fill('')}
 
 function render(){
   applyVisualTheme();
-  boardEl.className='board '+(size===3?'size3':'size9');
+  boardEl.className='board '+(size===3?'size3':'size9')+(resultFeedback&&resultFeedback.kind==='anti'?' antiMistakeBoard':'');
   boardEl.innerHTML='';
 
   board.forEach((value,index)=>{
@@ -709,6 +777,9 @@ function render(){
     if(selectedCell===index) cell.classList.add('selected');
 
     if(challengeState&&challengeState.winLine&&challengeState.winLine.includes(index)) cell.classList.add('win');
+    if(resultFeedback&&resultFeedback.line&&resultFeedback.line.includes(index)){
+      cell.classList.add(resultFeedback.kind==='anti'?'antiLoss':'winClassic');
+    }
     if(challengeState&&challengeState.banana===index) cell.classList.add('blocked');
 
     cell.onclick=()=>{if(suppressNextClick){suppressNextClick=false;return}playAt(index)};
@@ -717,6 +788,13 @@ function render(){
     if(value){
       const piece=document.createElement('div');
       piece.className='monkey';
+      if(mobileSlideFx&&mobileSlideFx.to===index){
+        const fromR=Math.floor(mobileSlideFx.from/3),fromC=mobileSlideFx.from%3;
+        const toR=Math.floor(mobileSlideFx.to/3),toC=mobileSlideFx.to%3;
+        piece.classList.add('moveSlide');
+        piece.style.setProperty('--move-x',`${(fromC-toC)*100}%`);
+        piece.style.setProperty('--move-y',`${(fromR-toR)*100}%`);
+      }
       piece.innerHTML=monkeySVG(value);
       cell.appendChild(piece);
     }
@@ -811,7 +889,7 @@ function beginMobileDrag(event,index){
   const upHandler=()=>{document.removeEventListener('pointermove',moveHandler);document.removeEventListener('pointerup',upHandler);document.removeEventListener('pointercancel',upHandler);document.querySelectorAll('.cell.dragTarget').forEach(el=>el.classList.remove('dragTarget'));if(!dragState)return;const {from,target,moved}=dragState;dragState=null;if(moved&&target!==null){suppressNextClick=true;moveMobilePiece(from,target)}};
   document.addEventListener('pointermove',moveHandler,{passive:true});document.addEventListener('pointerup',upHandler,{once:true});document.addEventListener('pointercancel',upHandler,{once:true});
 }
-function moveMobilePiece(from,to){if(roundOver||activeMode()!=='mobile'||board[from]!==turn||board[to]||!isAdjacent3(from,to))return;board[to]=turn;board[from]='';selectedCell=null;mobileMoveCount++;pluck();const line=getThreeLine(board);if(line){finishStandard({winner:turn,line});return}if(mobileMoveCount>=20){finishStandard({winner:null,line:[]});return}switchTurn();afterHumanTurn()}
+function moveMobilePiece(from,to){if(roundOver||activeMode()!=='mobile'||board[from]!==turn||board[to]||!isAdjacent3(from,to))return;mobileSlideFx={from,to};board[to]=turn;board[from]='';selectedCell=null;mobileMoveCount++;pluck();setTimeout(()=>{mobileSlideFx=null},220);const line=getThreeLine(board);if(line){finishStandard({winner:turn,line});return}if(mobileMoveCount>=20){finishStandard({winner:null,line:[]});return}switchTurn();afterHumanTurn()}
 
 function handleMobileMove(index){
   const totalPlaced=placementCounts.X+placementCounts.O;
@@ -855,6 +933,7 @@ function isAdjacent3(a,b){
 }
 
 function startChallengeRound(){
+  resultFeedback=null;mobileSlideFx=null;
   gameMode='challenge';
   playType='ai';
   aiLevel='medium';
@@ -1055,6 +1134,10 @@ function handleJumpSelection(index){
 function finishChallenge(result){
   roundOver=true;
   challengeState.winLine=result.line||[];
+  const inverseChallenge=!!result.inverse;
+  resultFeedback=result.line&&result.line.length
+    ?{line:result.line.slice(),kind:inverseChallenge?'anti':'classic'}
+    :null;
   render();
 
   const humanWon=result.winner===humanTeam;
@@ -1066,18 +1149,20 @@ function finishChallenge(result){
     challengeNextButton.style.display='none';
     drawSound();
   }else if(humanWon){
-    challengeResultTitle.textContent='🏆 ¡Desafío superado!';
+    challengeResultTitle.textContent=inverseChallenge?'🍃 ¡El rival formó la línea!':'🏆 ¡Desafío superado!';
     challengeResultText.textContent=result.reason;
     challengeNextButton.style.display='block';
-    winSound();
+    if(inverseChallenge) mistakeSound(); else winSound();
   }else{
-    challengeResultTitle.textContent='🌿 Esta vez ganó '+teamName(result.winner);
-    challengeResultText.textContent='El desafío sigue disponible para volver a intentarlo.';
+    challengeResultTitle.textContent=inverseChallenge?'🍃 ¡Formaste la línea!':'🌿 Esta vez ganó '+teamName(result.winner);
+    challengeResultText.textContent=inverseChallenge
+      ?'En este desafío, formar la línea significa perder.'
+      :'El desafío sigue disponible para volver a intentarlo.';
     challengeNextButton.style.display='none';
-    drawSound();
+    if(inverseChallenge) mistakeSound(); else drawSound();
   }
 
-  setTimeout(()=>challengeResultOverlay.style.display='flex',450);
+  setTimeout(()=>challengeResultOverlay.style.display='flex',resultFeedback?760:560);
 }
 
 function nextChallenge(){
@@ -1296,8 +1381,10 @@ function mobileAiMove(){
   }
 
   chosen=chosen||options[Math.floor(Math.random()*options.length)];
+  mobileSlideFx={from:chosen.from,to:chosen.to};
   board[chosen.to]=aiTeam;
   board[chosen.from]='';
+  setTimeout(()=>{mobileSlideFx=null},220);
   mobileMoveCount++;
   pluck();
 
@@ -1410,44 +1497,42 @@ function finishStandard(result){
   roundOver=true;
   aiTurnToken++;
 
-  if(result.line){
-    setTimeout(()=>{
-      [...boardEl.children].forEach((cell,i)=>cell.classList.toggle('win',result.line.includes(i)));
-    },0);
-  }
+  const inverseResult=activeMode()==='anti'&&!!result.winner;
+  resultFeedback=result.line&&result.line.length
+    ?{line:result.line.slice(),kind:inverseResult?'anti':'classic'}
+    :null;
+
+  render();
 
   if(gameMode==='tournament'){
     if(tournamentSuddenDeath){
-      if(result.winner){
-        tournamentPendingWinner=result.winner;
-        winSound();
-      }else{
-        drawSound();
-      }
+      if(result.winner) tournamentPendingWinner=result.winner;
     }else{
-      if(result.winner){
-        tournamentScores[result.winner]+=2;
-        winSound();
-      }else{
-        tournamentScores.X++;
-        tournamentScores.O++;
-        drawSound();
-      }
+      if(result.winner) tournamentScores[result.winner]+=2;
+      else{tournamentScores.X++;tournamentScores.O++}
     }
 
-    render();
-    setTimeout(()=>showTournamentRoundResult(result),450);
+    // En inverso, quien formó la línea debe sentir que cometió un error.
+    if(result.winner){
+      if(inverseResult) mistakeSound(); else winSound();
+    }else drawSound();
+
+    setTimeout(()=>showTournamentRoundResult(result),inverseResult?760:620);
     return;
   }
 
   if(result.winner){
     scores[result.winner]++;
-    winSound();
-    if(activeMode()==='anti'){
-      endTitle.textContent='🍃 ¡Ta-Te-Ti Inverso!';
-      endText.textContent=`${teamName(result.loser)} formó tres y perdió. Ganó ${teamName(result.winner)}.`;
+
+    if(inverseResult){
+      mistakeSound();
+      statusEl.textContent=`¡Ups! ${teamName(result.loser)} formó tres.`;
+      endTitle.textContent='🍃 ¡Formaste tres!';
+      endText.textContent=`${teamName(result.loser)} perdió la partida. Ganó ${teamName(result.winner)}.`;
     }else{
-      endTitle.textContent='🍃 ¡Qué buena jugada!';
+      winSound();
+      statusEl.textContent=`¡Línea completa de ${teamName(result.winner)}!`;
+      endTitle.textContent='🌿 ¡Qué buena jugada!';
       endText.textContent=`Ganó ${teamName(result.winner)}.`;
     }
   }else{
@@ -1459,20 +1544,26 @@ function finishStandard(result){
   }
 
   render();
-  setTimeout(()=>endOverlay.style.display='flex',450);
+  // Primero se entiende lo ocurrido en el tablero; después aparece el cartel.
+  setTimeout(()=>endOverlay.style.display='flex',resultFeedback?760:560);
 }
 
 function showTournamentRoundResult(result){
   const labels={classic:'Ta-Te-Ti',anti:'Ta-Te-Ti Inverso',mobile:'Ta-Te-Ti Móvil'};
   tournamentRoundTitle.textContent=tournamentSuddenDeath?'⚔️ Desempate':`🏆 ${labels[tournamentSubMode]}`;
 
+  const inverseRound=tournamentSubMode==='anti'&&!!result.winner;
   if(tournamentSuddenDeath){
     tournamentRoundText.textContent=result.winner
-      ?`${teamName(result.winner)} ganó el desempate.`
+      ?(inverseRound
+        ?`${teamName(result.loser)} formó tres y perdió. ${teamName(result.winner)} ganó el desempate.`
+        :`${teamName(result.winner)} ganó el desempate.`)
       :'La partida terminó empatada. El desempate continúa.';
   }else{
     tournamentRoundText.textContent=result.winner
-      ?`${teamName(result.winner)} ganó la partida y suma 2 puntos.`
+      ?(inverseRound
+        ?`${teamName(result.loser)} formó tres y perdió. ${teamName(result.winner)} suma 2 puntos.`
+        :`${teamName(result.winner)} ganó la partida y suma 2 puntos.`)
       :'La partida terminó empatada. Cada jugador suma 1 punto.';
   }
 
@@ -1538,6 +1629,7 @@ function presentTournamentRound(isFirstTiebreak=false){
 }
 
 function startPresentedTournamentRound(){
+  resultFeedback=null;mobileSlideFx=null;
   tournamentIntroOverlay.style.display='none';
   restartRound();
   startMusic();
@@ -1567,6 +1659,7 @@ async function downloadTournamentImage(){
 }
 
 function restartRound(){
+  resultFeedback=null;mobileSlideFx=null;
   aiTurnToken++;
   endOverlay.style.display='none';
 
@@ -1665,6 +1758,7 @@ function hideAllOverlays(){
 }
 
 function showMenu(){
+  resultFeedback=null;mobileSlideFx=null;
   stopMusic();
   aiTurnToken++;
   hideAllOverlays();
@@ -1735,9 +1829,15 @@ function toggleMusic(){
 function pluck(){tone(660,.1,'triangle',.04);tone(880,.12,'triangle',.03,.06)}
 function winSound(){tone(523,.15,'triangle',.05);tone(659,.15,'triangle',.05,.12);tone(784,.25,'triangle',.06,.24)}
 function drawSound(){tone(392,.18,'sine',.04);tone(349.23,.22,'sine',.035,.16)}
+function mistakeSound(){
+  tone(330,.13,'triangle',.045);
+  tone(247,.18,'sine',.05,.10);
+  tone(196,.28,'sine',.045,.23);
+}
 
 
 function resetToMainMenu(){
+  resultFeedback=null;mobileSlideFx=null;
   aiTurnToken++;
   stopMusic();
   gameMode='classic';
