@@ -474,7 +474,11 @@ body[class*="challenge-"] header{background:linear-gradient(color-mix(in srgb,va
     <h2 id="champResultTitle">Resultado de la partida</h2>
     <p id="champResultText"></p>
     <div class="champProgress" id="champProgressText"></div>
-    <button onclick="continueChampionship()">Continuar campeonato</button>
+    <div class="voiceRow">
+      <button id="champContinueButton" onclick="continueChampionship()">Continuar campeonato</button>
+      <button id="champRetryButton" class="championship" onclick="restartChampionshipFromResult()" style="display:none">Volver a empezar</button>
+      <button id="champMenuButton" class="secondary" onclick="showMenu()" style="display:none">Volver al menú</button>
+    </div>
   </div>
 </div>
 
@@ -553,7 +557,7 @@ body[class*="challenge-"] header{background:linear-gradient(color-mix(in srgb,va
     <div class="teacherPanel">
       <p><strong>Objetivo:</strong> capturar todas las fichas del equipo contrario o dejarlo sin movimientos.</p>
       <p><strong>Cómo se juega:</strong> cada ficha avanza en diagonal por los casilleros oscuros. Para capturar, salta por encima de una ficha rival y cae en el casillero vacío que está detrás.</p>
-      <p><strong>Reglas importantes:</strong> si existe una captura, hay que realizarla. Si después de capturar se puede volver a saltar, la jugada continúa. Al llegar al extremo opuesto, el monito recibe una corona de hojas, puede moverse hacia ambos lados y recorrer varios casilleros por una diagonal libre.</p>
+      <p><strong>Reglas importantes:</strong> si existe una captura, hay que realizarla. Si después de capturar se puede volver a saltar, la jugada continúa. Al llegar al extremo opuesto, el monito recibe una corona de hojas, puede moverse hacia ambos lados y recorrer varios casilleros por una diagonal libre. Si al final solo quedan damas, gana quien conserva más; con la misma cantidad, es empate.</p>
       <p><strong>Estrategias:</strong> proteger las fichas, evitar dejarlas solas, controlar el centro y pensar qué puede responder el rival.</p>
       <p><strong>Errores frecuentes:</strong> mover sobre casilleros claros, olvidar una captura disponible o dejar una ficha expuesta.</p>
       <p><strong>Preguntas para conversar:</strong> ¿por qué elegiste esa jugada? ¿Qué podía hacer el rival después? ¿Había otra opción más segura?</p>
@@ -888,6 +892,18 @@ function checkEnd(){
     return;
   }
 
+  // Regla de cierre para evitar finales interminables:
+  // si no quedan fichas comunes y solo permanecen damas, gana quien tiene más.
+  // Con la misma cantidad, la partida termina en empate.
+  if(!challengeActive&&g>0&&y>0){
+    const greenKings=countKings(GREEN);
+    const goldKings=countKings(GOLD);
+    if(greenKings===g&&goldKings===y){
+      finishOnlyKingsResult(greenKings,goldKings);
+      return;
+    }
+  }
+
   if(g===0||y===0||moves.length===0){
     let winnerPlayer;
     if(g===0) winnerPlayer=GOLD;
@@ -908,7 +924,7 @@ function checkEnd(){
       if(humanWon) championshipWins++; else championshipLosses++;
       if(championshipSchedule[championshipIndex]==='profe') championshipBeatProfe=humanWon;
       showChampionshipRoundResult(winner);
-      playWin();
+      if(humanWon) playWin(); else playLossResult();
       return;
     }
 
@@ -926,6 +942,56 @@ function countPieces(player){
     if(player===GOLD&&isGold(p)) n++;
   }
   return n;
+}
+
+function countKings(player){
+  let n=0;
+  for(const row of board) for(const p of row){
+    if(player===GREEN&&p===GREEN_K) n++;
+    if(player===GOLD&&p===GOLD_K) n++;
+  }
+  return n;
+}
+
+function finishOnlyKingsResult(greenKings,goldKings){
+  let winnerPlayer=null;
+  if(greenKings>goldKings) winnerPlayer=GREEN;
+  if(goldKings>greenKings) winnerPlayer=GOLD;
+
+  gameOver=true;
+  const detail=`Solo quedaron damas: ${greenKings} de Nito y ${goldKings} de Tina.`;
+
+  if(championshipActive){
+    if(winnerPlayer===null){
+      championshipLastResult='draw';
+      showChampionshipRoundResult(null,detail);
+      playDrawResult();
+      return;
+    }
+
+    const humanWon=winnerPlayer===humanPlayer;
+    championshipLastResult=humanWon?'win':'loss';
+    if(humanWon) championshipWins++; else championshipLosses++;
+    if(championshipSchedule[championshipIndex]==='profe') championshipBeatProfe=humanWon;
+    const winner=winnerPlayer===GREEN?'Nito · Equipo Hoja':'Tina · Equipo Dorado';
+    showChampionshipRoundResult(winner,detail);
+    if(humanWon) playWin(); else playLossResult();
+    return;
+  }
+
+  if(winnerPlayer===null){
+    document.getElementById('endTitle').textContent='👑 ¡Empate entre damas!';
+    document.getElementById('endText').textContent=`${detail} Ambos equipos conservaron la misma cantidad.`;
+    document.getElementById('endOverlay').style.display='flex';
+    playDrawResult();
+    return;
+  }
+
+  const winner=winnerPlayer===GREEN?'Nito · Equipo Hoja':'Tina · Equipo Dorado';
+  document.getElementById('endTitle').textContent='👑 ¡Ganó quien conservó más damas!';
+  document.getElementById('endText').textContent=`${detail} Ganó ${winner}.`;
+  document.getElementById('endOverlay').style.display='flex';
+  playWin();
 }
 
 function selectCell(r,c){
@@ -1738,16 +1804,56 @@ function startChampionshipRound(){
   updateOpponentDisplay(aiLevel,false);
   setStatus(aiLevel==='profe'?'🦍 FINAL DEL CAMPEONATO · VAS CONTRA EL PROFE':`🏆 Campeonato · Partida ${championshipIndex+1}/${championshipSchedule.length}`);
 }
-function showChampionshipRoundResult(winner){
+function showChampionshipRoundResult(winner,extraDetail=''){
   const rival=opponentData[championshipSchedule[championshipIndex]];
-  const humanWon=championshipLastResult==='win';
-  document.getElementById('champResultTitle').textContent=humanWon?'🌿 ¡Ganaste la partida!':'La partida terminó';
-  document.getElementById('champResultText').textContent=`${winner} ganó la partida contra ${rival.name}.`;
-  document.getElementById('champProgressText').textContent=`Progreso: ${championshipIndex+1}/${championshipSchedule.length} · Victorias: ${championshipWins} · Derrotas: ${championshipLosses}`;
+  const title=document.getElementById('champResultTitle');
+  const text=document.getElementById('champResultText');
+  const progress=document.getElementById('champProgressText');
+  const continueButton=document.getElementById('champContinueButton');
+  const retryButton=document.getElementById('champRetryButton');
+  const menuButton=document.getElementById('champMenuButton');
+
+  continueButton.style.display='none';
+  retryButton.style.display='none';
+  menuButton.style.display='none';
+
+  if(championshipLastResult==='win'){
+    title.textContent='🌿 ¡Ganaste la partida!';
+    text.textContent=`Derrotaste a ${rival.name}. ${extraDetail}`.trim();
+    progress.textContent=`Progreso: ${championshipIndex+1}/${championshipSchedule.length} · Victorias: ${championshipWins}`;
+    continueButton.textContent=championshipIndex===championshipSchedule.length-1?'Ver final':'Ir al siguiente rival';
+    continueButton.style.display='inline-block';
+  }else if(championshipLastResult==='draw'){
+    title.textContent='👑 ¡La partida terminó empatada!';
+    text.textContent=`${extraDetail} Para avanzar tenés que derrotar a ${rival.name}.`.trim();
+    progress.textContent=`Seguís en la partida ${championshipIndex+1}/${championshipSchedule.length}.`;
+    continueButton.textContent='Repetir esta partida';
+    continueButton.style.display='inline-block';
+    menuButton.style.display='inline-block';
+  }else{
+    title.textContent='🌳 El campeonato terminó aquí';
+    text.textContent=`Esta vez ${rival.name} defendió mejor el Gran Árbol. No pasarás al siguiente rival. ${extraDetail}`.trim();
+    progress.textContent=`Llegaste hasta la partida ${championshipIndex+1}/${championshipSchedule.length}.`;
+    retryButton.style.display='inline-block';
+    menuButton.style.display='inline-block';
+  }
+
   document.getElementById('champResultOverlay').style.display='flex';
 }
+
 function continueChampionship(){
   document.getElementById('champResultOverlay').style.display='none';
+
+  if(championshipLastResult==='loss'){
+    showMenu();
+    return;
+  }
+
+  if(championshipLastResult==='draw'){
+    startChampionshipRound();
+    return;
+  }
+
   championshipIndex++;
   if(championshipIndex>=championshipSchedule.length) finishChampionship();
   else startChampionshipRound();
@@ -1872,6 +1978,11 @@ async function downloadChampionshipPng(){
 
 function restartChampionship(){
   document.getElementById('champFinalOverlay').style.display='none';
+  startChampionship(championshipCharacter);
+}
+
+function restartChampionshipFromResult(){
+  document.getElementById('champResultOverlay').style.display='none';
   startChampionship(championshipCharacter);
 }
 
@@ -2132,6 +2243,8 @@ function playMoveSound(){tone(190,.07,'triangle',.035)}
 function playCaptureSound(){tone(145,.10,'square',.045);tone(95,.13,'triangle',.035,.05)}
 function playCrownSound(){tone(523,.12,'triangle',.05);tone(659,.14,'triangle',.05,.10);tone(784,.20,'sine',.055,.20)}
 function playWin(){tone(523,.18,'triangle',.05);tone(659,.18,'triangle',.05,.16);tone(784,.28,'triangle',.06,.32)}
+function playDrawResult(){tone(392,.16,'sine',.04);tone(392,.22,'sine',.035,.18)}
+function playLossResult(){tone(330,.16,'triangle',.045);tone(247,.20,'sine',.05,.14);tone(196,.28,'sine',.045,.32)}
 
 
 function refreshMobileLayout(){
