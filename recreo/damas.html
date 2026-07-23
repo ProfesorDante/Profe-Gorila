@@ -517,6 +517,7 @@ body[class*="challenge-"] header{background:linear-gradient(color-mix(in srgb,va
       <div id="challengeIntroStep" class="challengeStep">DESAFÍO 1 DE 7</div>
       <h2 id="challengeIntroTitle">Rey del Tablero</h2>
       <div id="challengeIntroOpponent" class="challengeOpponent">🦥 Te enfrentás a Perezoso</div>
+      <p id="challengeIntroQuote" style="font-style:italic;font-weight:900"></p>
       <p id="challengeIntroRule" class="challengeRule"></p>
       <button onclick="beginPresentedChallenge()">Comenzar desafío</button>
     </div>
@@ -612,21 +613,23 @@ let challengeCaptures={1:0,2:0};
 let challengeControl={1:0,2:0};
 let frozenCells={1:null,2:null};
 let extremeDestroyAt=null;
+let challengeNextStarter=GREEN;
+let boardFx=[];
 const controlSquares=[{r:3,c:2},{r:3,c:4},{r:4,c:3}];
 const challengeSchedule=[
-  {type:'king',title:'Rey del Tablero',icon:'👑',level:'easy',face:'🦥',opponent:'Perezoso',
+  {type:'king',title:'Rey del Tablero',quote:'No hace falta correr... el centro siempre espera.',icon:'👑',level:'easy',face:'🦥',opponent:'Perezoso',
    rule:'Tres casilleros centrales brillan. Al terminar tu turno con una ficha sobre cualquiera de ellos ganás 1 punto. El primero en llegar a 10 gana.'},
-  {type:'race',title:'Carrera de Damas',icon:'🏁',level:'medium',face:'🦜',opponent:'Loro',
+  {type:'race',title:'Carrera de Damas',quote:'¡Cinco capturas y me llevo la victoria!',icon:'🏁',level:'medium',face:'🦜',opponent:'Loro',
    rule:'Gana el primer jugador que capture cinco fichas rivales.'},
-  {type:'frozen',title:'Damas Congeladas',icon:'❄️',level:'hard',face:'🐆',opponent:'Jaguar',
+  {type:'frozen',title:'Damas Congeladas',quote:'El hielo también puede ser un arma.',icon:'❄️',level:'hard',face:'🐆',opponent:'Jaguar',
    rule:'En cada turno se congela una ficha al azar de cada equipo. Las fichas congeladas no pueden moverse durante ese turno.'},
-  {type:'inverse',title:'Damas Inversas',icon:'🔄',level:'expert',face:'🐘',opponent:'Elefante',
+  {type:'inverse',title:'Damas Inversas',quote:'Hoy perder... es ganar.',icon:'🔄',level:'expert',face:'🐘',opponent:'Elefante',
    rule:'Gana quien logra quedarse sin fichas o sin movimientos. La clave es obligar al rival a capturarte.'},
-  {type:'sudden',title:'Todo o Nada',icon:'⚡',level:'expert',face:'🦅',opponent:'Águila',
+  {type:'sudden',title:'Todo o Nada',quote:'Un solo salto decidirá todo.',icon:'⚡',level:'expert',face:'🦅',opponent:'Águila',
    rule:'Cada equipo comienza con solo dos filas de fichas. La primera captura decide toda la partida.'},
-  {type:'extreme',title:'Damas Extremas',icon:'💥',level:'profe',face:'🐊',opponent:'Cocodrilo',
+  {type:'extreme',title:'Damas Extremas',quote:'Toda captura tiene un precio.',icon:'💥',level:'profe',face:'🐊',opponent:'Cocodrilo',
    rule:'Cuando una ficha captura, también desaparece al terminar su combo. Si encadena varias capturas, completa todo el recorrido antes de desaparecer.'},
-  {type:'crazy',title:'Damas Locas',icon:'🌪️',level:'profe',face:'🦍',opponent:'Profe Gorila',
+  {type:'crazy',title:'Damas Locas',quote:'En el Gran Árbol, hasta el caos tiene sus reglas.',icon:'🌪️',level:'profe',face:'🦍',opponent:'Profe Gorila',
    rule:'Al terminar cada turno, una ficha cualquiera cambia de posición al azar. Adaptarse al caos es parte del desafío.'}
 ];
 
@@ -802,6 +805,9 @@ function makeMove(m,fromAi=false){
     playCaptureSound();
     if(challengeActive){
       challengeCaptures[movingPlayer]++;
+      if(challengeType==='race') addBoardFx(m.to.r,m.to.c,`🏁 ${challengeCaptures[movingPlayer]}/5`,'text');
+      if(challengeType==='inverse') addBoardFx(m.to.r,m.to.c,movingPlayer===humanPlayer?'😬':'✅','text');
+      if(challengeType==='extreme') addBoardFx(m.to.r,m.to.c,'💥','burst');
       updateChallengeHud();
       if(challengeType==='sudden'){
         updateAll();
@@ -827,7 +833,7 @@ function makeMove(m,fromAi=false){
     if(pendingPromotion){pendingPromotion.r=m.to.r;pendingPromotion.c=m.to.c;}
     selected=mustContinue;
     legalMoves=follow;
-    setStatus(challengeType==='extreme'?'💥 Completá el combo antes de que desaparezca tu ficha.':'La captura continúa.');
+    setStatus(challengeType==='extreme'?'💥 Combo en curso.':'Captura en curso.');
     updateAll();
     return;
   }
@@ -862,7 +868,7 @@ function makeMove(m,fromAi=false){
   checkEnd();
 
   if(!gameOver&&mode==='ai'&&turn===aiPlayer&&!fromAi){
-    setStatus('La computadora está pensando...');
+    setStatus(rivalThinkingText());
     setTimeout(aiTurn,300+Math.random()*300);
   }
 }
@@ -930,7 +936,7 @@ function selectCell(r,c){
   if(clickedMove){makeMove(clickedMove);return true;}
 
   if(mustContinue&&(r!==mustContinue.r||c!==mustContinue.c)){
-    setStatus('La misma ficha debe continuar capturando.');
+    setStatus('La captura continúa.');
     draw();
     return false;
   }
@@ -941,14 +947,14 @@ function selectCell(r,c){
 
   const moves=allMovesFor(turn).filter(m=>m.from.r===r&&m.from.c===c);
   if(!moves.length){
-    if(allMovesFor(turn).some(m=>m.capture)) setStatus('Hay una captura obligatoria con otra ficha que está brillando.');
+    if(allMovesFor(turn).some(m=>m.capture)) setStatus('Hay una captura obligatoria.');
     draw();
     return false;
   }
 
   selected={r,c};
   legalMoves=moves;
-  setStatus(moves[0].capture?'Captura disponible: elegí el casillero azul.':'Elegí un casillero iluminado.');
+  setStatus(moves[0].capture?'Captura disponible.':'Movimiento disponible.');
   draw();
   return true;
 }
@@ -1023,6 +1029,23 @@ function chooseExpert(moves){
 function expertMoveBonus(m,b){
   const p=b[m.from.r][m.from.c];
   let s=0;
+  if(challengeActive){
+    if(challengeType==='king'){
+      const lands=controlSquares.some(q=>q.r===m.to.r&&q.c===m.to.c);
+      const leaves=controlSquares.some(q=>q.r===m.from.r&&q.c===m.from.c);
+      if(lands) s+=35;
+      if(leaves&&!lands) s-=18;
+    }
+    if(challengeType==='race'&&m.capture) s+=22;
+    if(challengeType==='sudden'&&m.capture) s+=100;
+    if(challengeType==='inverse'){
+      if(m.capture) s-=5;
+      const nb=applyMoveToBoard(b,m);
+      const offered=allMovesFor(humanPlayer,nb).filter(x=>x.capture).length;
+      s+=offered*8;
+    }
+    if(challengeType==='extreme'&&m.capture) s+=4;
+  }
   if(m.capture) s+=1.5;
   if(!isKing(p)&&((p===GOLD&&m.to.r===7)||(p===GREEN&&m.to.r===0))) s+=3;
   if(m.to.c>=2&&m.to.c<=5&&m.to.r>=2&&m.to.r<=5) s+=.6;
@@ -1097,6 +1120,16 @@ function evaluateForAi(b){
     return rawTeamScore(b,humanPlayer)-rawTeamScore(b,aiPlayer);
   }
   let score=rawTeamScore(b,aiPlayer)-rawTeamScore(b,humanPlayer);
+  if(challengeActive&&challengeType==='king'){
+    for(const q of controlSquares){
+      const p=b[q.r][q.c];
+      if((aiPlayer===GREEN&&isGreen(p))||(aiPlayer===GOLD&&isGold(p))) score+=18;
+      if((humanPlayer===GREEN&&isGreen(p))||(humanPlayer===GOLD&&isGold(p))) score-=16;
+    }
+  }
+  if(challengeActive&&challengeType==='race'){
+    score+=(challengeCaptures[aiPlayer]-challengeCaptures[humanPlayer])*14;
+  }
   const aiMoves=allMovesFor(aiPlayer,b),humanMoves=allMovesFor(humanPlayer,b);
   score+=(aiMoves.length-humanMoves.length)*.10;
   score+=(aiMoves.filter(m=>m.capture).length-humanMoves.filter(m=>m.capture).length)*.45;
@@ -1121,11 +1154,11 @@ function updateAll(){
   const captureRequired=moves.some(m=>m.capture);
 
   if(mustContinue){
-    setStatus('Captura obligatoria: la misma ficha debe seguir comiendo.');
+    setStatus('Captura en curso.');
   }else if(captureRequired){
-    setStatus('¡Captura obligatoria! Elegí una ficha que brilla.');
+    setStatus('Captura obligatoria.');
   }else{
-    setStatus(turn===GREEN?'Turno de Nito · Equipo Hoja.':'Turno de Tina · Equipo Dorado.');
+    setStatus(turn===GREEN?'Turno de Nito.':'Turno de Tina.');
   }
   draw();
 }
@@ -1228,10 +1261,37 @@ function draw(){
     drawPiece(drag.piece,drag.x-ox,drag.y-oy,size*1.06);
     ctx.restore();
   }
+
+  if(boardFx.length){
+    const now=performance.now();
+    boardFx=boardFx.filter(fx=>now-fx.start<fx.life);
+    for(const fx of boardFx){
+      const t=(now-fx.start)/fx.life;
+      const x=fx.c*size+size/2;
+      const y=fx.r*size+size/2-size*.35*t;
+      ctx.save();
+      ctx.globalAlpha=1-t;
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.font=`900 ${Math.round(size*(fx.kind==='burst'?.46:.30))}px Arial`;
+      ctx.shadowColor=fx.kind==='gold'?'#fff26a':'rgba(0,0,0,.35)';
+      ctx.shadowBlur=size*.16;
+      ctx.fillStyle=fx.kind==='gold'?'#fff36a':'#ffffff';
+      ctx.fillText(fx.text,x,y);
+      if(fx.kind==='burst'||fx.kind==='swirl'){
+        ctx.strokeStyle=fx.kind==='burst'?'#ffe36a':'#d9ffd0';
+        ctx.lineWidth=Math.max(2,size*.03);
+        ctx.beginPath();
+        ctx.arc(x,y,size*(.14+.28*t),0,Math.PI*2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
   ctx.restore();
 
   // Mantiene vivo el brillo sin alterar la lógica del juego.
-  if((forced.size||legalMoves.length||promotionFx||(challengeActive&&challengeType==='king')) && !gameOver) requestAnimationFrame(draw);
+  if((forced.size||legalMoves.length||promotionFx||boardFx.length||(challengeActive&&challengeType==='king')) && !gameOver) requestAnimationFrame(draw);
 }
 
 function drawLeavesBackground(W,H){
@@ -1247,6 +1307,21 @@ function drawPiece(p,x,y,size){
   const css=getComputedStyle(document.documentElement);
   ctx.save();ctx.translate(x,y);
   const r=size*.34;
+
+  // Las damas coronadas se muestran como una pila de tres fichas.
+  if(isKing(p)){
+    for(let layer=2;layer>=1;layer--){
+      const dy=layer*size*.075;
+      ctx.save();
+      ctx.translate(0,dy);
+      ctx.fillStyle=brownTeam?(css.getPropertyValue('--green-piece').trim()||'#8b5434'):(css.getPropertyValue('--gold-piece').trim()||'#e0ad42');
+      ctx.strokeStyle=brownTeam?(css.getPropertyValue('--green-piece-stroke').trim()||'#f1d2a2'):(css.getPropertyValue('--gold-piece-stroke').trim()||'#fff0a3');
+      ctx.lineWidth=Math.max(2,size*.03);
+      ctx.globalAlpha=layer===2?.72:.86;
+      ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.restore();
+    }
+  }
 
   // Borde claro y sombra: las fichas se leen bien sobre cualquier casillero.
   ctx.shadowColor='rgba(0,0,0,.28)';ctx.shadowBlur=6;ctx.shadowOffsetY=4;
@@ -1303,12 +1378,12 @@ function drawPiece(p,x,y,size){
     ctx.strokeStyle='#315f37';
     ctx.lineWidth=Math.max(2,size*.025);
     ctx.beginPath();
-    ctx.moveTo(-r*.42,-r*.58);
-    ctx.lineTo(-r*.28,-r*.90);
-    ctx.lineTo(-r*.08,-r*.69);
-    ctx.lineTo(r*.08,-r*.96);
-    ctx.lineTo(r*.28,-r*.69);
-    ctx.lineTo(r*.43,-r*.90);
+    ctx.moveTo(-r*.48,-r*.64);
+    ctx.lineTo(-r*.30,-r*1.02);
+    ctx.lineTo(-r*.09,-r*.77);
+    ctx.lineTo(r*.08,-r*1.10);
+    ctx.lineTo(r*.29,-r*.77);
+    ctx.lineTo(r*.48,-r*1.02);
     ctx.lineTo(r*.42,-r*.56);
     ctx.closePath();
     ctx.fill();ctx.stroke();
@@ -1365,7 +1440,7 @@ canvas.addEventListener('pointerdown',e=>{
 
   selected={r:pos.r,c:pos.c};
   legalMoves=selectableMoves;
-  setStatus(selectableMoves[0].capture?'Captura disponible: elegí el casillero azul.':'Elegí un casillero iluminado.');
+  setStatus(selectableMoves[0].capture?'Captura disponible.':'Movimiento disponible.');
   draw();
 
   drag={pointerId:e.pointerId,from:{r:pos.r,c:pos.c},piece:p,startX:pos.x,startY:pos.y,x:pos.x,y:pos.y,active:false};
@@ -1403,6 +1478,29 @@ canvas.addEventListener('lostpointercapture',()=>{if(drag){drag=null;draw();}});
 
 
 
+
+function rivalThinkingText(){
+  const ch=challengeActive?currentChallenge():null;
+  if(challengeActive&&ch){
+    const texts={
+      king:`${ch.face} ${ch.opponent} busca controlar el centro...`,
+      race:`${ch.face} ${ch.opponent} busca otra captura...`,
+      frozen:`${ch.face} ${ch.opponent} reorganiza sus fichas...`,
+      inverse:`${ch.face} ${ch.opponent} prepara una trampa...`,
+      sudden:`${ch.face} ${ch.opponent} busca la captura decisiva...`,
+      extreme:`${ch.face} ${ch.opponent} calcula el próximo sacrificio...`,
+      crazy:`${ch.face} ${ch.opponent} se adapta al caos...`
+    };
+    return texts[challengeType]||`${ch.face} ${ch.opponent} está pensando...`;
+  }
+  const data=opponentData[aiLevel];
+  return data?`${data.face} ${data.name} está pensando...`:'Tu rival está pensando...';
+}
+function addBoardFx(r,c,text,kind='spark'){
+  boardFx.push({r,c,text,kind,start:performance.now(),life:850});
+  requestAnimationFrame(draw);
+}
+
 function currentChallenge(){return challengeSchedule[challengeIndex]||null}
 
 function applyChallengeTheme(type){
@@ -1416,6 +1514,7 @@ function clearChallengeState(){
   challengeControl={1:0,2:0};
   frozenCells={1:null,2:null};
   extremeDestroyAt=null;
+  boardFx=[];
   const hud=document.getElementById('challengeHud');
   if(hud) hud.style.display='none';
   applyChallengeTheme('');
@@ -1435,6 +1534,7 @@ function startGrandTreeChallenge(character){
   challengeIndex=0;
   challengeWins=0;
   challengeLosses=0;
+  challengeNextStarter=GREEN;
   humanPlayer=character==='nito'?GREEN:GOLD;
   aiPlayer=humanPlayer===GREEN?GOLD:GREEN;
   mode='ai';
@@ -1451,6 +1551,7 @@ function presentChallenge(){
   document.getElementById('challengeIntroStep').textContent=`DESAFÍO ${challengeIndex+1} DE ${challengeSchedule.length}`;
   document.getElementById('challengeIntroTitle').textContent=ch.title;
   document.getElementById('challengeIntroOpponent').textContent=`${ch.face} Te enfrentás a ${ch.opponent}`;
+  document.getElementById('challengeIntroQuote').textContent=`“${ch.quote}”`;
   document.getElementById('challengeIntroRule').textContent=ch.rule;
   document.getElementById('challengeIntroOverlay').style.display='flex';
 }
@@ -1463,8 +1564,8 @@ function beginPresentedChallenge(){
   beginChallengeMatch();
 }
 function beginChallengeMatch(){
-  const starter=nextStarter;
-  nextStarter=nextStarter===GREEN?GOLD:GREEN;
+  const starter=challengeNextStarter;
+  challengeNextStarter=challengeNextStarter===GREEN?GOLD:GREEN;
   initBoard(starter,challengeType==='sudden'?2:3);
   challengeCaptures={1:0,2:0};
   challengeControl={1:0,2:0};
@@ -1478,7 +1579,7 @@ function beginChallengeMatch(){
   document.getElementById('mobileOpponentName').textContent=ch.opponent;
   if(challengeType==='frozen') assignFrozenPieces();
   updateChallengeHud();
-  setStatus(`${ch.icon} ${ch.title} · Desafío ${challengeIndex+1}/${challengeSchedule.length}`);
+  setStatus(starter===GREEN?'Turno de Nito.':'Turno de Tina.');
   if(mode==='ai'&&starter===aiPlayer) setTimeout(aiTurn,500);
 }
 function updateChallengeHud(){
@@ -1486,12 +1587,12 @@ function updateChallengeHud(){
   if(!challengeActive){hud.style.display='none';return;}
   hud.style.display='block';
   if(challengeType==='king'){
-    hud.textContent=`👑 Nito ${challengeControl[GREEN]}/10 · Tina ${challengeControl[GOLD]}/10`;
+    hud.textContent=`👑 ${challengeControl[GREEN]}/10 · ${challengeControl[GOLD]}/10`;
   }else if(challengeType==='race'){
-    hud.textContent=`🏁 Capturas: Nito ${challengeCaptures[GREEN]}/5 · Tina ${challengeCaptures[GOLD]}/5`;
+    hud.textContent=`🏁 ${challengeCaptures[GREEN]}/5 · ${challengeCaptures[GOLD]}/5`;
   }else{
     const ch=currentChallenge();
-    hud.textContent=`${ch.icon} ${ch.title} · ${challengeIndex+1}/${challengeSchedule.length}`;
+    hud.textContent=`${ch.icon} ${challengeIndex+1}/${challengeSchedule.length}`;
   }
 }
 function finishChallengeRound(winnerPlayer,reason=''){
@@ -1555,7 +1656,11 @@ function assignFrozenPieces(){
       const p=board[r][c];
       if((player===GREEN&&isGreen(p))||(player===GOLD&&isGold(p))) candidates.push({r,c});
     }
-    if(candidates.length) frozenCells[player]=candidates[Math.floor(Math.random()*candidates.length)];
+    if(candidates.length){
+      frozenCells[player]=candidates[Math.floor(Math.random()*candidates.length)];
+      const f=frozenCells[player];
+      addBoardFx(f.r,f.c,'❄️','ice');
+    }
   }
   // Nunca congela por completo al jugador que debe mover.
   if(allMovesFor(turn).length===0) frozenCells[turn]=null;
@@ -1576,6 +1681,8 @@ function randomRelocatePiece(){
   const to=empties[Math.floor(Math.random()*empties.length)];
   board[to.r][to.c]=board[from.r][from.c];
   board[from.r][from.c]=EMPTY;
+  addBoardFx(from.r,from.c,'🍃','swirl');
+  addBoardFx(to.r,to.c,'🌪️','swirl');
   promotionFx={r:to.r,c:to.c,start:performance.now()};
 }
 function awardKingPoint(player){
@@ -1584,7 +1691,14 @@ function awardKingPoint(player){
     const p=board[s.r][s.c];
     return player===GREEN?isGreen(p):isGold(p);
   });
-  if(controls) challengeControl[player]++;
+  if(controls){
+    challengeControl[player]++;
+    const occupied=controlSquares.find(s=>{
+      const p=board[s.r][s.c];
+      return player===GREEN?isGreen(p):isGold(p);
+    });
+    if(occupied) addBoardFx(occupied.r,occupied.c,'+1','gold');
+  }
   updateChallengeHud();
   if(challengeControl[player]>=10){
     finishChallengeRound(player,'alcanzó 10 puntos en el centro');
