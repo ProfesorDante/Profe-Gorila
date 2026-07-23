@@ -222,6 +222,67 @@ small.note{color:#5b704e;line-height:1.35}
   max-height:100dvh;
 }
 
+
+/* Identidad visual por dificultad */
+:root{
+  --scene-top:#b9e8ef;
+  --scene-bottom:#7fbf72;
+  --frame:#8b5a2b;
+  --light-square:#e9d8a4;
+  --dark-square:#5f8b4e;
+  --green-piece:#2f80d0;
+  --green-piece-stroke:#bfe4ff;
+  --gold-piece:#f2c230;
+  --gold-piece-stroke:#fff0a3;
+  --green-head:#5e3827;
+  --gold-head:#8b572d;
+  --green-face:#e4b77d;
+  --gold-face:#f1c983;
+  --accent:#315f3c;
+}
+body.theme-easy{
+  --scene-top:#c8edf0;--scene-bottom:#85c778;
+  --frame:#7c5429;--light-square:#e9dca9;--dark-square:#5d914e;
+  --green-piece:#2f80d0;--green-piece-stroke:#c9ebff;
+  --gold-piece:#f2c230;--gold-piece-stroke:#fff3a6;
+  --accent:#315f3c;
+}
+body.theme-medium{
+  --scene-top:#d7f2ff;--scene-bottom:#82bfd7;
+  --frame:#355f7e;--light-square:#d9eef6;--dark-square:#4f88a7;
+  --green-piece:#244f86;--green-piece-stroke:#b8dcff;
+  --gold-piece:#d84a4a;--gold-piece-stroke:#ffc1c1;
+  --accent:#285b7b;
+}
+body.theme-hard{
+  --scene-top:#ffe5bd;--scene-bottom:#d9944e;
+  --frame:#8c4c22;--light-square:#f6d9a7;--dark-square:#b85a2f;
+  --green-piece:#c73b32;--green-piece-stroke:#ffc0b7;
+  --gold-piece:#f0c62c;--gold-piece-stroke:#fff1a0;
+  --accent:#8b3f1f;
+}
+body.theme-expert{
+  --scene-top:#eadcff;--scene-bottom:#9b78c8;
+  --frame:#4d3477;--light-square:#e5daf4;--dark-square:#7757a7;
+  --green-piece:#69b8e8;--green-piece-stroke:#d9f3ff;
+  --gold-piece:#e37aa9;--gold-piece-stroke:#ffd6e7;
+  --accent:#5b3d88;
+}
+body.theme-profe{
+  --scene-top:#2f2f37;--scene-bottom:#121217;
+  --frame:#1b1a1d;--light-square:#c5a45a;--dark-square:#3c3330;
+  --green-piece:#f1d36b;--green-piece-stroke:#fff5b2;
+  --gold-piece:#f3f3f3;--gold-piece-stroke:#ffffff;
+  --accent:#d5af4f;
+}
+body.theme-profe header{
+  background:linear-gradient(#23222a,#111116);
+}
+body.theme-profe main{background:#2b2827}
+body.theme-profe .pill{border-color:#d5af4f}
+body.theme-profe .side h2,
+body.theme-profe .scoreLine{color:#8a6a16}
+
 </style>
 </head>
 <body>
@@ -323,8 +384,8 @@ small.note{color:#5b704e;line-height:1.35}
 <div class="overlay" id="champOverlay" style="display:none">
   <div class="card">
     <h2>🏆 Modo Campeonato</h2>
-    <p>Superá una serie de rivales cada vez más hábiles y descubrí hasta dónde podés llegar.</p>
-    <div class="champProgress">Cada victoria te acerca al desafío final.</div>
+    <p>Jugá cinco partidas: una contra cada dificultad y una gran final contra el Profe Gorila.</p>
+    <div class="champProgress">🦥 Fácil → 🦜 Medio → 🐆 Difícil → 🐘 Experto → 🦍 Profe Gorila</div>
     <p>Elegí a Nito o a Tina. El personaje elegido se mantiene durante todo el campeonato.</p>
     <div class="teamGrid">
       <button class="teamChoice" onclick="startChampionship('nito')">🐒 Jugar con Nito<small>Equipo Hoja</small></button>
@@ -411,7 +472,7 @@ let championshipWins=0;
 let championshipLosses=0;
 let championshipLastResult='';
 let championshipBeatProfe=false;
-const championshipSchedule=['easy','easy','medium','medium','hard','hard','expert','expert','profe'];
+const championshipSchedule=['easy','medium','hard','expert','profe'];
 const opponentData={
   easy:{name:'Perezoso',face:'🦥'},
   medium:{name:'Loro',face:'🦜'},
@@ -438,11 +499,20 @@ function dirsFor(p){
 }
 
 function inBounds(r,c){return r>=0&&r<8&&c>=0&&c<8}
+
+function applyDifficultyTheme(level){
+  document.body.classList.remove('theme-easy','theme-medium','theme-hard','theme-expert','theme-profe');
+  const resolved=level||'easy';
+  document.body.classList.add(`theme-${resolved}`);
+  draw();
+}
+
 function levelName(level){
   return ({easy:'Fácil',medium:'Medio',hard:'Difícil',expert:'Experto',profe:'VAS CONTRA EL PROFE'})[level]||level;
 }
 
 function updateOpponentDisplay(level,showDifficulty=false){
+  applyDifficultyTheme(level);
   const data=opponentData[level];
   if(!data) return;
   const card=document.getElementById('opponentCard');
@@ -456,6 +526,7 @@ function updateOpponentDisplay(level,showDifficulty=false){
   mobile.style.display='flex';
 }
 function hideOpponentDisplay(){
+  applyDifficultyTheme('easy');
   document.getElementById('opponentCard').style.display='none';
   document.getElementById('mobileOpponent').style.display='none';
 }
@@ -865,14 +936,17 @@ function draw(){
   const W=canvas.width,H=canvas.height,margin=26,size=Math.min((W-margin*2)/8,(H-margin*2)/8);
   const ox=(W-size*8)/2,oy=(H-size*8)/2;
   ctx.clearRect(0,0,W,H);
-  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#b9e8ef');g.addColorStop(1,'#7fbf72');
+  const css=getComputedStyle(document.documentElement);
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,css.getPropertyValue('--scene-top').trim()||'#b9e8ef');
+  g.addColorStop(1,css.getPropertyValue('--scene-bottom').trim()||'#7fbf72');
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
   drawLeavesBackground(W,H);
 
   ctx.save();ctx.translate(ox,oy);
-  ctx.fillStyle='#8b5a2b';ctx.fillRect(-12,-12,size*8+24,size*8+24);
+  ctx.fillStyle=css.getPropertyValue('--frame').trim()||'#8b5a2b';ctx.fillRect(-12,-12,size*8+24,size*8+24);
   for(let r=0;r<8;r++)for(let c=0;c<8;c++){
-    ctx.fillStyle=(r+c)%2===0?'#e9d8a4':'#5f8b4e';
+    ctx.fillStyle=(r+c)%2===0?(css.getPropertyValue('--light-square').trim()||'#e9d8a4'):(css.getPropertyValue('--dark-square').trim()||'#5f8b4e');
     ctx.fillRect(c*size,r*size,size,size);
   }
   if(selected){
@@ -935,24 +1009,25 @@ function drawLeavesBackground(W,H){
 
 function drawPiece(p,x,y,size){
   const brownTeam=isGreen(p);
+  const css=getComputedStyle(document.documentElement);
   ctx.save();ctx.translate(x,y);
   const r=size*.34;
 
   // Borde claro y sombra: las fichas se leen bien sobre cualquier casillero.
   ctx.shadowColor='rgba(0,0,0,.28)';ctx.shadowBlur=6;ctx.shadowOffsetY=4;
-  ctx.fillStyle=brownTeam?'#8b5434':'#e0ad42';
-  ctx.strokeStyle=brownTeam?'#f1d2a2':'#fff0a3';
+  ctx.fillStyle=brownTeam?(css.getPropertyValue('--green-piece').trim()||'#8b5434'):(css.getPropertyValue('--gold-piece').trim()||'#e0ad42');
+  ctx.strokeStyle=brownTeam?(css.getPropertyValue('--green-piece-stroke').trim()||'#f1d2a2'):(css.getPropertyValue('--gold-piece-stroke').trim()||'#fff0a3');
   ctx.lineWidth=Math.max(2,size*.035);
   ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.stroke();
   ctx.shadowColor='transparent';
 
   // Cabeza y orejas.
-  ctx.fillStyle=brownTeam?'#5e3827':'#8b572d';
+  ctx.fillStyle=brownTeam?(css.getPropertyValue('--green-head').trim()||'#5e3827'):(css.getPropertyValue('--gold-head').trim()||'#8b572d');
   ctx.beginPath();ctx.arc(0,-r*.05,r*.52,0,Math.PI*2);ctx.fill();
   ctx.beginPath();ctx.arc(-r*.48,-r*.14,r*.2,0,Math.PI*2);ctx.arc(r*.48,-r*.14,r*.2,0,Math.PI*2);ctx.fill();
 
   // Rostro.
-  ctx.fillStyle=brownTeam?'#e4b77d':'#f1c983';
+  ctx.fillStyle=brownTeam?(css.getPropertyValue('--green-face').trim()||'#e4b77d'):(css.getPropertyValue('--gold-face').trim()||'#f1c983');
   ctx.beginPath();ctx.ellipse(0,r*.10,r*.36,r*.28,0,0,Math.PI*2);ctx.fill();
 
   ctx.fillStyle='#fff';
@@ -1119,14 +1194,14 @@ function startChampionshipRound(){
   currentModeSnapshot={mode:'ai',aiLevel,humanPlayer,championship:true};
   beginNewMatch();
   updateOpponentDisplay(aiLevel,false);
-  setStatus(aiLevel==='profe'?'🦍 VAS CONTRA EL PROFE':`🏆 Campeonato · Partida ${championshipIndex+1}/9`);
+  setStatus(aiLevel==='profe'?'🦍 FINAL DEL CAMPEONATO · VAS CONTRA EL PROFE':`🏆 Campeonato · Partida ${championshipIndex+1}/${championshipSchedule.length}`);
 }
 function showChampionshipRoundResult(winner){
   const rival=opponentData[championshipSchedule[championshipIndex]];
   const humanWon=championshipLastResult==='win';
   document.getElementById('champResultTitle').textContent=humanWon?'🌿 ¡Ganaste la partida!':'La partida terminó';
   document.getElementById('champResultText').textContent=`${winner} ganó la partida contra ${rival.name}.`;
-  document.getElementById('champProgressText').textContent=`Progreso: ${championshipIndex+1}/9 · Victorias: ${championshipWins} · Derrotas: ${championshipLosses}`;
+  document.getElementById('champProgressText').textContent=`Progreso: ${championshipIndex+1}/${championshipSchedule.length} · Victorias: ${championshipWins} · Derrotas: ${championshipLosses}`;
   document.getElementById('champResultOverlay').style.display='flex';
 }
 function continueChampionship(){
@@ -1141,7 +1216,7 @@ function finishChampionship(){
   image.src=championshipCharacter==='nito'?'../img/damasnito.png?v=1':'../img/damastina.png?v=1';
   image.alt=championshipCharacter==='nito'?'Final del campeonato jugando con Nito':'Final del campeonato jugando con Tina';
   document.getElementById('champFinalScore').textContent=
-    `Resultado final: ${championshipWins} victorias y ${championshipLosses} derrotas en 9 partidas. `+
+    `Resultado final: ${championshipWins} victorias y ${championshipLosses} derrotas en ${championshipSchedule.length} partidas. `+
     (championshipBeatProfe?'¡También venciste al Profe Gorila!':'El Profe Gorila ganó la partida final.');
   document.getElementById('champDownloadStatus').textContent='';
   document.getElementById('champFinalOverlay').style.display='flex';
@@ -1263,9 +1338,10 @@ function beginNewMatch(){
   nextStarter=nextStarter===GREEN?GOLD:GREEN;
   initBoard(starter);
   if(championshipActive){
+    applyDifficultyTheme(championshipSchedule[championshipIndex]);
     const label=levelName(championshipSchedule[championshipIndex]);
     updateOpponentDisplay(championshipSchedule[championshipIndex],false);
-    setStatus(label==='VAS CONTRA EL PROFE'?'🦍 VAS CONTRA EL PROFE':`🏆 Campeonato · Partida ${championshipIndex+1}/9`);
+    setStatus(label==='VAS CONTRA EL PROFE'?'🦍 VAS CONTRA EL PROFE':`🏆 Campeonato · Partida ${championshipIndex+1}/${championshipSchedule.length}`);
   }else{
     setStatus(starter===GREEN?'Comienza Nito · Equipo Hoja.':'Comienza Tina · Equipo Dorado.');
   }
@@ -1297,7 +1373,7 @@ function chooseTeam(character){
   aiPlayer=humanPlayer===GREEN?GOLD:GREEN;
   currentModeSnapshot={mode,aiLevel,humanPlayer};
   hideMenus();
-  if(mode==='ai') updateOpponentDisplay(aiLevel,true); else hideOpponentDisplay();
+  if(mode==='ai') updateOpponentDisplay(aiLevel,true); else {applyDifficultyTheme('easy');hideOpponentDisplay();}
   beginNewMatch();
   startMusic();
 }
